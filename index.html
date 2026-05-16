@@ -187,6 +187,7 @@
       height: 600px;
       background: radial-gradient(circle, rgba(40,116,240,0.3) 0%, transparent 70%);
       border-radius: 50%;
+      animation: floatOrb 6s ease-in-out infinite;
     }
     .hero::after {
       content: '';
@@ -197,6 +198,51 @@
       height: 400px;
       background: radial-gradient(circle, rgba(245,166,35,0.2) 0%, transparent 70%);
       border-radius: 50%;
+      animation: floatOrb 8s ease-in-out infinite reverse;
+    }
+    @keyframes floatOrb {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-20px); }
+    }
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroFadeLeft {
+      from { opacity: 0; transform: translateX(32px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes shimmerLine {
+      0%   { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: 0; transform: scale(0.5); }
+      50%      { opacity: 1; transform: scale(1.6); }
+    }
+    @keyframes zoomSlide {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.06); }
+    }
+    @keyframes greenPulse {
+      0%,100% { box-shadow: 0 4px 20px rgba(22,163,74,0.45); }
+      50%      { box-shadow: 0 4px 32px rgba(22,163,74,0.8); }
+    }
+    .hero-tag   { animation: heroFadeUp 0.7s ease 0.1s both; }
+    .hero h1    { animation: heroFadeUp 0.7s ease 0.25s both; }
+    .hero p     { animation: heroFadeUp 0.7s ease 0.4s both; }
+    .hero-btns  { animation: heroFadeUp 0.7s ease 0.55s both; }
+    .hero-stats { animation: heroFadeUp 0.7s ease 0.7s both; }
+    .hero-shimmer {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #2874f0, #f5a623, #2874f0, transparent);
+      background-size: 200% 100%;
+      animation: shimmerLine 3s linear infinite;
+    }
+    .hero-particle {
+      position: absolute; width: 2px; height: 2px;
+      background: rgba(245,166,35,0.7); border-radius: 50%;
+      animation: twinkle var(--d) ease-in-out infinite var(--delay);
     }
     .hero-inner {
       max-width: 1280px;
@@ -285,50 +331,6 @@
       color: var(--gold);
     }
     .stat-label { font-size: 12px; color: #708090; margin-top: 2px; }
-
-    /* ===== HERO ANIMATIONS ===== */
-    @keyframes heroFadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes heroFadeLeft {
-      from { opacity: 0; transform: translateX(32px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes floatOrb {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-18px); }
-    }
-    @keyframes shimmerLine {
-      0%   { background-position: -100% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes twinkle {
-      0%,100% { opacity: 0; transform: scale(0.5); }
-      50%      { opacity: 1; transform: scale(1.5); }
-    }
-    @keyframes zoomSlide {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.06); }
-    }
-    .hero::before { animation: floatOrb 6s ease-in-out infinite; }
-    .hero::after  { animation: floatOrb 8s ease-in-out infinite reverse; }
-    .hero-tag     { animation: heroFadeUp 0.7s ease 0.1s both; }
-    .hero h1      { animation: heroFadeUp 0.7s ease 0.25s both; }
-    .hero p       { animation: heroFadeUp 0.7s ease 0.4s both; }
-    .hero-btns    { animation: heroFadeUp 0.7s ease 0.55s both; }
-    .hero-stats   { animation: heroFadeUp 0.7s ease 0.7s both; }
-    .hero-shimmer {
-      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, #2874f0, #f5a623, #2874f0, transparent);
-      background-size: 200% 100%;
-      animation: shimmerLine 3s linear infinite;
-    }
-    .hero-particle {
-      position: absolute; width: 2px; height: 2px;
-      background: rgba(245,166,35,0.7); border-radius: 50%;
-      animation: twinkle var(--d) ease-in-out infinite var(--delay);
-    }
 
     /* ===== HERO CAROUSEL ===== */
     .hero-carousel-wrap { animation: heroFadeLeft 0.8s ease 0.5s both; flex-shrink: 0; }
@@ -1199,9 +1201,7 @@
       <p>Premium luxury bags crafted for the modern woman. Made with love, designed for elegance.</p>
       <div class="social-links">
         <a href="https://instagram.com/laxuage"><i class="fa-brands fa-instagram"></i></a>
-        <a href="#"><i class="fa-brands fa-facebook"></i></a>
         <a href="https://wa.me/919846923350"><i class="fa-brands fa-whatsapp"></i></a>
-        <a href="#"><i class="fa-brands fa-pinterest"></i></a>
       </div>
     </div>
     <div class="footer-col">

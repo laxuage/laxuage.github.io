@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laxuage - Premium Bags</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; }
+    .heading { font-family: 'Playfair Display', sans-serif; }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(225 29 72 / 0.2); }
+    .search-bar { background: #18181b; border: 2px solid #e11d48; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar (Flipkart Style) -->
+  <nav class="bg-black sticky top-0 z-50 border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <img src="logo.png" alt="Laxuage" class="h-11">
+      
+      <div class="flex-1 max-w-2xl mx-6">
+        <div class="relative">
+          <input type="text" id="search" class="search-bar w-full py-3 px-5 pl-12 rounded-xl text-white placeholder-zinc-400 focus:outline-none" placeholder="Search bags...">
+          <i class="fa-solid fa-magnifying-glass absolute left-5 top-4 text-pink-400"></i>
+        </div>
+      </div>
+      
+      <button onclick="toggleCart()" class="flex items-center gap-2 hover:text-pink-400">
+        <i class="fa-solid fa-bag-shopping text-2xl"></i>
+        <span id="cart-count" class="bg-pink-600 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-r from-black to-zinc-900 h-[60vh] flex items-center">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+      <h1 class="heading text-5xl md:text-6xl font-bold mb-4">Timeless Luxury Bags</h1>
+      <p class="text-pink-200 text-xl">Made of Her • Crafted for Elegance</p>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section class="max-w-7xl mx-auto px-6 py-12">
+    <h2 class="heading text-4xl font-bold mb-8 text-white">Our Collection</h2>
+    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </section>
+
+  <!-- Cart -->
+  <div id="cart-sidebar" class="fixed top-0 right-0 w-96 h-full bg-zinc-900 border-l border-pink-500 transform translate-x-full transition-all z-50">
+    <div class="p-6 border-b bg-black flex justify-between">
+      <h3 class="text-2xl">Your Cart</h3>
+      <button onclick="toggleCart()" class="text-3xl">×</button>
+    </div>
+    <div id="cart-items" class="p-6 overflow-auto" style="height: calc(100vh - 240px);"></div>
+    <div class="p-6 border-t bg-black">
+      <div class="flex justify-between text-xl mb-6">
+        <span>Total</span>
+        <span id="cart-total" class="font-bold text-yellow-400">₹0</span>
+      </div>
+      <button onclick="checkout()" class="w-full bg-gradient-to-r from-pink-500 to-yellow-400 text-black py-5 rounded-2xl font-bold">PROCEED TO CHECKOUT</button>
+    </div>
+  </div>
+
+  <script>
+    const products = [
+      {
+        id: 1,
+        name: "Ivory Chain Shoulder Bag",
+        price: 0,
+        img: "bag1.jpg",
+        description: "Elegant ivory leather bag with bold gold chain strap and signature clasp. Perfect for daily elegance and evening outings.",
+        category: "handbag"
+      },
+      {
+        id: 2,
+        name: "Quilted White Crossbody",
+        price: 0,
+        img: "bag2.jpg",
+        description: "Luxurious quilted white crossbody with beautiful gold flower emblem. Spacious and stylish for casual and formal use.",
+        category: "crossbody"
+      },
+      {
+        id: 3,
+        name: "Beige Monogram Satchel",
+        price: 0,
+        img: "bag3.jpg",
+        description: "Sophisticated beige and white patterned satchel with adjustable strap. Classic design with modern comfort.",
+        category: "handbag"
+      },
+      {
+        id: 4,
+        name: "Black Pleated Tote Bag",
+        price: 0,
+        img: "bag4.jpg",
+        description: "Chic black pleated tote with structured design. Spacious interior perfect for office and weekend use.",
+        category: "tote"
+      },
+      {
+        id: 5,
+        name: "Cream Star Chain Bag",
+        price: 0,
+        img: "bag5.jpg",
+        description: "Premium cream leather bag with gold chain and star charm detail. A true statement piece.",
+        category: "handbag"
+      },
+      {
+        id: 6,
+        name: "White Quilted Mini Bag",
+        price: 0,
+        img: "bag6.jpg",
+        description: "Adorable white quilted mini bag with gold clover emblem. Compact yet stylish for everyday essentials.",
+        category: "crossbody"
+      },
+      {
+        id: 7,
+        name: "Dual Tone Beige Set",
+        price: 0,
+        img: "bag7.jpg",
+        description: "Elegant beige collection featuring textured and patterned designs. Versatile and luxurious.",
+        category: "handbag"
+      },
+      {
+        id: 8,
+        name: "Brown Leather Crossbody",
+        price: 0,
+        img: "bag8.jpg",
+        description: "Rich brown leather crossbody with gold hardware and signature logo. Timeless and sophisticated.",
+        category: "crossbody"
+      },
+      {
+        id: 9,
+        name: "Pearl & Gold Clutch Set",
+        price: 0,
+        img: "bag9.jpg",
+        description: "Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.",
+        category: "clutch"
+      }
+    ];
+
+    let cart = [];
+
+    function renderProducts(prods) {
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      prods.forEach(p => {
+        const div = document.createElement('div');
+        div.className = "product-card bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-700";
+        div.innerHTML = `
+          <img src="${p.img}" class="w-full h-64 object-cover">
+          <div class="p-4">
+            <h3 class="font-semibold">${p.name}</h3>
+            <p class="text-pink-400 text-sm mt-1 line-clamp-2">${p.description}</p>
+            <div class="mt-4 flex justify-between items-center">
+              <span class="text-2xl font-bold">${p.price ? '₹' + p.price : 'Price on Request'}</span>
+              <button onclick="addToCart(${p.id})" class="bg-white text-black px-6 py-2.5 rounded-xl hover:bg-pink-500 hover:text-white transition">Add to Cart</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(i => i.id === id);
+      if (existing) existing.quantity += 1;
+      else cart.push({...product, quantity: 1});
+      updateCart();
+      showToast(`${product.name} added to cart`);
+    }
+
+    function updateCart() {
+      document.getElementById('cart-count').textContent = cart.reduce((a,b) => a + b.quantity, 0);
+      let total = cart.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
+      document.getElementById('cart-total').textContent = `₹${total}`;
+    }
+
+    function toggleCart() {
+      document.getElementById('cart-sidebar').classList.toggle('translate-x-full');
+    }
+
+    function checkout() {
+      alert("🎉 Thank you for shopping at Laxuage!\n\nThis is a demo site.");
+      cart = [];
+      updateCart();
+      toggleCart();
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = "fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-800 border border-pink-500 px-6 py-3 rounded-2xl z-50";
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    window.onload = () => renderProducts(products);
+  </script>
+</body>
+</html>

@@ -182,7 +182,7 @@
 
     /* ===== HERO BANNER ===== */
     .hero {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+      background: linear-gradient(135deg, #0a0a0a 0%, #111111 40%, #1a1a1a 100%);
       position: relative;
       overflow: hidden;
       padding: 60px 16px;
@@ -891,11 +891,53 @@
       .product-grid { grid-template-columns: repeat(2, 1fr); }
       .cat-btn span { display: none; }
       .cat-btn { padding: 10px 14px; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 20px; padding: 32px 16px; }
+      .promo-inner { grid-template-columns: 1fr 1fr; }
     }
-    @media (max-width: 480px) {
-      .nav-inner { gap: 10px; }
-      .logo-text { font-size: 18px; }
-      .product-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 430px) {
+      .topbar { font-size: 10px; padding: 5px 8px; }
+      .nav-inner { padding: 0 10px; height: 56px; gap: 8px; }
+      .logo-text { font-size: 16px; }
+      .logo-sub { font-size: 9px; }
+      .logo-wrap { min-width: 80px; }
+      .search-wrap input { padding: 9px 10px; font-size: 13px; }
+      .search-btn { padding: 9px 12px; font-size: 14px; }
+      .nav-btn { padding: 6px 8px; }
+      .nav-btn span { font-size: 10px; }
+      .nav-btn i { font-size: 16px; }
+      .cat-btn { padding: 8px 10px; }
+      .cat-btn i { font-size: 18px; }
+      .hero { padding: 32px 14px; }
+      .hero h1 { font-size: 28px; }
+      .hero-tag { font-size: 10px; padding: 4px 10px; }
+      .hero p { font-size: 13px; }
+      .hero-stats { gap: 20px; }
+      .stat-num { font-size: 22px; }
+      .stat-label { font-size: 10px; }
+      .btn-primary { padding: 11px 20px; font-size: 13px; }
+      .btn-outline { padding: 9px 16px; font-size: 13px; }
+      .promo-inner { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+      .promo-item { padding: 10px; gap: 8px; }
+      .promo-icon { width: 36px; height: 36px; font-size: 14px; }
+      .promo-title { font-size: 11px; }
+      .promo-desc { font-size: 10px; }
+      .section-wrap { padding: 0 8px; margin: 12px auto; }
+      .section-title { font-size: 18px; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1px; }
+      .product-img-wrap img { height: 180px; }
+      .product-info { padding: 10px; }
+      .product-name { font-size: 12px; }
+      .price-main { font-size: 16px; }
+      .add-cart-btn { padding: 9px 0; font-size: 12px; }
+      .rating-badge { font-size: 10px; }
+      .cart-sidebar { width: 100vw; }
+      .modal-body { grid-template-columns: 1fr; }
+      .modal-img { height: 220px; }
+      .modal-details { padding: 16px; }
+      .modal-name { font-size: 18px; }
+      .footer-top { grid-template-columns: 1fr; gap: 24px; padding: 24px 16px; }
+      .footer-brand p { font-size: 12px; }
+      .whatsapp-fab { width: 46px; height: 46px; font-size: 22px; bottom: 16px; right: 16px; }
     }
   </style>
 </head>
@@ -1040,9 +1082,9 @@
       <span class="logo-text heading">Laxuage</span>
       <p>Premium luxury bags crafted for the modern woman. Made with love, designed for elegance.</p>
       <div class="social-links">
-        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://instagram.com/laxuage"><i class="fa-brands fa-instagram"></i></a>
         <a href="#"><i class="fa-brands fa-facebook"></i></a>
-        <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="https://wa.me/919846923350"><i class="fa-brands fa-whatsapp"></i></a>
         <a href="#"><i class="fa-brands fa-pinterest"></i></a>
       </div>
     </div>
@@ -1067,19 +1109,19 @@
     <div class="footer-col">
       <h4>Contact Us</h4>
       <ul>
-        <li><a href="#"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>support@laxuage.com</a></li>
-        <li><a href="#"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 XXXXX XXXXX</a></li>
+        <li><a href="#"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>laxuage@gmail.com</a></li>
+        <li><a href="https://wa.me/919846923350"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 98469 23350</a></li>
         <li><a href="#"><i class="fa-solid fa-location-dot" style="margin-right:6px"></i>Kerala, India</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    © 2025 <span>Laxuage</span>. All rights reserved. Made with ♥ in Kerala
+    © 2026 <span>Laxuage</span>. All rights reserved.
   </div>
 </footer>
 
 <!-- WhatsApp FAB -->
-<a href="https://wa.me/91XXXXXXXXXX" class="whatsapp-fab" target="_blank">
+<a href="https://wa.me/919846923350" class="whatsapp-fab" target="_blank">
   <i class="fa-brands fa-whatsapp"></i>
 </a>
 

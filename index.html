@@ -26,16 +26,7 @@
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
     .heading { font-family: 'Playfair Display', serif; }
 
-    /* ===== TOPBAR ===== */
-    .topbar {
-      background: #1a1a2e;
-      color: #aaa;
-      font-size: 12px;
-      padding: 6px 0;
-      text-align: center;
-      letter-spacing: 0.5px;
-    }
-    .topbar span { color: var(--gold); font-weight: 600; }
+
 
     /* ===== NAVBAR ===== */
     nav {
@@ -250,7 +241,7 @@
     }
     .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn-primary {
-      background: var(--primary);
+      background: #16a34a;
       color: white;
       border: none;
       padding: 14px 32px;
@@ -260,9 +251,14 @@
       cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       transition: all 0.2s;
-      box-shadow: 0 4px 20px rgba(40,116,240,0.4);
+      box-shadow: 0 4px 20px rgba(22,163,74,0.45);
+      animation: greenPulse 3s ease-in-out infinite 2s;
     }
-    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn-primary:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 6px 28px rgba(22,163,74,0.6); }
+    @keyframes greenPulse {
+      0%,100% { box-shadow: 0 4px 20px rgba(22,163,74,0.45); }
+      50% { box-shadow: 0 4px 32px rgba(22,163,74,0.75); }
+    }
     .btn-outline {
       background: transparent;
       color: white;
@@ -289,6 +285,85 @@
       color: var(--gold);
     }
     .stat-label { font-size: 12px; color: #708090; margin-top: 2px; }
+
+    /* ===== HERO ANIMATIONS ===== */
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroFadeLeft {
+      from { opacity: 0; transform: translateX(32px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes floatOrb {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-18px); }
+    }
+    @keyframes shimmerLine {
+      0%   { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: 0; transform: scale(0.5); }
+      50%      { opacity: 1; transform: scale(1.5); }
+    }
+    @keyframes zoomSlide {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.06); }
+    }
+    .hero::before { animation: floatOrb 6s ease-in-out infinite; }
+    .hero::after  { animation: floatOrb 8s ease-in-out infinite reverse; }
+    .hero-tag     { animation: heroFadeUp 0.7s ease 0.1s both; }
+    .hero h1      { animation: heroFadeUp 0.7s ease 0.25s both; }
+    .hero p       { animation: heroFadeUp 0.7s ease 0.4s both; }
+    .hero-btns    { animation: heroFadeUp 0.7s ease 0.55s both; }
+    .hero-stats   { animation: heroFadeUp 0.7s ease 0.7s both; }
+    .hero-shimmer {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #2874f0, #f5a623, #2874f0, transparent);
+      background-size: 200% 100%;
+      animation: shimmerLine 3s linear infinite;
+    }
+    .hero-particle {
+      position: absolute; width: 2px; height: 2px;
+      background: rgba(245,166,35,0.7); border-radius: 50%;
+      animation: twinkle var(--d) ease-in-out infinite var(--delay);
+    }
+
+    /* ===== HERO CAROUSEL ===== */
+    .hero-carousel-wrap { animation: heroFadeLeft 0.8s ease 0.5s both; flex-shrink: 0; }
+    .hero-carousel-frame {
+      position: relative; width: 240px; height: 300px;
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+      background: #111; margin: 0 auto;
+    }
+    .hc-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+    .hc-slide.active { opacity: 1; }
+    .hc-slide img { width: 100%; height: 100%; object-fit: cover; display: block; animation: zoomSlide 7s ease-in-out infinite; }
+    .hc-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.88));
+      padding: 28px 14px 14px;
+    }
+    .hc-name  { font-family: 'Playfair Display', serif; font-size: 13px; color: white; font-weight: 700; display: block; }
+    .hc-price { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 3px; display: block; }
+    .hc-badge { position: absolute; top: 10px; left: 10px; color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.5px; }
+    .hc-b-new { background: #15803d; }
+    .hc-b-hot { background: #dc2626; }
+    .hc-counter { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 10px; }
+    .hc-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .hc-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; transition: all 0.3s; border: none; padding: 0; }
+    .hc-dot.active { background: var(--gold); width: 18px; border-radius: 3px; }
+    .hc-arrows { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+    .hc-arr {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+      color: white; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .hc-arr:hover { background: rgba(22,163,74,0.4); border-color: #16a34a; }
 
     /* ===== PROMO STRIP ===== */
     .promo-strip {
@@ -943,10 +1018,7 @@
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-  🎁 Free Shipping on orders above ₹999 &nbsp;|&nbsp; <span>Exclusive Luxury Bags</span> &nbsp;|&nbsp; COD Available
-</div>
+
 
 <!-- Navbar -->
 <nav>
@@ -1001,6 +1073,13 @@
 
 <!-- Hero -->
 <section class="hero">
+  <!-- Particles -->
+  <div class="hero-particle" style="top:15%;left:72%;--d:2.8s;--delay:0s"></div>
+  <div class="hero-particle" style="top:70%;left:80%;--d:3.5s;--delay:0.5s"></div>
+  <div class="hero-particle" style="top:30%;left:88%;--d:2.2s;--delay:1s"></div>
+  <div class="hero-particle" style="top:55%;left:60%;--d:4s;--delay:0.3s"></div>
+  <div class="hero-particle" style="top:10%;left:50%;--d:3s;--delay:1.5s"></div>
+
   <div class="hero-inner">
     <div class="hero-text">
       <div class="hero-tag">✦ New Collection 2025</div>
@@ -1027,7 +1106,44 @@
         </div>
       </div>
     </div>
+
+    <!-- Carousel -->
+    <div class="hero-carousel-wrap">
+      <div class="hero-carousel-frame">
+        <div class="hc-slide active">
+          <img src="bag1.jpg" alt="Ivory Chain Shoulder Bag">
+          <span class="hc-badge hc-b-new">NEW</span>
+          <div class="hc-overlay">
+            <span class="hc-name">Ivory Chain Shoulder Bag</span>
+            <span class="hc-price">₹1,599</span>
+          </div>
+        </div>
+        <div class="hc-slide">
+          <img src="bag2.jpg" alt="Quilted White Crossbody">
+          <span class="hc-badge hc-b-hot">HOT</span>
+          <div class="hc-overlay">
+            <span class="hc-name">Quilted White Crossbody</span>
+            <span class="hc-price">₹1,497</span>
+          </div>
+        </div>
+        <div class="hc-slide">
+          <img src="bag3.jpg" alt="Beige Monogram Satchel">
+          <div class="hc-overlay">
+            <span class="hc-name">Beige Monogram Satchel</span>
+            <span class="hc-price">₹1,497</span>
+          </div>
+        </div>
+        <div class="hc-counter" id="hc-counter">1 / 3</div>
+      </div>
+      <div class="hc-dots" id="hc-dots"></div>
+      <div class="hc-arrows">
+        <button class="hc-arr" onclick="hcPrev()" aria-label="Previous">&#8592;</button>
+        <button class="hc-arr" onclick="hcNext()" aria-label="Next">&#8594;</button>
+      </div>
+    </div>
   </div>
+
+  <div class="hero-shimmer"></div>
 </section>
 
 <!-- Promo Strip -->
@@ -1379,6 +1495,34 @@
     c.appendChild(t);
     setTimeout(() => t.remove(), 2800);
   }
+
+  // Hero Carousel
+  (function() {
+    const slides = document.querySelectorAll('.hc-slide');
+    const dotsWrap = document.getElementById('hc-dots');
+    const counter = document.getElementById('hc-counter');
+    const total = slides.length;
+    let cur = 0, timer;
+    slides.forEach((_, i) => {
+      const d = document.createElement('button');
+      d.className = 'hc-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => hcGoTo(i);
+      dotsWrap.appendChild(d);
+    });
+    window.hcGoTo = function(n) {
+      slides[cur].classList.remove('active');
+      dotsWrap.children[cur].classList.remove('active');
+      cur = (n + total) % total;
+      slides[cur].classList.add('active');
+      dotsWrap.children[cur].classList.add('active');
+      counter.textContent = (cur + 1) + ' / ' + total;
+      clearInterval(timer);
+      timer = setInterval(() => hcGoTo(cur + 1), 3200);
+    };
+    window.hcNext = () => hcGoTo(cur + 1);
+    window.hcPrev = () => hcGoTo(cur - 1);
+    timer = setInterval(() => hcGoTo(cur + 1), 3200);
+  })();
 
   window.onload = () => renderProducts(products);
 </script>

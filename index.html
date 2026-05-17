@@ -1038,6 +1038,12 @@
     }
     .footer-bottom span { color: var(--gold); }
 
+    /* ===== HIDE LINK PREVIEW IN STATUS BAR ===== */
+    a[href] {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     /* ===== HEART ANIMATION ===== */
     @keyframes heartPop {
       0%   { transform: scale(1); }
@@ -1176,7 +1182,7 @@
           <div class="dropdown-header">More Options</div>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-store"></i> Become a Seller</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-bell"></i> Notification Settings</a>
-          <a class="dropdown-item" href="https://wa.me/919846923350" target="_blank"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
+          <a class="dropdown-item" href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-bullhorn"></i> Advertise on Laxuage</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-download"></i> Download App</a>
         </div>
@@ -1371,8 +1377,8 @@
       <span class="logo-text heading">Laxuage</span>
       <p>Premium luxury bags crafted for the modern woman. Made with love, designed for elegance.</p>
       <div class="social-links">
-        <a href="https://instagram.com/laxuage"><i class="fa-brands fa-instagram"></i></a>
-        <a href="https://wa.me/919846923350"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="javascript:void(0)" onclick="window.open('https://instagram.com/laxuage','_blank')"><i class="fa-brands fa-instagram"></i></a>
+        <a href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp"></i></a>
       </div>
     </div>
     <div class="footer-col">
@@ -1397,7 +1403,7 @@
       <h4>Contact Us</h4>
       <ul>
         <li><a href="#"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>laxuage@gmail.com</a></li>
-        <li><a href="https://wa.me/919846923350"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 98469 23350</a></li>
+        <li><a href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 98469 23350</a></li>
         <li><a href="#"><i class="fa-solid fa-location-dot" style="margin-right:6px"></i>Kerala, India</a></li>
       </ul>
     </div>
@@ -1408,9 +1414,9 @@
 </footer>
 
 <!-- WhatsApp FAB -->
-<a href="https://wa.me/919846923350" class="whatsapp-fab" target="_blank">
+<button onclick="window.open('https://wa.me/919846923350','_blank')" class="whatsapp-fab">
   <i class="fa-brands fa-whatsapp"></i>
-</a>
+</button>
 
 <!-- Cart Overlay -->
 <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>

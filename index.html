@@ -133,6 +133,106 @@
       justify-content: center;
     }
 
+    /* ===== PROFILE & MORE DROPDOWN ===== */
+    .nav-dropdown {
+      position: relative;
+    }
+    .nav-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      min-width: 210px;
+      z-index: 999;
+      overflow: hidden;
+      animation: dropDown 0.18s ease;
+    }
+    @keyframes dropDown {
+      from { opacity:0; transform: translateY(-8px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .nav-dropdown-menu.open { display: block; }
+    .dropdown-header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dropdown-header small {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f5f5f5;
+      text-decoration: none;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: #f1f3f6; color: var(--primary); }
+    .dropdown-item i { font-size: 15px; color: var(--muted); width: 18px; text-align: center; }
+    .dropdown-item:hover i { color: var(--primary); }
+
+    /* ===== SORT / FILTER BAR ===== */
+    .sort-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+    }
+    .sort-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .sort-inner::-webkit-scrollbar { display: none; }
+    .sort-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px 12px 0;
+      white-space: nowrap;
+      border-right: 1px solid var(--border);
+      margin-right: 8px;
+    }
+    .sort-btn {
+      background: none;
+      border: none;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sort-btn:hover { color: var(--primary); background: #f8f9ff; }
+    .sort-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+    .sort-btn i { font-size: 12px; }
+
     /* ===== CATEGORY BAR ===== */
     .cat-bar {
       background: white;
@@ -1034,11 +1134,49 @@
       <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
     <div class="nav-actions">
+      <!-- Profile Dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="toggleDropdown('profile-menu')">
+          <i class="fa-regular fa-circle-user"></i>
+          <span>Surru &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i></span>
+        </button>
+        <div class="nav-dropdown-menu" id="profile-menu">
+          <div class="dropdown-header">
+            Hello, Surru!
+            <small>surru@email.com</small>
+          </div>
+          <a class="dropdown-item" href="#"><i class="fa-regular fa-user"></i> My Profile</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-box"></i> My Orders</a>
+          <a class="dropdown-item" href="#"><i class="fa-regular fa-heart"></i> Wishlist</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot"></i> Saved Addresses</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </div>
+      </div>
+
+      <!-- More Dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="toggleDropdown('more-menu')">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+          <span>More &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i></span>
+        </button>
+        <div class="nav-dropdown-menu" id="more-menu">
+          <div class="dropdown-header">More Options</div>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-store"></i> Become a Seller</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-bell"></i> Notification Settings</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-bullhorn"></i> Advertise on Laxuage</a>
+          <a class="dropdown-item" href="#"><i class="fa-solid fa-download"></i> Download App</a>
+        </div>
+      </div>
+
+      <!-- Cart -->
       <button class="nav-btn" onclick="openCart()">
         <i class="fa-solid fa-bag-shopping"></i>
         <span>Cart</span>
         <div class="cart-badge" id="cart-count">0</div>
       </button>
+
+      <!-- Wishlist -->
       <button class="nav-btn">
         <i class="fa-regular fa-heart"></i>
         <span>Wishlist</span>
@@ -1073,7 +1211,27 @@
   </div>
 </div>
 
-<!-- Hero -->
+<!-- Sort / Filter Bar -->
+<div class="sort-bar">
+  <div class="sort-inner">
+    <span class="sort-label"><i class="fa-solid fa-arrow-up-wide-short"></i> &nbsp;Sort By</span>
+    <button class="sort-btn active" onclick="sortProducts('popular', this)">
+      <i class="fa-solid fa-fire"></i> Popular
+    </button>
+    <button class="sort-btn" onclick="sortProducts('low', this)">
+      <i class="fa-solid fa-arrow-up"></i> Price: Low to High
+    </button>
+    <button class="sort-btn" onclick="sortProducts('high', this)">
+      <i class="fa-solid fa-arrow-down"></i> Price: High to Low
+    </button>
+    <button class="sort-btn" onclick="sortProducts('rating', this)">
+      <i class="fa-solid fa-star"></i> Top Rated
+    </button>
+    <button class="sort-btn" onclick="sortProducts('newest', this)">
+      <i class="fa-solid fa-tag"></i> Newest First
+    </button>
+  </div>
+</div>
 <section class="hero">
   <!-- Particles -->
   <div class="hero-particle" style="top:15%;left:72%;--d:2.8s;--delay:0s"></div>
@@ -1311,6 +1469,39 @@
 <div id="toast-container"></div>
 
 <script>
+  // ===== DROPDOWN TOGGLE =====
+  function toggleDropdown(id) {
+    const menus = document.querySelectorAll('.nav-dropdown-menu');
+    menus.forEach(m => { if (m.id !== id) m.classList.remove('open'); });
+    document.getElementById(id).classList.toggle('open');
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.nav-dropdown')) {
+      document.querySelectorAll('.nav-dropdown-menu').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // ===== SORT =====
+  let currentSort = 'popular';
+  function sortProducts(type, btn) {
+    currentSort = type;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    applyFiltersAndSort();
+  }
+
+  function applyFiltersAndSort() {
+    let list = currentCat === 'all' ? [...products] : products.filter(p => p.category === currentCat);
+    const q = document.getElementById('search').value.toLowerCase();
+    if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    if (currentSort === 'low')    list.sort((a,b) => a.price - b.price);
+    else if (currentSort === 'high')   list.sort((a,b) => b.price - a.price);
+    else if (currentSort === 'rating') list.sort((a,b) => b.rating - a.rating);
+    else if (currentSort === 'newest') list.sort((a,b) => b.id - a.id);
+    else list.sort((a,b) => b.reviews - a.reviews); // popular
+    renderProducts(list);
+  }
+
   const products = [
     { id:1, name:"Ivory Chain Shoulder Bag", price:1599, img:"bag1.jpg", description:"Elegant ivory leather bag with bold gold chain strap and signature clasp. Perfect for daily elegance and evening outings.", category:"handbag", badge:"new", rating:4.5, reviews:128 },
     { id:2, name:"Quilted White Crossbody", price:1497, img:"bag2.jpg", description:"Luxurious quilted white crossbody with beautiful gold flower emblem. Spacious and stylish for casual and formal use.", category:"crossbody", badge:"hot", rating:4.7, reviews:96 },
@@ -1369,17 +1560,11 @@
     currentCat = cat;
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    const filtered = cat === 'all' ? products : products.filter(p => p.category === cat);
-    renderProducts(filtered);
+    applyFiltersAndSort();
   }
 
   function handleSearch(val) {
-    const q = val.toLowerCase();
-    const filtered = products.filter(p =>
-      (currentCat === 'all' || p.category === currentCat) &&
-      (p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
-    );
-    renderProducts(filtered);
+    applyFiltersAndSort();
   }
 
   function addToCart(id) {
@@ -1524,7 +1709,7 @@
     timer = setInterval(() => hcGoTo(cur + 1), 3200);
   })();
 
-  window.onload = () => renderProducts(products);
+  window.onload = () => applyFiltersAndSort();
 </script>
 </body>
 </html>

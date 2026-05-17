@@ -1038,6 +1038,19 @@
     }
     .footer-bottom span { color: var(--gold); }
 
+    /* ===== HEART ANIMATION ===== */
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.5); }
+      60%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .heart-pop {
+      animation: heartPop 0.4s ease forwards;
+    }
+    .wishlist-btn.active { color: var(--accent) !important; opacity: 1 !important; }
+    .nav-wishlist-active { color: #ff6161 !important; }
+
     /* ===== WHATSAPP ===== */
     .whatsapp-fab {
       position: fixed;
@@ -1163,7 +1176,7 @@
           <div class="dropdown-header">More Options</div>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-store"></i> Become a Seller</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-bell"></i> Notification Settings</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
+          <a class="dropdown-item" href="https://wa.me/919846923350" target="_blank"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-bullhorn"></i> Advertise on Laxuage</a>
           <a class="dropdown-item" href="#"><i class="fa-solid fa-download"></i> Download App</a>
         </div>
@@ -1177,8 +1190,8 @@
       </button>
 
       <!-- Wishlist -->
-      <button class="nav-btn">
-        <i class="fa-regular fa-heart"></i>
+      <button class="nav-btn" id="nav-wishlist-btn" onclick="toggleNavWishlist(this)">
+        <i class="fa-regular fa-heart" id="nav-wishlist-icon"></i>
         <span>Wishlist</span>
       </button>
     </div>
@@ -1660,7 +1673,22 @@
     const icon = btn.querySelector('i');
     icon.classList.toggle('fa-regular');
     icon.classList.toggle('fa-solid');
-    showToast(btn.classList.contains('active') ? '❤️ Added to Wishlist' : 'Removed from Wishlist');
+    // Heart pop animation
+    icon.classList.remove('heart-pop');
+    void icon.offsetWidth; // reflow to restart animation
+    icon.classList.add('heart-pop');
+  }
+
+  function toggleNavWishlist(btn) {
+    const icon = document.getElementById('nav-wishlist-icon');
+    const isActive = icon.classList.contains('fa-solid');
+    icon.classList.toggle('fa-regular', isActive);
+    icon.classList.toggle('fa-solid', !isActive);
+    btn.classList.toggle('nav-wishlist-active', !isActive);
+    // Heart pop animation
+    icon.classList.remove('heart-pop');
+    void icon.offsetWidth;
+    icon.classList.add('heart-pop');
   }
 
   function checkout() {

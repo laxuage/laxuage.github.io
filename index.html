@@ -1399,19 +1399,19 @@
     <div class="nav-actions">
       <!-- Profile Dropdown -->
       <div class="nav-dropdown">
-        <button class="nav-btn" onclick="toggleDropdown('profile-menu')">
+        <button class="nav-btn" id="nav-profile-btn" onclick="navProfileClick()">
           <i class="fa-regular fa-circle-user"></i>
-          <span id="nav-user-name">Login &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i></span>
+          <span id="nav-user-name">Login</span>
         </button>
         <div class="nav-dropdown-menu" id="profile-menu">
           <div class="dropdown-header" id="dropdown-profile-name">
             Hello, Guest!
             <small>Login to your account</small>
           </div>
-          <button class="dropdown-item" onclick="handleProfileClick()"><i class="fa-regular fa-user"></i> My Profile</button>
-          <button class="dropdown-item" onclick="handleProfileClick()"><i class="fa-solid fa-box"></i> My Orders</button>
-          <button class="dropdown-item" onclick="handleProfileClick()"><i class="fa-regular fa-heart"></i> Wishlist</button>
-          <button class="dropdown-item" onclick="handleProfileClick()"><i class="fa-solid fa-location-dot"></i> Saved Addresses</button>
+          <button class="dropdown-item" id="dd-profile"><i class="fa-regular fa-user"></i> My Profile</button>
+          <button class="dropdown-item" id="dd-orders"><i class="fa-solid fa-box"></i> My Orders</button>
+          <button class="dropdown-item" id="dd-wishlist"><i class="fa-regular fa-heart"></i> Wishlist</button>
+          <button class="dropdown-item" id="dd-address"><i class="fa-solid fa-location-dot"></i> Saved Addresses</button>
           <button class="dropdown-item" id="dropdown-logout" onclick="doLogout()" style="display:none;color:#e53935;"><i class="fa-solid fa-right-from-bracket" style="color:#e53935"></i> Logout</button>
         </div>
       </div>
@@ -1512,21 +1512,6 @@
         <button class="btn-primary" onclick="document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">
           <i class="fa-solid fa-sparkles"></i> &nbsp;Shop Now
         </button>
-      </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-num">500+</div>
-          <div class="stat-label">Happy Customers</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">50+</div>
-          <div class="stat-label">Bag Styles</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">100%</div>
-          <div class="stat-label">Premium Quality</div>
-        </div>
-      </div>
     </div>
 
     <!-- Carousel -->
@@ -1902,13 +1887,14 @@
 
   function updateNavProfile() {
     const nameEl = document.getElementById('nav-user-name');
+    const profileBtn = document.getElementById('nav-profile-btn');
     if (nameEl) {
       if (currentUser) {
-        nameEl.textContent = currentUser.name.split(' ')[0];
-        nameEl.parentElement.classList.add('user-logged');
+        nameEl.innerHTML = currentUser.name.split(' ')[0] + ' &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i>';
+        if (profileBtn) profileBtn.classList.add('user-logged');
       } else {
         nameEl.textContent = 'Login';
-        nameEl.parentElement.classList.remove('user-logged');
+        if (profileBtn) profileBtn.classList.remove('user-logged');
       }
     }
     const logoutBtn = document.getElementById('dropdown-logout');
@@ -2453,6 +2439,16 @@
     window.hcPrev = () => hcGoTo(cur - 1);
     timer = setInterval(() => hcGoTo(cur + 1), 3200);
   })();
+
+  function navProfileClick() {
+    if (!currentUser) {
+      // Not logged in → open login popup directly
+      openLogin();
+    } else {
+      // Logged in → show profile dropdown
+      toggleDropdown('profile-menu');
+    }
+  }
 
   function handleProfileClick() {
     if (!currentUser) { openLogin(); }

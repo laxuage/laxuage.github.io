@@ -1100,6 +1100,116 @@
     /* Logged-in nav profile badge */
     .user-logged { color: #ffe082 !important; }
 
+    /* ===== PASSWORD EYE TOGGLE ===== */
+    .pw-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .pw-wrap input {
+      width: 100%;
+      padding-right: 42px !important;
+    }
+    .pw-eye {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 15px;
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+    .pw-eye:hover { color: var(--primary); }
+
+    /* ===== OTP ROW ===== */
+    .otp-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .otp-row input { flex: 1; }
+    .send-otp-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 11px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .send-otp-btn:hover { background: var(--primary-dark); }
+    .send-otp-btn:disabled { background: #aaa; cursor: not-allowed; }
+    .verify-hint {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ===== FORGOT LINK ===== */
+    .forgot-link {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+      text-align: right;
+      width: 100%;
+      transition: opacity 0.2s;
+    }
+    .forgot-link:hover { opacity: 0.75; }
+    .back-link {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--primary); }
+    .forgot-step-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .forgot-step-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .success-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      display: none;
+    }
+    .success-box.show { display: block; }
+
     /* ===== FOOTER ===== */
     footer {
       background: #172337;
@@ -1559,11 +1669,11 @@
       <button class="login-close-btn" onclick="closeLogin()">×</button>
       <div class="brand">Laxuage</div>
       <div class="brand-sub">Made of Her • Luxury Bags</div>
-      <div class="login-title">Login or create an account to continue</div>
+      <div class="login-title" id="login-header-title">Login or create an account to continue</div>
     </div>
     <div class="login-body">
       <!-- Tabs -->
-      <div class="login-tabs">
+      <div class="login-tabs" id="login-tabs-bar">
         <button class="login-tab active" onclick="switchTab('login')">Login</button>
         <button class="login-tab" onclick="switchTab('signup')">Sign Up</button>
       </div>
@@ -1576,9 +1686,13 @@
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" id="login-pass" placeholder="Enter password">
+          <div class="pw-wrap">
+            <input type="password" id="login-pass" placeholder="Enter password">
+            <button class="pw-eye" type="button" onclick="togglePw('login-pass', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
         </div>
         <div class="login-err" id="login-err">Invalid phone/email or password.</div>
+        <button class="forgot-link" type="button" onclick="showForgotPw()">Forgot Password?</button>
         <button class="login-submit" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> &nbsp;Login</button>
         <div class="login-or">or</div>
         <button class="wa-login-btn" onclick="whatsappLogin()"><i class="fa-brands fa-whatsapp"></i> Continue via WhatsApp</button>
@@ -1588,27 +1702,111 @@
       <!-- Sign Up Form -->
       <div class="login-form" id="form-signup">
         <div class="form-group">
-          <label>Full Name</label>
+          <label>Full Name *</label>
           <input type="text" id="signup-name" placeholder="Your full name">
         </div>
+
+        <!-- Phone + OTP -->
         <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" id="signup-phone" placeholder="+91 XXXXX XXXXX">
+          <label>Phone Number *</label>
+          <div class="otp-row">
+            <input type="tel" id="signup-phone" placeholder="+91 XXXXX XXXXX">
+            <button class="send-otp-btn" type="button" id="send-phone-otp-btn" onclick="sendPhoneOTP()">Send OTP</button>
+          </div>
         </div>
+        <div class="form-group" id="phone-otp-group" style="display:none">
+          <label>Enter Phone OTP *</label>
+          <div class="otp-row">
+            <input type="text" id="signup-phone-otp" placeholder="6-digit OTP" maxlength="6" inputmode="numeric">
+            <button class="send-otp-btn" type="button" onclick="verifyPhoneOTP()">Verify</button>
+          </div>
+          <span class="verify-hint" id="phone-otp-hint"></span>
+        </div>
+
+        <!-- Email + Verify -->
         <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="signup-email" placeholder="your@email.com">
+          <label>Email <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <div class="otp-row">
+            <input type="email" id="signup-email" placeholder="your@email.com">
+            <button class="send-otp-btn" type="button" id="send-email-code-btn" onclick="sendEmailCode()">Verify</button>
+          </div>
         </div>
+        <div class="form-group" id="email-verify-group" style="display:none">
+          <label>Email Verification Code</label>
+          <div class="otp-row">
+            <input type="text" id="signup-email-code" placeholder="6-digit code" maxlength="6" inputmode="numeric">
+            <button class="send-otp-btn" type="button" onclick="verifyEmailCode()">Confirm</button>
+          </div>
+          <span class="verify-hint" id="email-code-hint"></span>
+        </div>
+
+        <!-- Password -->
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="signup-pass" placeholder="Create a password">
+          <label>Password *</label>
+          <div class="pw-wrap">
+            <input type="password" id="signup-pass" placeholder="Create a password (min 6 chars)">
+            <button class="pw-eye" type="button" onclick="togglePw('signup-pass', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
         </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <div class="pw-wrap">
+            <input type="password" id="signup-pass-confirm" placeholder="Re-enter your password">
+            <button class="pw-eye" type="button" onclick="togglePw('signup-pass-confirm', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+
         <div class="login-err" id="signup-err">Please fill all fields correctly.</div>
         <button class="login-submit" onclick="doSignup()"><i class="fa-solid fa-user-plus"></i> &nbsp;Create Account</button>
         <div class="login-or">or</div>
         <button class="wa-login-btn" onclick="whatsappLogin()"><i class="fa-brands fa-whatsapp"></i> Continue via WhatsApp</button>
         <div class="login-note">By continuing, you agree to Laxuage's Terms of Use and Privacy Policy.</div>
       </div>
+
+      <!-- Forgot Password View -->
+      <div id="form-forgot" style="display:none; flex-direction:column; gap:14px;">
+        <!-- Step 1 -->
+        <div id="forgot-step1">
+          <div class="forgot-step-title">Reset Your Password</div>
+          <div class="forgot-step-sub">Enter your registered phone or email. We'll send you a reset code.</div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Phone / Email</label>
+            <input type="text" id="forgot-identifier" placeholder="Enter phone or email">
+          </div>
+          <div class="login-err" id="forgot-err"></div>
+          <button class="login-submit" onclick="sendForgotCode()"><i class="fa-solid fa-paper-plane"></i> &nbsp;Send Reset Code</button>
+        </div>
+        <!-- Step 2 -->
+        <div id="forgot-step2" style="display:none; flex-direction:column; gap:14px;">
+          <div class="forgot-step-title">Enter Reset Code</div>
+          <div class="forgot-step-sub" id="forgot-sent-to">A 6-digit code has been sent.</div>
+          <div class="form-group">
+            <label>Reset Code</label>
+            <input type="text" id="forgot-code" placeholder="6-digit code" maxlength="6" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="forgot-new-pass" placeholder="New password">
+              <button class="pw-eye" type="button" onclick="togglePw('forgot-new-pass', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="forgot-confirm-pass" placeholder="Re-enter new password">
+              <button class="pw-eye" type="button" onclick="togglePw('forgot-confirm-pass', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="login-err" id="forgot-err2"></div>
+          <div class="success-box" id="forgot-success">✅ Password reset successful! Now you can login.</div>
+          <button class="login-submit" id="reset-pw-btn" onclick="doResetPassword()"><i class="fa-solid fa-key"></i> &nbsp;Reset Password</button>
+        </div>
+        <button class="back-link" type="button" onclick="showLoginView()"><i class="fa-solid fa-arrow-left"></i> Back to Login</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1685,7 +1883,11 @@
 <script>
   // ===== LOGIN SYSTEM =====
   let currentUser = null;
-  let pendingAction = null; // store what to do after login
+  let pendingAction = null;
+
+  // OTP state (in-memory demo simulation)
+  let _phoneOTP = null, _emailCode = null, _forgotCode = null;
+  let _phoneVerified = false, _emailVerified = false;
 
   function loadUser() {
     try {
@@ -1710,7 +1912,6 @@
         nameEl.parentElement.classList.remove('user-logged');
       }
     }
-    // Update profile dropdown items
     const logoutBtn = document.getElementById('dropdown-logout');
     if (logoutBtn) logoutBtn.style.display = currentUser ? 'flex' : 'none';
     const profileName = document.getElementById('dropdown-profile-name');
@@ -1724,10 +1925,7 @@
   }
 
   function requireLogin(action) {
-    if (currentUser) {
-      action();
-      return;
-    }
+    if (currentUser) { action(); return; }
     pendingAction = action;
     openLogin();
   }
@@ -1736,6 +1934,7 @@
     document.getElementById('login-overlay').classList.add('open');
     document.getElementById('login-err').classList.remove('show');
     document.getElementById('signup-err').classList.remove('show');
+    showLoginView();
   }
 
   function closeLogin() {
@@ -1751,20 +1950,167 @@
     document.querySelectorAll('.login-tab').forEach((t,i) => t.classList.toggle('active', (i===0) === (tab==='login')));
     document.getElementById('form-login').classList.toggle('active', tab === 'login');
     document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('form-forgot').style.display = 'none';
   }
 
+  // ===== PASSWORD EYE TOGGLE =====
+  function togglePw(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+
+  // ===== PHONE OTP =====
+  function sendPhoneOTP() {
+    const phone = document.getElementById('signup-phone').value.trim();
+    if (!phone || phone.replace(/\D/g,'').length < 10) {
+      showToast('⚠️ Valid phone number enter cheyyuka'); return;
+    }
+    _phoneOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    _phoneVerified = false;
+    const grp = document.getElementById('phone-otp-group');
+    grp.style.display = 'flex';
+    grp.style.flexDirection = 'column';
+    document.getElementById('signup-phone-otp').value = '';
+    document.getElementById('phone-otp-hint').textContent = '';
+    document.getElementById('send-phone-otp-btn').textContent = 'Resend';
+    showToast(`📱 OTP: ${_phoneOTP}  (Demo – real app-il SMS varum)`);
+  }
+
+  function verifyPhoneOTP() {
+    const entered = document.getElementById('signup-phone-otp').value.trim();
+    const hint = document.getElementById('phone-otp-hint');
+    if (entered === _phoneOTP) {
+      _phoneVerified = true;
+      hint.textContent = '✓ Phone verified';
+      hint.style.color = '#16a34a';
+      showToast('✅ Phone verified!');
+    } else {
+      _phoneVerified = false;
+      hint.textContent = '✗ Wrong OTP. Try again.';
+      hint.style.color = '#dc2626';
+    }
+  }
+
+  // ===== EMAIL VERIFICATION =====
+  function sendEmailCode() {
+    const email = document.getElementById('signup-email').value.trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      showToast('⚠️ Valid email enter cheyyuka'); return;
+    }
+    _emailCode = Math.floor(100000 + Math.random() * 900000).toString();
+    _emailVerified = false;
+    const grp = document.getElementById('email-verify-group');
+    grp.style.display = 'flex';
+    grp.style.flexDirection = 'column';
+    document.getElementById('signup-email-code').value = '';
+    document.getElementById('email-code-hint').textContent = '';
+    document.getElementById('send-email-code-btn').textContent = 'Resend';
+    showToast(`📧 Email code: ${_emailCode}  (Demo – real app-il mail varum)`);
+  }
+
+  function verifyEmailCode() {
+    const entered = document.getElementById('signup-email-code').value.trim();
+    const hint = document.getElementById('email-code-hint');
+    if (entered === _emailCode) {
+      _emailVerified = true;
+      hint.textContent = '✓ Email verified';
+      hint.style.color = '#16a34a';
+      showToast('✅ Email verified!');
+    } else {
+      _emailVerified = false;
+      hint.textContent = '✗ Wrong code. Try again.';
+      hint.style.color = '#dc2626';
+    }
+  }
+
+  // ===== FORGOT PASSWORD =====
+  function showForgotPw() {
+    document.getElementById('login-tabs-bar').style.display = 'none';
+    document.getElementById('form-login').classList.remove('active');
+    document.getElementById('form-signup').classList.remove('active');
+    const forgotEl = document.getElementById('form-forgot');
+    forgotEl.style.display = 'flex';
+    forgotEl.style.flexDirection = 'column';
+    document.getElementById('login-header-title').textContent = 'Reset your password';
+    document.getElementById('forgot-step1').style.display = 'block';
+    document.getElementById('forgot-step2').style.display = 'none';
+    document.getElementById('forgot-err').classList.remove('show');
+    document.getElementById('forgot-identifier').value = '';
+  }
+
+  function showLoginView() {
+    document.getElementById('login-tabs-bar').style.display = 'flex';
+    document.getElementById('form-forgot').style.display = 'none';
+    document.getElementById('form-login').classList.add('active');
+    document.getElementById('form-signup').classList.remove('active');
+    document.querySelectorAll('.login-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+    document.getElementById('login-header-title').textContent = 'Login or create an account to continue';
+  }
+
+  function sendForgotCode() {
+    const id = document.getElementById('forgot-identifier').value.trim();
+    const errEl = document.getElementById('forgot-err');
+    if (!id) { errEl.textContent = 'Email or phone enter cheyyuka.'; errEl.classList.add('show'); return; }
+    let accounts = [];
+    try { accounts = JSON.parse(localStorage.getItem('laxuage_accounts') || '[]'); } catch(e) {}
+    const found = accounts.find(a => a.email === id || a.phone === id);
+    if (!found) { errEl.textContent = 'ഈ email / phone-ൽ account ഇല്ല.'; errEl.classList.add('show'); return; }
+    errEl.classList.remove('show');
+    _forgotCode = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('forgot-sent-to').textContent = `Reset code sent to: ${id}`;
+    document.getElementById('forgot-step1').style.display = 'none';
+    const step2 = document.getElementById('forgot-step2');
+    step2.style.display = 'flex';
+    step2.style.flexDirection = 'column';
+    document.getElementById('forgot-success').classList.remove('show');
+    document.getElementById('forgot-err2').classList.remove('show');
+    document.getElementById('forgot-code').value = '';
+    document.getElementById('forgot-new-pass').value = '';
+    document.getElementById('forgot-confirm-pass').value = '';
+    showToast(`🔑 Reset code: ${_forgotCode}  (Demo)`);
+  }
+
+  function doResetPassword() {
+    const code = document.getElementById('forgot-code').value.trim();
+    const newPass = document.getElementById('forgot-new-pass').value.trim();
+    const confirmPass = document.getElementById('forgot-confirm-pass').value.trim();
+    const errEl = document.getElementById('forgot-err2');
+    if (code !== _forgotCode) { errEl.textContent = 'Invalid reset code.'; errEl.classList.add('show'); return; }
+    if (!newPass || newPass.length < 6) { errEl.textContent = 'Password minimum 6 characters വേണം.'; errEl.classList.add('show'); return; }
+    if (newPass !== confirmPass) { errEl.textContent = 'Passwords match ആകുന്നില്ല.'; errEl.classList.add('show'); return; }
+    errEl.classList.remove('show');
+    const id = document.getElementById('forgot-identifier').value.trim();
+    let accounts = [];
+    try { accounts = JSON.parse(localStorage.getItem('laxuage_accounts') || '[]'); } catch(e) {}
+    const idx = accounts.findIndex(a => a.email === id || a.phone === id);
+    if (idx >= 0) {
+      accounts[idx].password = newPass;
+      try { localStorage.setItem('laxuage_accounts', JSON.stringify(accounts)); } catch(e) {}
+    }
+    document.getElementById('forgot-success').classList.add('show');
+    document.getElementById('reset-pw-btn').style.display = 'none';
+    _forgotCode = null;
+    showToast('✅ Password reset successful!');
+    setTimeout(() => { document.getElementById('reset-pw-btn').style.display = 'block'; showLoginView(); }, 2500);
+  }
+
+  // ===== LOGIN =====
   function doLogin() {
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value.trim();
     const errEl = document.getElementById('login-err');
-    if (!user || !pass) { errEl.classList.add('show'); return; }
-
-    // Check saved accounts
+    if (!user || !pass) { errEl.textContent = 'Phone/email, password enter cheyyuka.'; errEl.classList.add('show'); return; }
     let accounts = [];
     try { accounts = JSON.parse(localStorage.getItem('laxuage_accounts') || '[]'); } catch(e) {}
     const found = accounts.find(a => (a.email === user || a.phone === user) && a.password === pass);
     if (!found) { errEl.textContent = 'Invalid phone/email or password.'; errEl.classList.add('show'); return; }
-
     errEl.classList.remove('show');
     saveUser(found);
     updateNavProfile();
@@ -1773,23 +2119,31 @@
     if (pendingAction) { pendingAction(); pendingAction = null; }
   }
 
+  // ===== SIGNUP =====
   function doSignup() {
     const name  = document.getElementById('signup-name').value.trim();
     const phone = document.getElementById('signup-phone').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const pass  = document.getElementById('signup-pass').value.trim();
+    const confirmPass = document.getElementById('signup-pass-confirm').value.trim();
     const errEl = document.getElementById('signup-err');
-    if (!name || !phone || !pass) { errEl.textContent = 'Please fill all required fields.'; errEl.classList.add('show'); return; }
+
+    if (!name || !phone || !pass) { errEl.textContent = 'Name, phone, password required.'; errEl.classList.add('show'); return; }
+    if (!_phoneVerified) { errEl.textContent = 'Phone number OTP verify cheyyuka.'; errEl.classList.add('show'); return; }
+    if (email && !_emailVerified) { errEl.textContent = 'Email verify cheyyuka (or email field clear cheyyuka).'; errEl.classList.add('show'); return; }
+    if (pass.length < 6) { errEl.textContent = 'Password minimum 6 characters.'; errEl.classList.add('show'); return; }
+    if (pass !== confirmPass) { errEl.textContent = 'Passwords match ആകുന്നില്ല.'; errEl.classList.add('show'); return; }
 
     let accounts = [];
     try { accounts = JSON.parse(localStorage.getItem('laxuage_accounts') || '[]'); } catch(e) {}
     const exists = accounts.find(a => a.phone === phone || (email && a.email === email));
-    if (exists) { errEl.textContent = 'Account already exists with this phone/email.'; errEl.classList.add('show'); return; }
+    if (exists) { errEl.textContent = 'ഈ phone/email-ൽ account already ഉണ്ട്.'; errEl.classList.add('show'); return; }
 
     const newUser = { name, phone, email, password: pass };
     accounts.push(newUser);
     try { localStorage.setItem('laxuage_accounts', JSON.stringify(accounts)); } catch(e) {}
 
+    _phoneOTP = null; _emailCode = null; _phoneVerified = false; _emailVerified = false;
     errEl.classList.remove('show');
     saveUser(newUser);
     updateNavProfile();
@@ -2102,7 +2456,7 @@
   })();
 
   function handleProfileClick() {
-    if (!currentUser) { toggleDropdown('profile-menu'); openLogin(); }
+    if (!currentUser) { openLogin(); }
   }
 
   // ===== FIX URL # =====

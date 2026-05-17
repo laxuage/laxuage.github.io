@@ -439,40 +439,62 @@
     }
     .stat-label { font-size: 12px; color: #708090; margin-top: 2px; }
 
-    /* ===== HERO CAROUSEL ===== */
-    .hero-carousel-wrap { animation: heroFadeLeft 0.8s ease 0.5s both; flex-shrink: 0; }
-    .hero-carousel-frame {
-      position: relative; width: 240px; height: 300px;
-      border-radius: 16px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.55);
-      background: #111; margin: 0 auto;
+    /* ===== HERO CAROUSEL — 3 CARDS ===== */
+    .hero-carousel-wrap {
+      animation: heroFadeLeft 0.8s ease 0.5s both;
+      flex-shrink: 0;
+      width: 560px;
     }
-    .hc-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
-    .hc-slide.active { opacity: 1; }
-    .hc-slide img { width: 100%; height: 100%; object-fit: cover; display: block; animation: zoomSlide 7s ease-in-out infinite; }
+    .hc-track-outer {
+      overflow: hidden;
+      border-radius: 14px;
+      position: relative;
+    }
+    .hc-track {
+      display: flex;
+      gap: 12px;
+      transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+      will-change: transform;
+    }
+    .hc-card {
+      flex: 0 0 176px;
+      height: 260px;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      background: #111;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .hc-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(0,0,0,0.65); }
+    .hc-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s ease; }
+    .hc-card:hover img { transform: scale(1.07); }
     .hc-overlay {
       position: absolute; bottom: 0; left: 0; right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.88));
-      padding: 28px 14px 14px;
+      padding: 32px 12px 12px;
     }
-    .hc-name  { font-family: 'Playfair Display', serif; font-size: 13px; color: white; font-weight: 700; display: block; }
-    .hc-price { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 3px; display: block; }
+    .hc-name  { font-family: 'Playfair Display', serif; font-size: 12px; color: white; font-weight: 700; display: block; line-height: 1.3; }
+    .hc-price { font-size: 12px; color: var(--gold); font-weight: 700; margin-top: 4px; display: block; }
     .hc-badge { position: absolute; top: 10px; left: 10px; color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.5px; }
     .hc-b-new { background: #15803d; }
     .hc-b-hot { background: #dc2626; }
-    .hc-counter { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 10px; }
-    .hc-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .hc-b-exc { background: #b8860b; }
+    .hc-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 0 4px; }
+    .hc-dots { display: flex; gap: 6px; }
     .hc-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; transition: all 0.3s; border: none; padding: 0; }
-    .hc-dot.active { background: var(--gold); width: 18px; border-radius: 3px; }
-    .hc-arrows { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+    .hc-dot.active { background: var(--gold); width: 20px; border-radius: 3px; }
+    .hc-arrows { display: flex; gap: 8px; }
     .hc-arr {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
-      color: white; cursor: pointer; font-size: 14px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+      color: white; cursor: pointer; font-size: 15px;
       display: flex; align-items: center; justify-content: center; transition: all 0.2s;
     }
-    .hc-arr:hover { background: rgba(22,163,74,0.4); border-color: #16a34a; }
+    .hc-arr:hover { background: rgba(245,166,35,0.3); border-color: var(--gold); color: var(--gold); }
+    .hc-arr:disabled { opacity: 0.3; cursor: not-allowed; }
 
     /* ===== PROMO STRIP ===== */
     .promo-strip {
@@ -1327,6 +1349,8 @@
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .hero-inner { flex-direction: column; text-align: center; }
+      .hero-carousel-wrap { width: 100%; }
+      .hc-track-outer { border-radius: 10px; }
       .hero-stats { justify-content: center; }
       .hero-btns { justify-content: center; }
       .product-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1512,40 +1536,30 @@
         <button class="btn-primary" onclick="document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">
           <i class="fa-solid fa-sparkles"></i> &nbsp;Shop Now
         </button>
+      </div>
     </div>
 
-    <!-- Carousel -->
+    <!-- 3-Card Carousel -->
     <div class="hero-carousel-wrap">
-      <div class="hero-carousel-frame">
-        <div class="hc-slide active">
-          <img src="bag1.jpg" alt="Ivory Chain Shoulder Bag">
-          <span class="hc-badge hc-b-new">NEW</span>
-          <div class="hc-overlay">
-            <span class="hc-name">Ivory Chain Shoulder Bag</span>
-            <span class="hc-price">₹1,599</span>
-          </div>
+      <div class="hc-track-outer">
+        <div class="hc-track" id="hc-track">
+          <div class="hc-card"><img src="bag1.jpg" alt="Ivory Chain Shoulder Bag"><span class="hc-badge hc-b-new">NEW</span><div class="hc-overlay"><span class="hc-name">Ivory Chain Shoulder Bag</span><span class="hc-price">₹1,599</span></div></div>
+          <div class="hc-card"><img src="bag2.jpg" alt="Quilted White Crossbody"><span class="hc-badge hc-b-hot">HOT</span><div class="hc-overlay"><span class="hc-name">Quilted White Crossbody</span><span class="hc-price">₹1,497</span></div></div>
+          <div class="hc-card"><img src="bag3.jpg" alt="Beige Monogram Satchel"><div class="hc-overlay"><span class="hc-name">Beige Monogram Satchel</span><span class="hc-price">₹1,497</span></div></div>
+          <div class="hc-card"><img src="bag4.jpg" alt="Black Pleated Tote Bag"><span class="hc-badge hc-b-exc">EXCLUSIVE</span><div class="hc-overlay"><span class="hc-name">Black Pleated Tote Bag</span><span class="hc-price">₹1,397</span></div></div>
+          <div class="hc-card"><img src="bag5.jpg" alt="Cream Star Chain Bag"><span class="hc-badge hc-b-new">NEW</span><div class="hc-overlay"><span class="hc-name">Cream Star Chain Bag</span><span class="hc-price">₹1,597</span></div></div>
+          <div class="hc-card"><img src="bag6.jpg" alt="White Quilted Mini Bag"><span class="hc-badge hc-b-hot">HOT</span><div class="hc-overlay"><span class="hc-name">White Quilted Mini Bag</span><span class="hc-price">₹1,899</span></div></div>
+          <div class="hc-card"><img src="bag7.jpg" alt="Dual Tone Beige Set"><div class="hc-overlay"><span class="hc-name">Dual Tone Beige Set</span><span class="hc-price">₹1,497</span></div></div>
+          <div class="hc-card"><img src="bag8.jpg" alt="Brown Leather Crossbody"><span class="hc-badge hc-b-exc">EXCLUSIVE</span><div class="hc-overlay"><span class="hc-name">Brown Leather Crossbody</span><span class="hc-price">₹1,599</span></div></div>
+          <div class="hc-card"><img src="bag9.jpg" alt="Pearl & Gold Clutch Set"><span class="hc-badge hc-b-new">NEW</span><div class="hc-overlay"><span class="hc-name">Pearl & Gold Clutch Set</span><span class="hc-price">₹1,597</span></div></div>
         </div>
-        <div class="hc-slide">
-          <img src="bag2.jpg" alt="Quilted White Crossbody">
-          <span class="hc-badge hc-b-hot">HOT</span>
-          <div class="hc-overlay">
-            <span class="hc-name">Quilted White Crossbody</span>
-            <span class="hc-price">₹1,497</span>
-          </div>
-        </div>
-        <div class="hc-slide">
-          <img src="bag3.jpg" alt="Beige Monogram Satchel">
-          <div class="hc-overlay">
-            <span class="hc-name">Beige Monogram Satchel</span>
-            <span class="hc-price">₹1,497</span>
-          </div>
-        </div>
-        <div class="hc-counter" id="hc-counter">1 / 3</div>
       </div>
-      <div class="hc-dots" id="hc-dots"></div>
-      <div class="hc-arrows">
-        <button class="hc-arr" onclick="hcPrev()" aria-label="Previous">&#8592;</button>
-        <button class="hc-arr" onclick="hcNext()" aria-label="Next">&#8594;</button>
+      <div class="hc-bottom">
+        <div class="hc-dots" id="hc-dots"></div>
+        <div class="hc-arrows">
+          <button class="hc-arr" id="hc-prev" onclick="hcPrev()">&#8592;</button>
+          <button class="hc-arr" id="hc-next" onclick="hcNext()">&#8594;</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2412,32 +2426,49 @@
     setTimeout(() => t.remove(), 2800);
   }
 
-  // Hero Carousel
+  // Hero 3-Card Carousel
   (function() {
-    const slides = document.querySelectorAll('.hc-slide');
+    const track    = document.getElementById('hc-track');
     const dotsWrap = document.getElementById('hc-dots');
-    const counter = document.getElementById('hc-counter');
-    const total = slides.length;
-    let cur = 0, timer;
-    slides.forEach((_, i) => {
+    const cards    = track ? track.querySelectorAll('.hc-card') : [];
+    const VISIBLE  = 3;
+    const CARD_W   = 176;
+    const GAP      = 12;
+    const STEP     = CARD_W + GAP;
+    const total    = cards.length;
+    const maxIdx   = total - VISIBLE;
+    let cur = 0, autoTimer;
+
+    // Build dots (one per position)
+    for (let i = 0; i <= maxIdx; i++) {
       const d = document.createElement('button');
       d.className = 'hc-dot' + (i === 0 ? ' active' : '');
       d.onclick = () => hcGoTo(i);
       dotsWrap.appendChild(d);
-    });
+    }
+
+    function updateButtons() {
+      const prev = document.getElementById('hc-prev');
+      const next = document.getElementById('hc-next');
+      if (prev) prev.disabled = cur === 0;
+      if (next) next.disabled = cur >= maxIdx;
+    }
+
     window.hcGoTo = function(n) {
-      slides[cur].classList.remove('active');
-      dotsWrap.children[cur].classList.remove('active');
-      cur = (n + total) % total;
-      slides[cur].classList.add('active');
-      dotsWrap.children[cur].classList.add('active');
-      counter.textContent = (cur + 1) + ' / ' + total;
-      clearInterval(timer);
-      timer = setInterval(() => hcGoTo(cur + 1), 3200);
+      dotsWrap.children[cur] && dotsWrap.children[cur].classList.remove('active');
+      cur = Math.max(0, Math.min(n, maxIdx));
+      track.style.transform = `translateX(-${cur * STEP}px)`;
+      dotsWrap.children[cur] && dotsWrap.children[cur].classList.add('active');
+      updateButtons();
+      clearInterval(autoTimer);
+      autoTimer = setInterval(() => hcGoTo(cur >= maxIdx ? 0 : cur + 1), 3500);
     };
+
     window.hcNext = () => hcGoTo(cur + 1);
     window.hcPrev = () => hcGoTo(cur - 1);
-    timer = setInterval(() => hcGoTo(cur + 1), 3200);
+
+    updateButtons();
+    autoTimer = setInterval(() => hcGoTo(cur >= maxIdx ? 0 : cur + 1), 3500);
   })();
 
   function navProfileClick() {

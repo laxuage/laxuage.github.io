@@ -1552,7 +1552,7 @@
     else if (currentSort === 'high')   list.sort((a,b) => b.price - a.price);
     else if (currentSort === 'rating') list.sort((a,b) => b.rating - a.rating);
     else if (currentSort === 'newest') list.sort((a,b) => b.id - a.id);
-    else list.sort((a,b) => b.reviews - a.reviews); // popular
+    else list.sort((a,b) => b.reviews - a.reviews);
     renderProducts(list);
   }
 
@@ -1568,7 +1568,24 @@
     { id:9, name:"Pearl & Gold Clutch Set", price:1597, img:"bag9.jpg", description:"Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.", category:"clutch", badge:"new", rating:4.9, reviews:77 }
   ];
 
+  // ===== LOCALSTORAGE SAVE / LOAD =====
+  function saveData() {
+    try {
+      localStorage.setItem('laxuage_cart', JSON.stringify(cart));
+      localStorage.setItem('laxuage_wishlist', JSON.stringify([...wishlist]));
+    } catch(e) {}
+  }
+  function loadData() {
+    try {
+      const c = localStorage.getItem('laxuage_cart');
+      if (c) cart = JSON.parse(c);
+      const w = localStorage.getItem('laxuage_wishlist');
+      if (w) wishlist = new Set(JSON.parse(w));
+    } catch(e) {}
+  }
+
   let cart = [];
+  let wishlist = new Set(); // stores product ids that are wishlisted
   let currentCat = 'all';
 
   function renderProducts(list) {
@@ -1579,16 +1596,18 @@
       return;
     }
     list.forEach(p => {
-      const stars = renderStars(p.rating);
       const badgeHtml = p.badge ? `<span class="badge badge-${p.badge}">${p.badge.toUpperCase()}</span>` : '';
       const priceHtml = p.price ? `<span class="price-main">₹${p.price.toLocaleString()}</span>` : `<span class="price-request">Price on Request</span>`;
+      const isWishlisted = wishlist.has(p.id);
       const card = document.createElement('div');
       card.className = 'product-card';
       card.innerHTML = `
         <div class="product-img-wrap" onclick="openModal(${p.id})">
           <img src="${p.img}" alt="${p.name}" loading="lazy">
           ${badgeHtml}
-          <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist(this)"><i class="fa-regular fa-heart"></i></button>
+          <button class="wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist(this, ${p.id})">
+            <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+          </button>
         </div>
         <div class="product-info">
           <div class="product-category">${p.category}</div>
@@ -1626,12 +1645,14 @@
     const ex = cart.find(x => x.id === id);
     if (ex) ex.qty++;
     else cart.push({...p, qty:1});
+    saveData();
     updateCartUI();
     showToast(`${p.name} added to cart`);
   }
 
   function removeFromCart(id) {
     cart = cart.filter(x => x.id !== id);
+    saveData();
     updateCartUI();
     renderCartItems();
   }
@@ -1641,7 +1662,7 @@
     if (!item) return;
     item.qty += delta;
     if (item.qty <= 0) removeFromCart(id);
-    else { updateCartUI(); renderCartItems(); }
+    else { saveData(); updateCartUI(); renderCartItems(); }
   }
 
   function updateCartUI() {
@@ -1709,15 +1730,21 @@
     document.getElementById('modal-overlay').classList.remove('open');
   }
 
-  function toggleWishlist(btn) {
-    btn.classList.toggle('active');
+  function toggleWishlist(btn, productId) {
     const icon = btn.querySelector('i');
-    icon.classList.toggle('fa-regular');
-    icon.classList.toggle('fa-solid');
-    // Heart pop animation
+    if (wishlist.has(productId)) {
+      wishlist.delete(productId);
+      btn.classList.remove('active');
+      icon.classList.replace('fa-solid', 'fa-regular');
+    } else {
+      wishlist.add(productId);
+      btn.classList.add('active');
+      icon.classList.replace('fa-regular', 'fa-solid');
+    }
     icon.classList.remove('heart-pop');
-    void icon.offsetWidth; // reflow to restart animation
+    void icon.offsetWidth;
     icon.classList.add('heart-pop');
+    saveData();
   }
 
   function toggleNavWishlist(btn) {
@@ -1726,7 +1753,6 @@
     icon.classList.toggle('fa-regular', isActive);
     icon.classList.toggle('fa-solid', !isActive);
     btn.classList.toggle('nav-wishlist-active', !isActive);
-    // Heart pop animation
     icon.classList.remove('heart-pop');
     void icon.offsetWidth;
     icon.classList.add('heart-pop');
@@ -1737,6 +1763,7 @@
     const msg = cart.map(i => `• ${i.name} (x${i.qty})`).join('\n');
     alert(`🎉 Order Placed!\n\n${msg}\n\nThank you for shopping at Laxuage!\nWe'll contact you shortly.`);
     cart = [];
+    saveData();
     updateCartUI();
     closeCart();
   }
@@ -1778,7 +1805,21 @@
     timer = setInterval(() => hcGoTo(cur + 1), 3200);
   })();
 
-  window.onload = () => applyFiltersAndSort();
+  // ===== FIX URL # =====
+  // Remove # from URL without page reload
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  window.onload = () => {
+    loadData();
+    updateCartUI();
+    applyFiltersAndSort();
+    // Clean URL on load
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  };
 </script>
 </body>
 </html>

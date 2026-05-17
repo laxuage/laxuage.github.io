@@ -180,6 +180,12 @@
       transition: background 0.15s;
       border-bottom: 1px solid #f5f5f5;
       text-decoration: none;
+      background: none;
+      border: none;
+      border-bottom: 1px solid #f5f5f5;
+      width: 100%;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
     }
     .dropdown-item:last-child { border-bottom: none; }
     .dropdown-item:hover { background: #f1f3f6; color: var(--primary); }
@@ -1025,6 +1031,35 @@
       transition: all 0.2s;
     }
     .social-links a:hover { background: var(--primary); color: white; }
+    .social-btn {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #a0aec0;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: inherit;
+    }
+    .social-btn:hover { background: var(--primary); color: white; }
+    .footer-link {
+      background: none;
+      border: none;
+      color: #708090;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+      text-align: left;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .footer-link:hover { color: white; }
     .footer-col h4 { color: white; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
     .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
     .footer-col ul li a { color: #708090; text-decoration: none; font-size: 13px; transition: color 0.2s; }
@@ -1164,11 +1199,11 @@
             Hello, Surru!
             <small>surru@email.com</small>
           </div>
-          <a class="dropdown-item" href="#"><i class="fa-regular fa-user"></i> My Profile</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-box"></i> My Orders</a>
-          <a class="dropdown-item" href="#"><i class="fa-regular fa-heart"></i> Wishlist</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot"></i> Saved Addresses</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+          <button class="dropdown-item"><i class="fa-regular fa-user"></i> My Profile</button>
+          <button class="dropdown-item"><i class="fa-solid fa-box"></i> My Orders</button>
+          <button class="dropdown-item"><i class="fa-regular fa-heart"></i> Wishlist</button>
+          <button class="dropdown-item"><i class="fa-solid fa-location-dot"></i> Saved Addresses</button>
+          <button class="dropdown-item"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
         </div>
       </div>
 
@@ -1180,11 +1215,11 @@
         </button>
         <div class="nav-dropdown-menu" id="more-menu">
           <div class="dropdown-header">More Options</div>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-store"></i> Become a Seller</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-bell"></i> Notification Settings</a>
-          <a class="dropdown-item" href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-bullhorn"></i> Advertise on Laxuage</a>
-          <a class="dropdown-item" href="#"><i class="fa-solid fa-download"></i> Download App</a>
+          <button class="dropdown-item"><i class="fa-solid fa-store"></i> Become a Seller</button>
+          <button class="dropdown-item"><i class="fa-solid fa-bell"></i> Notification Settings</button>
+          <button class="dropdown-item" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-solid fa-headset"></i> 24/7 Customer Care</button>
+          <button class="dropdown-item"><i class="fa-solid fa-bullhorn"></i> Advertise on Laxuage</button>
+          <button class="dropdown-item"><i class="fa-solid fa-download"></i> Download App</button>
         </div>
       </div>
 
@@ -1377,34 +1412,34 @@
       <span class="logo-text heading">Laxuage</span>
       <p>Premium luxury bags crafted for the modern woman. Made with love, designed for elegance.</p>
       <div class="social-links">
-        <a href="javascript:void(0)" onclick="window.open('https://instagram.com/laxuage','_blank')"><i class="fa-brands fa-instagram"></i></a>
-        <a href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp"></i></a>
+        <button class="social-btn" onclick="window.open('https://instagram.com/laxuage','_blank')"><i class="fa-brands fa-instagram"></i></button>
+        <button class="social-btn" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp"></i></button>
       </div>
     </div>
     <div class="footer-col">
       <h4>Quick Links</h4>
       <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Collections</a></li>
-        <li><a href="#">New Arrivals</a></li>
-        <li><a href="#">Sale</a></li>
+        <li><button class="footer-link">Home</button></li>
+        <li><button class="footer-link">Collections</button></li>
+        <li><button class="footer-link">New Arrivals</button></li>
+        <li><button class="footer-link">Sale</button></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Customer Care</h4>
       <ul>
-        <li><a href="#">Track Order</a></li>
-        <li><a href="#">Return Policy</a></li>
-        <li><a href="#">Size Guide</a></li>
-        <li><a href="#">FAQ</a></li>
+        <li><button class="footer-link">Track Order</button></li>
+        <li><button class="footer-link">Return Policy</button></li>
+        <li><button class="footer-link">Size Guide</button></li>
+        <li><button class="footer-link">FAQ</button></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Contact Us</h4>
       <ul>
-        <li><a href="#"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>laxuage@gmail.com</a></li>
-        <li><a href="javascript:void(0)" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 98469 23350</a></li>
-        <li><a href="#"><i class="fa-solid fa-location-dot" style="margin-right:6px"></i>Kerala, India</a></li>
+        <li><button class="footer-link"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>laxuage@gmail.com</button></li>
+        <li><button class="footer-link" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i>+91 98469 23350</button></li>
+        <li><button class="footer-link"><i class="fa-solid fa-location-dot" style="margin-right:6px"></i>Kerala, India</button></li>
       </ul>
     </div>
   </div>

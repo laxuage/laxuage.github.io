@@ -1650,6 +1650,910 @@
       .modal-actions { flex-direction: column; }
     }
 
+    /* ===================================================================== */
+    /* ============= NEW FEATURES — CHECKOUT, WISHLIST, ORDERS ============= */
+    /* ===================================================================== */
+
+    /* ============= WISHLIST SIDEBAR ============= */
+    .ws-sidebar {
+      position: fixed;
+      top: 0;
+      right: -440px;
+      width: 440px;
+      max-width: 96vw;
+      height: 100%;
+      background: var(--paper);
+      z-index: 151;
+      transition: right 0.35s cubic-bezier(0.16,1,0.3,1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 28px rgba(26,26,26,0.18);
+    }
+    .ws-sidebar.open { right: 0; }
+    .ws-head {
+      background: var(--primary);
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .ws-head h3 {
+      color: var(--paper);
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ws-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
+
+    .wishlist-item {
+      display: grid;
+      grid-template-columns: 76px 1fr auto;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .wishlist-item:last-child { border-bottom: none; }
+    .wishlist-item img { width: 76px; height: 94px; object-fit: cover; border-radius: var(--radius-sm); background: var(--cream-warm); }
+    .wi-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .wi-name { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+    .wi-price { font-size: 14px; color: var(--primary); font-weight: 800; }
+    .wi-actions { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+    .wi-move-btn {
+      background: var(--primary);
+      color: var(--paper);
+      border: none;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .wi-move-btn:hover { background: var(--primary-dark); }
+    .wi-remove-btn {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .wi-remove-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* ============= COUPON IN CART ============= */
+    .coupon-section {
+      background: var(--paper);
+      border: 1px dashed var(--gold);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .coupon-row { display: flex; gap: 8px; }
+    .coupon-row input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-family: var(--sans);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      outline: none;
+    }
+    .coupon-row input:focus { border-color: var(--primary); }
+    .coupon-apply {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.2s;
+    }
+    .coupon-apply:hover { background: var(--primary); }
+    .coupon-result {
+      font-size: 12px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .coupon-result.success { color: var(--success); }
+    .coupon-result.error { color: var(--danger); }
+    .coupon-hints {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .coupon-hints code {
+      background: var(--cream-warm);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      margin-right: 4px;
+      display: inline-block;
+    }
+    .coupon-hints code:hover { background: var(--primary-soft); }
+    .summary-row.discount span:last-child { color: var(--success); font-weight: 700; }
+
+    /* ============= CHECKOUT OVERLAY ============= */
+    .checkout-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,26,0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 260;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .checkout-overlay.open { display: flex; }
+    .checkout-box {
+      background: var(--paper);
+      border-radius: var(--radius);
+      max-width: 720px;
+      width: 100%;
+      max-height: 94vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .ck-header {
+      background: var(--primary);
+      color: var(--paper);
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .ck-header h3 { font-size: 17px; font-weight: 700; }
+    .ck-close {
+      background: rgba(255,255,255,0.18);
+      border: none;
+      color: var(--paper);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ck-close:hover { background: rgba(255,255,255,0.32); }
+
+    .ck-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 24px 8px;
+      gap: 8px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .ck-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+    .ck-step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+    .ck-step.active .ck-step-num { background: var(--primary); color: var(--paper); }
+    .ck-step.done .ck-step-num { background: var(--success); color: var(--paper); }
+    .ck-step-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .ck-step.active .ck-step-label { color: var(--primary); }
+    .ck-step.done .ck-step-label { color: var(--success); }
+    .ck-step-bar {
+      width: 36px;
+      height: 2px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .ck-step-bar.done { background: var(--success); }
+
+    .ck-body { padding: 26px 28px; }
+    .ck-page { display: none; }
+    .ck-page.active { display: block; animation: ckFade 0.3s ease; }
+    @keyframes ckFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ck-section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ck-section-title i { color: var(--primary); }
+
+    .ck-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ck-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 540px) { .ck-grid { grid-template-columns: 1fr; } }
+
+    .ck-input-group { display: flex; flex-direction: column; gap: 6px; }
+    .ck-input-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .ck-input-group input,
+    .ck-input-group textarea,
+    .ck-input-group select {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .ck-input-group input:focus,
+    .ck-input-group textarea:focus,
+    .ck-input-group select:focus { border-color: var(--primary); }
+    .ck-input-group textarea { resize: vertical; min-height: 70px; }
+    .ck-input-group .ck-err { color: var(--danger); font-size: 11px; font-weight: 600; display: none; }
+    .ck-input-group.has-err input,
+    .ck-input-group.has-err textarea { border-color: var(--danger); }
+    .ck-input-group.has-err .ck-err { display: block; }
+
+    .ck-pay-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .ck-pay-opt {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ck-pay-opt:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .ck-pay-opt.selected { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 3px rgba(126,45,73,0.08); }
+    .ck-pay-icon {
+      width: 44px; height: 44px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .ck-pay-opt.selected .ck-pay-icon { background: var(--primary); color: var(--paper); }
+    .ck-pay-info { flex: 1; }
+    .ck-pay-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .ck-pay-desc { font-size: 11.5px; color: var(--muted); }
+    .ck-pay-radio {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ck-pay-opt.selected .ck-pay-radio { border-color: var(--primary); }
+    .ck-pay-opt.selected .ck-pay-radio::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      background: var(--primary);
+      border-radius: 50%;
+    }
+
+    .ck-review-list {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .ck-review-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--ink);
+    }
+    .ck-review-item:last-child { border-bottom: none; }
+    .ck-review-item .ri-name { color: var(--text-2); }
+    .ck-review-item .ri-qty { color: var(--muted); font-size: 11.5px; margin-left: 6px; }
+    .ck-review-item .ri-price { font-weight: 700; }
+
+    .ck-addr-card {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .ck-addr-card strong { display: block; margin-bottom: 4px; }
+    .ck-addr-card .ck-change {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      padding: 0;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .ck-addr-card .ck-change:hover { text-decoration: underline; }
+
+    .ck-totals { background: var(--bg); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+    .ck-totals .summary-row.total { color: var(--primary); }
+
+    .ck-footer {
+      padding: 16px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .ck-back-btn {
+      background: transparent;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      padding: 11px 22px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .ck-back-btn:hover { background: var(--ink); color: var(--paper); }
+    .ck-next-btn {
+      background: var(--primary);
+      color: var(--paper);
+      border: none;
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+      margin-left: auto;
+    }
+    .ck-next-btn:hover { background: var(--primary-dark); }
+
+    /* ============= SUCCESS PAGE ============= */
+    .ck-success {
+      text-align: center;
+      padding: 50px 30px 30px;
+    }
+    .ck-success-icon {
+      width: 84px; height: 84px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--paper);
+      font-size: 38px;
+      margin: 0 auto 22px;
+      animation: successPop 0.5s cubic-bezier(0.16,1.4,0.3,1);
+    }
+    @keyframes successPop {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .ck-success h2 {
+      font-family: var(--sans);
+      font-size: 26px;
+      color: var(--ink);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .ck-success p { font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
+    .ck-order-id {
+      background: var(--cream-warm);
+      border: 1px dashed var(--gold);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin: 0 auto 24px;
+      display: inline-block;
+    }
+    .ck-order-id-label { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+    .ck-order-id-val { font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 0.04em; font-family: var(--display); font-style: italic; }
+    .ck-success-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+
+    /* ============= ORDERS MODAL ============= */
+    .orders-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,26,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .orders-modal-overlay.open { display: flex; }
+    .orders-modal-box {
+      background: var(--paper);
+      border-radius: var(--radius);
+      max-width: 720px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .orders-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .orders-empty i { font-size: 50px; color: var(--border); display: block; margin-bottom: 14px; }
+    .orders-empty p { font-size: 14px; color: var(--text-2); }
+    .orders-list { padding: 18px 22px; }
+    .order-row {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      transition: box-shadow 0.2s;
+    }
+    .order-row:hover { box-shadow: var(--shadow); }
+    .order-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .order-id-text { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.04em; }
+    .order-date { font-size: 11.5px; color: var(--muted); }
+    .order-status {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .order-status.placed { background: #fff4d6; color: #a06a00; }
+    .order-status.shipped { background: #d6ebff; color: #1356a0; }
+    .order-status.delivered { background: #d6f3e0; color: var(--success); }
+    .order-items-mini {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    .order-items-mini img {
+      width: 50px; height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      background: var(--cream-warm);
+    }
+    .order-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .order-total-text { font-size: 13.5px; font-weight: 800; color: var(--primary); }
+    .order-detail-btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .order-detail-btn:hover { background: var(--primary); color: var(--paper); }
+
+    /* ============= PINCODE CHECK (Product Modal) ============= */
+    .pincode-section {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-top: 14px;
+    }
+    .pincode-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .pincode-title i { color: var(--primary); }
+    .pincode-row { display: flex; gap: 6px; }
+    .pincode-row input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      outline: none;
+      font-family: var(--sans);
+    }
+    .pincode-row input:focus { border-color: var(--primary); }
+    .pincode-check-btn {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .pincode-check-btn:hover { background: var(--primary); }
+    .pincode-result {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+    }
+    .pincode-result.show { display: block; }
+    .pincode-result.success { color: var(--success); }
+    .pincode-result.error { color: var(--danger); }
+
+    /* ============= QTY + SHARE IN PRODUCT MODAL ============= */
+    .modal-qty-share {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .modal-qty-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-qty-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .modal-qty {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .modal-qty button {
+      background: transparent;
+      border: none;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .modal-qty button:hover { background: var(--primary-soft); color: var(--primary); }
+    .modal-qty span { padding: 0 14px; font-size: 14px; font-weight: 700; min-width: 40px; text-align: center; }
+
+    .modal-share {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-share:hover { background: #25D366; color: var(--paper); border-color: #25D366; }
+    .modal-share i { font-size: 14px; }
+
+    .stock-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .stock-info.in-stock { background: #d6f3e0; color: var(--success); }
+    .stock-info.low-stock { background: #fff4d6; color: #a06a00; }
+
+    /* ============= PRICE RANGE FILTER ============= */
+    .price-filter-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin-left: auto;
+      border-left: 1px solid var(--border);
+    }
+    .price-filter-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .price-range-input {
+      width: 110px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .price-range-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 76px;
+      white-space: nowrap;
+    }
+    @media (max-width: 720px) {
+      .price-filter-wrap { display: none; }
+    }
+
+    /* ============= RECENTLY VIEWED ============= */
+    .recent-section {
+      max-width: 1320px;
+      margin: 30px auto;
+      padding: 0 22px;
+      display: none;
+    }
+    .recent-section.show { display: block; }
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .recent-header h3 {
+      font-family: var(--sans);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .recent-header h3 em {
+      font-family: var(--display);
+      font-style: italic;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .recent-clear {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .recent-clear:hover { color: var(--danger); }
+    .recent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      background: var(--paper);
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .recent-card {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .recent-card:hover { transform: translateY(-3px); }
+    .recent-card img {
+      width: 100%; height: 130px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      background: var(--cream-warm);
+    }
+    .recent-card-name {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-top: 6px;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .recent-card-price {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+
+    /* ============= NEWSLETTER ============= */
+    .newsletter {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--paper);
+      padding: 44px 22px;
+      text-align: center;
+    }
+    .newsletter-inner { max-width: 600px; margin: 0 auto; }
+    .newsletter h3 {
+      font-family: var(--sans);
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .newsletter h3 em {
+      font-family: var(--display);
+      font-style: italic;
+      color: var(--gold);
+      font-weight: 500;
+    }
+    .newsletter p {
+      font-size: 13.5px;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 22px;
+      line-height: 1.55;
+    }
+    .newsletter-form {
+      display: flex;
+      gap: 8px;
+      max-width: 420px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+    .newsletter-form input {
+      flex: 1;
+      min-width: 220px;
+      padding: 13px 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 13.5px;
+      font-family: var(--sans);
+      outline: none;
+      color: var(--ink);
+    }
+    .newsletter-submit {
+      background: var(--gold);
+      color: var(--ink);
+      border: none;
+      padding: 13px 26px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.2s;
+    }
+    .newsletter-submit:hover { background: #d8b87d; }
+    .newsletter-msg {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold);
+      display: none;
+    }
+    .newsletter-msg.show { display: block; animation: ckFade 0.3s ease; }
+
+    /* ============= ADDRESS MODAL ============= */
+    .addr-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,26,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .addr-modal-overlay.open { display: flex; }
+    .addr-modal-box {
+      background: var(--paper);
+      border-radius: var(--radius);
+      max-width: 540px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .addr-saved-list { padding: 18px 22px; }
+    .saved-addr-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .saved-addr-card strong { display: block; margin-bottom: 4px; }
+    .saved-addr-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .saved-addr-actions button {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .saved-addr-actions button.danger:hover { color: var(--danger); border-color: var(--danger); }
+    .saved-addr-actions button:hover { color: var(--primary); border-color: var(--primary); }
+
+    @media (max-width: 540px) {
+      .ck-stepper { gap: 4px; padding: 14px 12px 6px; }
+      .ck-step-bar { width: 18px; }
+      .ck-step-label { font-size: 10px; }
+      .ck-step-num { width: 24px; height: 24px; font-size: 11px; }
+      .ck-body { padding: 18px 18px; }
+      .ck-footer { padding: 14px 18px; }
+      .modal-qty-share { gap: 10px; }
+    }
+
   </style>
 </head>
 <body>
@@ -1680,9 +2584,9 @@
             <small>Sign in to your account</small>
           </div>
           <button class="dropdown-item" id="dd-profile"><i class="fa-regular fa-user"></i> My Profile</button>
-          <button class="dropdown-item" id="dd-orders"><i class="fa-solid fa-box"></i> My Orders</button>
-          <button class="dropdown-item" id="dd-wishlist"><i class="fa-regular fa-heart"></i> Wishlist</button>
-          <button class="dropdown-item" id="dd-address"><i class="fa-solid fa-location-dot"></i> Saved Addresses</button>
+          <button class="dropdown-item" id="dd-orders" onclick="openOrders()"><i class="fa-solid fa-box"></i> My Orders</button>
+          <button class="dropdown-item" id="dd-wishlist" onclick="openWishlist()"><i class="fa-regular fa-heart"></i> Wishlist</button>
+          <button class="dropdown-item" id="dd-address" onclick="openAddressBook()"><i class="fa-solid fa-location-dot"></i> Saved Addresses</button>
           <button class="dropdown-item" id="dropdown-logout" onclick="doLogout()" style="display:none;color:var(--accent-danger);"><i class="fa-solid fa-right-from-bracket" style="color:var(--accent-danger)"></i> Sign Out</button>
         </div>
       </div>
@@ -1704,9 +2608,10 @@
       </div>
 
       <!-- Wishlist -->
-      <button class="nav-btn" id="nav-wishlist-btn" onclick="toggleNavWishlist(this)">
+      <button class="nav-btn" id="nav-wishlist-btn" onclick="openWishlist()">
         <i class="fa-regular fa-heart" id="nav-wishlist-icon"></i>
         <span>Wishlist</span>
+        <div class="cart-badge" id="wishlist-count" style="display:none">0</div>
       </button>
 
       <!-- Cart -->
@@ -1749,6 +2654,11 @@
     <button class="sort-btn" onclick="sortProducts('high', this)"><i class="fa-solid fa-arrow-down"></i> Price: High to Low</button>
     <button class="sort-btn" onclick="sortProducts('rating', this)"><i class="fa-solid fa-star"></i> Top Rated</button>
     <button class="sort-btn" onclick="sortProducts('newest', this)"><i class="fa-solid fa-tag"></i> Newest</button>
+    <div class="price-filter-wrap">
+      <span class="price-filter-label"><i class="fa-solid fa-tag"></i> Max Price</span>
+      <input type="range" min="500" max="3000" step="100" value="3000" class="price-range-input" id="price-range" oninput="updatePriceRange(this.value)">
+      <span class="price-range-val" id="price-range-val">₹3,000</span>
+    </div>
   </div>
 </div>
 
@@ -1857,6 +2767,28 @@
   </div>
 </div>
 
+<!-- Recently Viewed -->
+<div class="recent-section" id="recent-section">
+  <div class="recent-header">
+    <h3>Recently <em>Viewed</em></h3>
+    <button class="recent-clear" onclick="clearRecent()">Clear</button>
+  </div>
+  <div class="recent-grid" id="recent-grid"></div>
+</div>
+
+<!-- Newsletter -->
+<section class="newsletter">
+  <div class="newsletter-inner">
+    <h3>Join the <em>Laxuage</em> Circle</h3>
+    <p>Be the first to know about new arrivals, private sales, and styling inspiration. Receive a special welcome offer on your first order.</p>
+    <div class="newsletter-form">
+      <input type="email" id="newsletter-email" placeholder="Your email address">
+      <button class="newsletter-submit" onclick="subscribeNewsletter()">Subscribe</button>
+    </div>
+    <div class="newsletter-msg" id="newsletter-msg"></div>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer>
   <div class="footer-top">
@@ -1881,7 +2813,7 @@
     <div class="footer-col">
       <h4>Customer Care</h4>
       <ul>
-        <li><button class="footer-link">Track Order</button></li>
+        <li><button class="footer-link" onclick="openOrders()">Track Order</button></li>
         <li><button class="footer-link">Return Policy</button></li>
         <li><button class="footer-link">Size Guide</button></li>
         <li><button class="footer-link">FAQ</button></li>
@@ -2065,9 +2997,18 @@
     </div>
   </div>
   <div class="cart-foot" id="cart-foot" style="display:none">
+    <div class="coupon-section">
+      <div class="coupon-row">
+        <input type="text" id="coupon-input" placeholder="Enter coupon code" maxlength="15">
+        <button class="coupon-apply" onclick="applyCoupon()">Apply</button>
+      </div>
+      <div class="coupon-result" id="coupon-result"></div>
+      <div class="coupon-hints">Try: <code onclick="document.getElementById('coupon-input').value='WELCOME10'">WELCOME10</code><code onclick="document.getElementById('coupon-input').value='LUX100'">LUX100</code><code onclick="document.getElementById('coupon-input').value='FIRST500'">FIRST500</code></div>
+    </div>
     <div class="cart-summary">
       <div class="summary-row"><span>Subtotal</span><span id="cart-sub">₹0</span></div>
-      <div class="summary-row"><span>Shipping</span><span style="color:var(--accent-success);font-weight:600">Complimentary</span></div>
+      <div class="summary-row discount" id="discount-row" style="display:none"><span>Discount</span><span id="cart-discount">−₹0</span></div>
+      <div class="summary-row"><span>Shipping</span><span style="color:var(--success);font-weight:600">Complimentary</span></div>
       <div class="summary-row total"><span>Total</span><span id="cart-total">₹0</span></div>
     </div>
     <button class="checkout-btn" onclick="checkout()">
@@ -2093,13 +3034,33 @@
           <div class="modal-price" id="modal-price"></div>
           <div class="modal-offer" id="modal-offer"></div>
         </div>
+        <div id="modal-stock" class="stock-info in-stock"><i class="fa-solid fa-check-circle"></i> In Stock</div>
+        <div class="modal-qty-share">
+          <div class="modal-qty-wrap">
+            <span class="modal-qty-label">Qty</span>
+            <div class="modal-qty">
+              <button onclick="changeModalQty(-1)">−</button>
+              <span id="modal-qty-val">1</span>
+              <button onclick="changeModalQty(1)">+</button>
+            </div>
+          </div>
+          <button class="modal-share" onclick="shareProductWA()"><i class="fa-brands fa-whatsapp"></i> Share</button>
+        </div>
         <div class="modal-actions">
           <button class="btn-cart-modal" id="modal-add-btn">
             <i class="fa-solid fa-bag-shopping"></i> Add to Bag
           </button>
-          <button class="btn-wishlist-modal">
+          <button class="btn-wishlist-modal" id="modal-wishlist-btn" onclick="toggleModalWishlist()">
             <i class="fa-regular fa-heart"></i> Save
           </button>
+        </div>
+        <div class="pincode-section">
+          <div class="pincode-title"><i class="fa-solid fa-truck-fast"></i> Check Delivery</div>
+          <div class="pincode-row">
+            <input type="text" id="pincode-input" placeholder="Enter 6-digit pincode" maxlength="6" inputmode="numeric">
+            <button class="pincode-check-btn" onclick="checkPincode()">Check</button>
+          </div>
+          <div class="pincode-result" id="pincode-result"></div>
         </div>
         <div class="modal-features">
           <div class="modal-feat-title">Why You'll Love It</div>
@@ -2110,6 +3071,213 @@
             <div class="feat-item"><i class="fa-solid fa-check"></i> Easy 7-day returns</div>
           </div>
         </div>
+      </div>
+      <div class="related-section" id="related-section" style="display:none">
+        <div class="related-title">You May Also Like</div>
+        <div class="related-grid" id="related-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Wishlist Sidebar -->
+<div class="cart-overlay" id="wishlist-overlay" onclick="closeWishlist()"></div>
+<div class="ws-sidebar" id="wishlist-sidebar">
+  <div class="ws-head">
+    <h3><i class="fa-solid fa-heart"></i> Your Wishlist</h3>
+    <button class="cart-close" onclick="closeWishlist()">×</button>
+  </div>
+  <div class="ws-body" id="wishlist-body">
+    <div class="cart-empty">
+      <i class="fa-regular fa-heart"></i>
+      <p>Your wishlist is empty</p>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout Overlay -->
+<div class="checkout-overlay" id="checkout-overlay">
+  <div class="checkout-box">
+    <div class="ck-header">
+      <h3 id="ck-header-title"><i class="fa-solid fa-lock"></i> Secure Checkout</h3>
+      <button class="ck-close" onclick="closeCheckout()">×</button>
+    </div>
+    <div class="ck-stepper" id="ck-stepper">
+      <div class="ck-step active" data-step="1">
+        <div class="ck-step-num">1</div>
+        <span class="ck-step-label">Address</span>
+      </div>
+      <div class="ck-step-bar"></div>
+      <div class="ck-step" data-step="2">
+        <div class="ck-step-num">2</div>
+        <span class="ck-step-label">Payment</span>
+      </div>
+      <div class="ck-step-bar"></div>
+      <div class="ck-step" data-step="3">
+        <div class="ck-step-num">3</div>
+        <span class="ck-step-label">Review</span>
+      </div>
+    </div>
+
+    <div class="ck-body">
+      <!-- Step 1: Address -->
+      <div class="ck-page active" id="ck-page-1">
+        <div class="ck-section-title"><i class="fa-solid fa-location-dot"></i> Shipping Address</div>
+        <div class="ck-grid">
+          <div class="ck-input-group">
+            <label>Full Name *</label>
+            <input type="text" id="ck-name" placeholder="Recipient name">
+            <span class="ck-err">Please enter name</span>
+          </div>
+          <div class="ck-input-group">
+            <label>Phone Number *</label>
+            <input type="tel" id="ck-phone" placeholder="10-digit number" maxlength="13" inputmode="numeric">
+            <span class="ck-err">Enter valid phone</span>
+          </div>
+          <div class="ck-input-group full">
+            <label>House / Flat / Building *</label>
+            <input type="text" id="ck-house" placeholder="House no., building, street">
+            <span class="ck-err">Required</span>
+          </div>
+          <div class="ck-input-group full">
+            <label>Area / Locality *</label>
+            <input type="text" id="ck-area" placeholder="Area, landmark, locality">
+            <span class="ck-err">Required</span>
+          </div>
+          <div class="ck-input-group">
+            <label>City *</label>
+            <input type="text" id="ck-city" placeholder="City">
+            <span class="ck-err">Required</span>
+          </div>
+          <div class="ck-input-group">
+            <label>State *</label>
+            <select id="ck-state">
+              <option value="">Select state</option>
+              <option>Kerala</option><option>Karnataka</option><option>Tamil Nadu</option>
+              <option>Maharashtra</option><option>Delhi</option><option>Telangana</option>
+              <option>Andhra Pradesh</option><option>Goa</option><option>Gujarat</option>
+              <option>Rajasthan</option><option>Uttar Pradesh</option><option>West Bengal</option>
+              <option>Punjab</option><option>Haryana</option><option>Madhya Pradesh</option>
+              <option>Other</option>
+            </select>
+            <span class="ck-err">Select state</span>
+          </div>
+          <div class="ck-input-group">
+            <label>Pincode *</label>
+            <input type="text" id="ck-pin" placeholder="6-digit pincode" maxlength="6" inputmode="numeric">
+            <span class="ck-err">Enter 6-digit pincode</span>
+          </div>
+          <div class="ck-input-group">
+            <label>Save as</label>
+            <select id="ck-addr-type">
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Payment -->
+      <div class="ck-page" id="ck-page-2">
+        <div class="ck-section-title"><i class="fa-solid fa-credit-card"></i> Payment Method</div>
+        <div class="ck-pay-options" id="ck-pay-options">
+          <div class="ck-pay-opt selected" data-pay="upi" onclick="selectPay(this)">
+            <div class="ck-pay-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+            <div class="ck-pay-info">
+              <div class="ck-pay-title">UPI Payment</div>
+              <div class="ck-pay-desc">Pay using Google Pay, PhonePe, Paytm, BHIM</div>
+            </div>
+            <div class="ck-pay-radio"></div>
+          </div>
+          <div class="ck-pay-opt" data-pay="card" onclick="selectPay(this)">
+            <div class="ck-pay-icon"><i class="fa-solid fa-credit-card"></i></div>
+            <div class="ck-pay-info">
+              <div class="ck-pay-title">Credit / Debit Card</div>
+              <div class="ck-pay-desc">Visa, Mastercard, RuPay — secure encrypted</div>
+            </div>
+            <div class="ck-pay-radio"></div>
+          </div>
+          <div class="ck-pay-opt" data-pay="netbanking" onclick="selectPay(this)">
+            <div class="ck-pay-icon"><i class="fa-solid fa-building-columns"></i></div>
+            <div class="ck-pay-info">
+              <div class="ck-pay-title">Net Banking</div>
+              <div class="ck-pay-desc">All major Indian banks supported</div>
+            </div>
+            <div class="ck-pay-radio"></div>
+          </div>
+          <div class="ck-pay-opt" data-pay="cod" onclick="selectPay(this)">
+            <div class="ck-pay-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div class="ck-pay-info">
+              <div class="ck-pay-title">Cash on Delivery</div>
+              <div class="ck-pay-desc">Pay when your bag is delivered to your door</div>
+            </div>
+            <div class="ck-pay-radio"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Review -->
+      <div class="ck-page" id="ck-page-3">
+        <div class="ck-section-title"><i class="fa-solid fa-clipboard-check"></i> Review Your Order</div>
+        <div class="ck-addr-card" id="ck-review-addr"></div>
+        <div class="ck-review-list" id="ck-review-list"></div>
+        <div class="ck-totals" id="ck-review-totals"></div>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div class="ck-page" id="ck-page-4">
+        <div class="ck-success">
+          <div class="ck-success-icon"><i class="fa-solid fa-check"></i></div>
+          <h2>Order Placed Successfully!</h2>
+          <p>Thank you for shopping at Laxuage. We'll send confirmation shortly.</p>
+          <div class="ck-order-id">
+            <div class="ck-order-id-label">Order ID</div>
+            <div class="ck-order-id-val" id="ck-success-id">LXG-000000</div>
+          </div>
+          <p style="font-size:13px"><i class="fa-solid fa-truck-fast" style="color:var(--primary);margin-right:4px"></i> Estimated delivery: <strong id="ck-success-eta">3–5 business days</strong></p>
+          <div class="ck-success-actions">
+            <button class="btn-outline" onclick="closeCheckout(); openOrders()" style="padding:11px 22px;font-size:12px">View My Orders</button>
+            <button class="btn-primary" onclick="closeCheckout()" style="padding:11px 22px;font-size:12px">Continue Shopping</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ck-footer" id="ck-footer">
+      <button class="ck-back-btn" id="ck-back-btn" onclick="checkoutBack()" style="display:none"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="ck-next-btn" id="ck-next-btn" onclick="checkoutNext()">Continue <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Orders Modal -->
+<div class="orders-modal-overlay" id="orders-overlay" onclick="ordersOverlayClick(event)">
+  <div class="orders-modal-box">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-box"></i> My Orders</h3>
+      <button class="modal-close" onclick="closeOrders()">×</button>
+    </div>
+    <div id="orders-content">
+      <div class="orders-empty">
+        <i class="fa-solid fa-box-open"></i>
+        <p>You haven't placed any orders yet</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Address Book Modal -->
+<div class="addr-modal-overlay" id="addr-overlay" onclick="addrOverlayClick(event)">
+  <div class="addr-modal-box">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-location-dot"></i> Saved Addresses</h3>
+      <button class="modal-close" onclick="closeAddressBook()">×</button>
+    </div>
+    <div class="addr-saved-list" id="addr-list">
+      <div class="orders-empty">
+        <i class="fa-solid fa-location-dot"></i>
+        <p>No saved addresses yet. Place an order to save one.</p>
       </div>
     </div>
   </div>
@@ -2433,6 +3601,9 @@
     let list = currentCat === 'all' ? [...products] : products.filter(p => p.category === currentCat);
     const q = document.getElementById('search').value.toLowerCase();
     if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    if (typeof maxPrice !== 'undefined' && maxPrice < 3000) {
+      list = list.filter(p => !p.price || p.price <= maxPrice);
+    }
     if (currentSort === 'low')    list.sort((a,b) => a.price - b.price);
     else if (currentSort === 'high')   list.sort((a,b) => b.price - a.price);
     else if (currentSort === 'rating') list.sort((a,b) => b.rating - a.rating);
@@ -2525,12 +3696,13 @@
     applyFiltersAndSort();
   }
 
-  function addToCart(id) {
+  function addToCart(id, qty) {
+    qty = qty || 1;
     requireLogin(() => {
       const p = products.find(x => x.id === id);
       const ex = cart.find(x => x.id === id);
-      if (ex) ex.qty++;
-      else cart.push({...p, qty:1});
+      if (ex) ex.qty += qty;
+      else cart.push({...p, qty: qty});
       saveData();
       updateCartUI();
       showToast(`${p.name} added to cart`);
@@ -2555,6 +3727,16 @@
   function updateCartUI() {
     const count = cart.reduce((a,b) => a+b.qty, 0);
     document.getElementById('cart-count').textContent = count;
+    // Update wishlist count badge
+    const wlc = document.getElementById('wishlist-count');
+    if (wlc) {
+      if (wishlist.size > 0) {
+        wlc.textContent = wishlist.size;
+        wlc.style.display = 'flex';
+      } else {
+        wlc.style.display = 'none';
+      }
+    }
   }
 
   function renderCartItems() {
@@ -2584,8 +3766,18 @@
         <button class="ci-remove" onclick="removeFromCart(${item.id})"><i class="fa-regular fa-trash-can"></i></button>
       </div>`;
     }).join('');
+    // Apply coupon discount
+    const discount = computeDiscount(total);
+    const finalTotal = Math.max(0, total - discount);
     document.getElementById('cart-sub').textContent = total ? '₹'+total.toLocaleString() : 'On Request';
-    document.getElementById('cart-total').textContent = total ? '₹'+total.toLocaleString() : 'On Request';
+    const discRow = document.getElementById('discount-row');
+    if (discount > 0) {
+      discRow.style.display = 'flex';
+      document.getElementById('cart-discount').textContent = '−₹' + discount.toLocaleString();
+    } else {
+      discRow.style.display = 'none';
+    }
+    document.getElementById('cart-total').textContent = total ? '₹'+finalTotal.toLocaleString() : 'On Request';
   }
 
   function openCart() {
@@ -2600,6 +3792,9 @@
 
   function openModal(id) {
     const p = products.find(x => x.id === id);
+    currentModalProductId = id;
+    modalQty = 1;
+    document.getElementById('modal-qty-val').textContent = modalQty;
     document.getElementById('modal-img').src = p.img;
     document.getElementById('modal-title').textContent = p.name;
     document.getElementById('modal-cat').textContent = p.category.toUpperCase();
@@ -2607,7 +3802,59 @@
     document.getElementById('modal-desc').textContent = p.description;
     document.getElementById('modal-price').textContent = p.price ? '₹' + p.price.toLocaleString() : 'Price on Request';
     document.getElementById('modal-offer').textContent = p.price ? '✦ Premium Quality' : '📩 Contact for Price';
-    document.getElementById('modal-add-btn').onclick = () => { addToCart(id); closeModalDirect(); openCart(); };
+    // Stock indicator (deterministic per product so it doesn't shuffle on re-open)
+    const stockEl = document.getElementById('modal-stock');
+    const stockSeed = (p.id * 7) % 10;
+    if (stockSeed < 2) {
+      stockEl.className = 'stock-info low-stock';
+      stockEl.innerHTML = `<i class="fa-solid fa-fire"></i> Only ${stockSeed + 2} left in stock — order soon`;
+    } else {
+      stockEl.className = 'stock-info in-stock';
+      stockEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> In Stock — ready to ship`;
+    }
+    // Wishlist button state
+    const wbtn = document.getElementById('modal-wishlist-btn');
+    const wicon = wbtn.querySelector('i');
+    if (wishlist.has(id)) {
+      wicon.classList.replace('fa-regular', 'fa-solid');
+      wbtn.innerHTML = '<i class="fa-solid fa-heart" style="color:var(--primary)"></i> Saved';
+    } else {
+      wbtn.innerHTML = '<i class="fa-regular fa-heart"></i> Save';
+    }
+    // Reset pincode
+    document.getElementById('pincode-input').value = '';
+    document.getElementById('pincode-result').className = 'pincode-result';
+    document.getElementById('pincode-result').textContent = '';
+
+    document.getElementById('modal-add-btn').onclick = () => {
+      addToCart(id, modalQty);
+      closeModalDirect();
+      openCart();
+    };
+
+    // Related products (other items in same category, fallback to all)
+    let related = products.filter(x => x.category === p.category && x.id !== id);
+    if (related.length < 3) related = products.filter(x => x.id !== id).slice(0, 4);
+    related = related.slice(0, 4);
+    const relGrid = document.getElementById('related-grid');
+    const relSec = document.getElementById('related-section');
+    if (related.length) {
+      relSec.style.display = 'block';
+      relGrid.innerHTML = related.map(r => `
+        <div class="related-card" onclick="openModal(${r.id})">
+          <img src="${r.img}" alt="${r.name}" loading="lazy">
+          <div class="related-info">
+            <div class="related-name">${r.name}</div>
+            <div class="related-price">${r.price ? '₹' + r.price.toLocaleString() : 'On Request'}</div>
+          </div>
+        </div>`).join('');
+    } else {
+      relSec.style.display = 'none';
+    }
+
+    // Track recently viewed
+    addToRecentlyViewed(id);
+
     document.getElementById('modal-overlay').classList.add('open');
   }
   function closeModal(e) {
@@ -2649,12 +3896,10 @@
 
   function checkout() {
     if (!cart.length) return;
-    const msg = cart.map(i => `• ${i.name} (x${i.qty})`).join('\n');
-    alert(`🎉 Order Placed!\n\n${msg}\n\nThank you for shopping at Laxuage!\nWe'll contact you shortly.`);
-    cart = [];
-    saveData();
-    updateCartUI();
-    closeCart();
+    requireLogin(() => {
+      closeCart();
+      openCheckout();
+    });
   }
 
   function showToast(msg) {
@@ -2725,6 +3970,586 @@
     if (!currentUser) { openLogin(); }
   }
 
+  // ===================================================================
+  // ============= NEW: WISHLIST SIDEBAR ===============================
+  // ===================================================================
+  function openWishlist() {
+    requireLogin(() => {
+      renderWishlistSidebar();
+      document.getElementById('wishlist-sidebar').classList.add('open');
+      document.getElementById('wishlist-overlay').classList.add('open');
+    });
+  }
+  function closeWishlist() {
+    document.getElementById('wishlist-sidebar').classList.remove('open');
+    document.getElementById('wishlist-overlay').classList.remove('open');
+  }
+  function renderWishlistSidebar() {
+    const body = document.getElementById('wishlist-body');
+    const items = [...wishlist].map(id => products.find(p => p.id === id)).filter(Boolean);
+    if (!items.length) {
+      body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-heart"></i><p>Your wishlist is empty</p><p style="font-size:12px;margin-top:8px;color:var(--muted-soft)">Tap the heart on any bag to save it here</p></div>';
+      return;
+    }
+    body.innerHTML = items.map(p => `
+      <div class="wishlist-item">
+        <img src="${p.img}" alt="${p.name}">
+        <div class="wi-info">
+          <div class="wi-name">${p.name}</div>
+          <div class="wi-price">${p.price ? '₹'+p.price.toLocaleString() : 'On Request'}</div>
+          <div class="wi-actions">
+            <button class="wi-move-btn" onclick="moveToCartFromWishlist(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+            <button class="wi-remove-btn" onclick="removeFromWishlist(${p.id})">Remove</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  function moveToCartFromWishlist(id) {
+    addToCart(id, 1);
+    removeFromWishlist(id);
+  }
+  function removeFromWishlist(id) {
+    wishlist.delete(id);
+    // Also un-highlight in the grid
+    document.querySelectorAll('.product-card').forEach(card => {
+      // re-render grid for simplicity
+    });
+    saveData();
+    updateCartUI();
+    renderWishlistSidebar();
+    applyFiltersAndSort();
+  }
+
+  // ===================================================================
+  // ============= NEW: PRODUCT MODAL QTY + SHARE ======================
+  // ===================================================================
+  let modalQty = 1;
+  let currentModalProductId = null;
+
+  function changeModalQty(delta) {
+    modalQty = Math.max(1, Math.min(10, modalQty + delta));
+    document.getElementById('modal-qty-val').textContent = modalQty;
+  }
+
+  function shareProductWA() {
+    if (!currentModalProductId) return;
+    const p = products.find(x => x.id === currentModalProductId);
+    if (!p) return;
+    const text = `Hey! Check out this beautiful "${p.name}" from Laxuage — ${p.price ? '₹'+p.price.toLocaleString() : 'Premium quality'}. ${window.location.href}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  function toggleModalWishlist() {
+    if (!currentModalProductId) return;
+    requireLogin(() => {
+      const id = currentModalProductId;
+      const wbtn = document.getElementById('modal-wishlist-btn');
+      if (wishlist.has(id)) {
+        wishlist.delete(id);
+        wbtn.innerHTML = '<i class="fa-regular fa-heart"></i> Save';
+      } else {
+        wishlist.add(id);
+        wbtn.innerHTML = '<i class="fa-solid fa-heart" style="color:var(--primary)"></i> Saved';
+        showToast('Added to wishlist');
+      }
+      saveData();
+      updateCartUI();
+      applyFiltersAndSort();
+    });
+  }
+
+  // ===================================================================
+  // ============= NEW: PINCODE DELIVERY CHECK =========================
+  // ===================================================================
+  function checkPincode() {
+    const pin = document.getElementById('pincode-input').value.trim();
+    const result = document.getElementById('pincode-result');
+    if (!/^\d{6}$/.test(pin)) {
+      result.className = 'pincode-result show error';
+      result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 6-digit pincode';
+      return;
+    }
+    // Simulate delivery: Kerala (67xxxx, 68xxxx, 69xxxx) = fast, metros = standard, else = slow
+    const prefix = pin.substring(0, 2);
+    let days = 5;
+    const keralaPrefixes = ['67','68','69'];
+    const metroPrefixes = ['11','12','40','50','56','60','70','80'];
+    if (keralaPrefixes.includes(prefix)) days = 2;
+    else if (metroPrefixes.includes(prefix)) days = 3;
+    else days = 5;
+    const today = new Date();
+    const eta = new Date(today.getTime() + days * 86400000);
+    const opts = { weekday: 'short', day: 'numeric', month: 'short' };
+    result.className = 'pincode-result show success';
+    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivery by <strong>${eta.toLocaleDateString('en-IN', opts)}</strong> · Free shipping`;
+  }
+
+  // ===================================================================
+  // ============= NEW: COUPON CODES ===================================
+  // ===================================================================
+  let appliedCoupon = null;
+  const COUPONS = {
+    'WELCOME10': { type: 'percent', value: 10, min: 0, desc: '10% off' },
+    'LUX100':    { type: 'flat',    value: 100, min: 999, desc: '₹100 off above ₹999' },
+    'FIRST500':  { type: 'flat',    value: 500, min: 2000, desc: '₹500 off above ₹2,000' }
+  };
+
+  function computeDiscount(subtotal) {
+    if (!appliedCoupon || !COUPONS[appliedCoupon]) return 0;
+    const c = COUPONS[appliedCoupon];
+    if (subtotal < c.min) return 0;
+    return c.type === 'percent' ? Math.round(subtotal * c.value / 100) : c.value;
+  }
+
+  function applyCoupon() {
+    const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+    const result = document.getElementById('coupon-result');
+    if (!code) {
+      result.className = 'coupon-result error';
+      result.textContent = 'Please enter a code.';
+      return;
+    }
+    if (!COUPONS[code]) {
+      result.className = 'coupon-result error';
+      result.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Invalid coupon code';
+      appliedCoupon = null;
+      renderCartItems();
+      return;
+    }
+    const c = COUPONS[code];
+    const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    if (subtotal < c.min) {
+      result.className = 'coupon-result error';
+      result.innerHTML = `<i class="fa-solid fa-circle-info"></i> Add ₹${(c.min - subtotal).toLocaleString()} more to use this code`;
+      appliedCoupon = null;
+      renderCartItems();
+      return;
+    }
+    appliedCoupon = code;
+    result.className = 'coupon-result success';
+    result.innerHTML = `<i class="fa-solid fa-circle-check"></i> Code applied — ${c.desc}`;
+    renderCartItems();
+  }
+
+  // ===================================================================
+  // ============= NEW: CHECKOUT FLOW (multi-step) =====================
+  // ===================================================================
+  let ckStep = 1;
+  let ckPayMethod = 'upi';
+
+  function openCheckout() {
+    ckStep = 1;
+    showCheckoutStep(1);
+    // Prefill phone/name if logged in
+    if (currentUser) {
+      if (currentUser.name && !document.getElementById('ck-name').value) document.getElementById('ck-name').value = currentUser.name;
+      if (currentUser.phone && !document.getElementById('ck-phone').value) document.getElementById('ck-phone').value = currentUser.phone;
+    }
+    // Prefill saved address if available
+    const savedAddrs = loadAddresses();
+    if (savedAddrs.length && !document.getElementById('ck-house').value) {
+      const a = savedAddrs[0];
+      document.getElementById('ck-name').value = a.name || (currentUser ? currentUser.name : '');
+      document.getElementById('ck-phone').value = a.phone || (currentUser ? currentUser.phone : '');
+      document.getElementById('ck-house').value = a.house || '';
+      document.getElementById('ck-area').value = a.area || '';
+      document.getElementById('ck-city').value = a.city || '';
+      document.getElementById('ck-state').value = a.state || '';
+      document.getElementById('ck-pin').value = a.pin || '';
+      document.getElementById('ck-addr-type').value = a.type || 'Home';
+    }
+    document.getElementById('checkout-overlay').classList.add('open');
+  }
+
+  function closeCheckout() {
+    document.getElementById('checkout-overlay').classList.remove('open');
+  }
+
+  function showCheckoutStep(step) {
+    ckStep = step;
+    document.querySelectorAll('.ck-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('ck-page-' + step).classList.add('active');
+    // Update stepper
+    const steps = document.querySelectorAll('.ck-step');
+    const bars = document.querySelectorAll('.ck-step-bar');
+    steps.forEach((s, i) => {
+      const n = i + 1;
+      s.classList.remove('active', 'done');
+      if (n < step) s.classList.add('done');
+      else if (n === step) s.classList.add('active');
+    });
+    bars.forEach((b, i) => {
+      b.classList.toggle('done', i + 1 < step);
+    });
+
+    const back = document.getElementById('ck-back-btn');
+    const next = document.getElementById('ck-next-btn');
+    const footer = document.getElementById('ck-footer');
+
+    if (step === 4) {
+      footer.style.display = 'none';
+    } else {
+      footer.style.display = 'flex';
+      back.style.display = step > 1 ? 'inline-flex' : 'none';
+      if (step === 1) next.innerHTML = 'Continue to Payment <i class="fa-solid fa-arrow-right"></i>';
+      else if (step === 2) next.innerHTML = 'Review Order <i class="fa-solid fa-arrow-right"></i>';
+      else if (step === 3) next.innerHTML = '<i class="fa-solid fa-lock"></i> Place Order';
+    }
+  }
+
+  function checkoutBack() {
+    if (ckStep > 1) showCheckoutStep(ckStep - 1);
+  }
+
+  function checkoutNext() {
+    if (ckStep === 1) {
+      if (!validateAddress()) return;
+      saveAddress(getAddressFromForm());
+      showCheckoutStep(2);
+    } else if (ckStep === 2) {
+      renderReview();
+      showCheckoutStep(3);
+    } else if (ckStep === 3) {
+      placeOrder();
+    }
+  }
+
+  function validateAddress() {
+    const fields = [
+      { id: 'ck-name', check: v => v.length >= 2 },
+      { id: 'ck-phone', check: v => /^[+\d\s-]{10,13}$/.test(v) && v.replace(/\D/g,'').length >= 10 },
+      { id: 'ck-house', check: v => v.length >= 2 },
+      { id: 'ck-area', check: v => v.length >= 2 },
+      { id: 'ck-city', check: v => v.length >= 2 },
+      { id: 'ck-state', check: v => v.length >= 2 },
+      { id: 'ck-pin', check: v => /^\d{6}$/.test(v) }
+    ];
+    let ok = true;
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      const v = el.value.trim();
+      const group = el.closest('.ck-input-group');
+      if (!f.check(v)) {
+        group.classList.add('has-err');
+        ok = false;
+      } else {
+        group.classList.remove('has-err');
+      }
+    });
+    return ok;
+  }
+
+  function getAddressFromForm() {
+    return {
+      name: document.getElementById('ck-name').value.trim(),
+      phone: document.getElementById('ck-phone').value.trim(),
+      house: document.getElementById('ck-house').value.trim(),
+      area: document.getElementById('ck-area').value.trim(),
+      city: document.getElementById('ck-city').value.trim(),
+      state: document.getElementById('ck-state').value,
+      pin: document.getElementById('ck-pin').value.trim(),
+      type: document.getElementById('ck-addr-type').value
+    };
+  }
+
+  function selectPay(el) {
+    document.querySelectorAll('.ck-pay-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    ckPayMethod = el.dataset.pay;
+  }
+
+  function renderReview() {
+    const addr = getAddressFromForm();
+    document.getElementById('ck-review-addr').innerHTML = `
+      <strong>${addr.name} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${addr.type.toUpperCase()}</span></strong>
+      ${addr.house}, ${addr.area}<br>
+      ${addr.city}, ${addr.state} – ${addr.pin}<br>
+      <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${addr.phone}</span>
+      <button class="ck-change" onclick="showCheckoutStep(1)">Change Address</button>
+    `;
+    let subtotal = 0;
+    const itemsHtml = cart.map(item => {
+      const sub = item.price * item.qty;
+      subtotal += sub;
+      return `<div class="ck-review-item">
+        <div><span class="ri-name">${item.name}</span><span class="ri-qty">× ${item.qty}</span></div>
+        <span class="ri-price">₹${sub.toLocaleString()}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('ck-review-list').innerHTML = itemsHtml;
+    const discount = computeDiscount(subtotal);
+    const final = Math.max(0, subtotal - discount);
+    const payLabels = { upi: 'UPI Payment', card: 'Credit / Debit Card', netbanking: 'Net Banking', cod: 'Cash on Delivery' };
+    document.getElementById('ck-review-totals').innerHTML = `
+      <div class="summary-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString()}</span></div>
+      ${discount > 0 ? `<div class="summary-row discount"><span>Discount (${appliedCoupon})</span><span>−₹${discount.toLocaleString()}</span></div>` : ''}
+      <div class="summary-row"><span>Shipping</span><span style="color:var(--success);font-weight:600">Free</span></div>
+      <div class="summary-row"><span>Payment Method</span><span style="font-weight:700">${payLabels[ckPayMethod]}</span></div>
+      <div class="summary-row total"><span>Total</span><span>₹${final.toLocaleString()}</span></div>
+    `;
+  }
+
+  function placeOrder() {
+    const addr = getAddressFromForm();
+    const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    const discount = computeDiscount(subtotal);
+    const final = Math.max(0, subtotal - discount);
+    const orderId = 'LXG-' + Date.now().toString().slice(-7);
+    // Determine ETA from pincode
+    const prefix = addr.pin.substring(0, 2);
+    let days = 5;
+    if (['67','68','69'].includes(prefix)) days = 2;
+    else if (['11','12','40','50','56','60','70','80'].includes(prefix)) days = 3;
+    const eta = new Date(Date.now() + days * 86400000);
+    const etaStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    const order = {
+      id: orderId,
+      date: new Date().toISOString(),
+      items: cart.map(i => ({ id: i.id, name: i.name, img: i.img, price: i.price, qty: i.qty })),
+      subtotal: subtotal,
+      discount: discount,
+      coupon: appliedCoupon || null,
+      total: final,
+      address: addr,
+      payment: ckPayMethod,
+      status: 'placed',
+      eta: etaStr,
+      etaDays: days
+    };
+    saveOrder(order);
+    // Update success screen
+    document.getElementById('ck-success-id').textContent = orderId;
+    document.getElementById('ck-success-eta').textContent = days <= 3 ? `By ${etaStr}` : `${days}–${days+2} business days`;
+    // Clear cart
+    cart = [];
+    appliedCoupon = null;
+    document.getElementById('coupon-input').value = '';
+    document.getElementById('coupon-result').textContent = '';
+    saveData();
+    updateCartUI();
+    showCheckoutStep(4);
+  }
+
+  // ===================================================================
+  // ============= NEW: ORDERS STORAGE & MODAL =========================
+  // ===================================================================
+  function loadOrders() {
+    if (!currentUser) return [];
+    try {
+      const key = 'laxuage_orders_' + (currentUser.phone || currentUser.email || 'guest');
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch(e) { return []; }
+  }
+  function saveOrder(order) {
+    if (!currentUser) return;
+    try {
+      const key = 'laxuage_orders_' + (currentUser.phone || currentUser.email || 'guest');
+      const all = loadOrders();
+      all.unshift(order);
+      localStorage.setItem(key, JSON.stringify(all));
+    } catch(e) {}
+  }
+
+  function openOrders() {
+    requireLogin(() => {
+      renderOrders();
+      document.getElementById('orders-overlay').classList.add('open');
+    });
+  }
+  function closeOrders() {
+    document.getElementById('orders-overlay').classList.remove('open');
+  }
+  function ordersOverlayClick(e) {
+    if (e.target === document.getElementById('orders-overlay')) closeOrders();
+  }
+  function renderOrders() {
+    const orders = loadOrders();
+    const content = document.getElementById('orders-content');
+    if (!orders.length) {
+      content.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-box-open"></i><p>You haven\'t placed any orders yet</p><p style="font-size:12px;margin-top:6px;color:var(--muted-soft)">Start shopping to see your orders here</p></div>';
+      return;
+    }
+    const html = orders.map(o => {
+      const date = new Date(o.date);
+      const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      // Determine status from age (demo)
+      const ageDays = (Date.now() - date.getTime()) / 86400000;
+      let status = 'placed';
+      if (ageDays > (o.etaDays || 5) + 1) status = 'delivered';
+      else if (ageDays > 1) status = 'shipped';
+      const itemsImgs = o.items.slice(0, 4).map(i => `<img src="${i.img}" alt="${i.name}">`).join('');
+      const moreCount = o.items.length > 4 ? `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:60px;background:var(--cream-warm);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0">+${o.items.length-4}</div>` : '';
+      return `<div class="order-row">
+        <div class="order-top">
+          <div>
+            <div class="order-id-text">${o.id}</div>
+            <div class="order-date">Placed on ${dateStr}</div>
+          </div>
+          <div class="order-status ${status}">${status === 'placed' ? '⏳ Order Placed' : status === 'shipped' ? '🚚 Shipped' : '✓ Delivered'}</div>
+        </div>
+        <div class="order-items-mini">${itemsImgs}${moreCount}</div>
+        <div class="order-bottom">
+          <div>
+            <div class="order-total-text">₹${o.total.toLocaleString()}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${o.items.length} item${o.items.length > 1 ? 's' : ''} · ${o.payment.toUpperCase()}</div>
+          </div>
+          <button class="order-detail-btn" onclick="viewOrderDetail('${o.id}')"><i class="fa-solid fa-eye" style="margin-right:4px"></i> View Details</button>
+        </div>
+      </div>`;
+    }).join('');
+    content.innerHTML = '<div class="orders-list">' + html + '</div>';
+  }
+
+  function viewOrderDetail(orderId) {
+    const o = loadOrders().find(x => x.id === orderId);
+    if (!o) return;
+    const a = o.address;
+    const itemsList = o.items.map(i => `• ${i.name} (×${i.qty}) — ₹${(i.price * i.qty).toLocaleString()}`).join('\n');
+    const msg = `Order ${o.id}\n\n${itemsList}\n\nShipping to:\n${a.name}\n${a.house}, ${a.area}\n${a.city}, ${a.state} – ${a.pin}\nPhone: ${a.phone}\n\nPayment: ${o.payment.toUpperCase()}\nTotal: ₹${o.total.toLocaleString()}\nETA: ${o.eta}\n\nQuestions? Contact us on WhatsApp.`;
+    alert(msg);
+  }
+
+  // ===================================================================
+  // ============= NEW: ADDRESS BOOK ===================================
+  // ===================================================================
+  function loadAddresses() {
+    if (!currentUser) return [];
+    try {
+      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch(e) { return []; }
+  }
+  function saveAddress(addr) {
+    if (!currentUser) return;
+    try {
+      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
+      const all = loadAddresses();
+      // Avoid exact duplicates
+      const exists = all.find(a => a.house === addr.house && a.pin === addr.pin);
+      if (!exists) {
+        all.unshift(addr);
+        localStorage.setItem(key, JSON.stringify(all.slice(0, 5))); // max 5
+      }
+    } catch(e) {}
+  }
+  function deleteAddress(idx) {
+    try {
+      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
+      const all = loadAddresses();
+      all.splice(idx, 1);
+      localStorage.setItem(key, JSON.stringify(all));
+      renderAddressBook();
+      showToast('Address removed');
+    } catch(e) {}
+  }
+  function openAddressBook() {
+    requireLogin(() => {
+      renderAddressBook();
+      document.getElementById('addr-overlay').classList.add('open');
+    });
+  }
+  function closeAddressBook() {
+    document.getElementById('addr-overlay').classList.remove('open');
+  }
+  function addrOverlayClick(e) {
+    if (e.target === document.getElementById('addr-overlay')) closeAddressBook();
+  }
+  function renderAddressBook() {
+    const list = loadAddresses();
+    const el = document.getElementById('addr-list');
+    if (!list.length) {
+      el.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-location-dot"></i><p>No saved addresses yet</p><p style="font-size:12px;margin-top:6px;color:var(--muted-soft)">Place an order to save your address</p></div>';
+      return;
+    }
+    el.innerHTML = list.map((a, i) => `
+      <div class="saved-addr-card">
+        <strong>${a.name} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${(a.type||'HOME').toUpperCase()}</span></strong>
+        ${a.house}, ${a.area}<br>
+        ${a.city}, ${a.state} – ${a.pin}<br>
+        <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${a.phone}</span>
+        <div class="saved-addr-actions">
+          <button class="danger" onclick="deleteAddress(${i})"><i class="fa-regular fa-trash-can"></i> Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ===================================================================
+  // ============= NEW: PRICE RANGE FILTER =============================
+  // ===================================================================
+  let maxPrice = 3000;
+  function updatePriceRange(v) {
+    maxPrice = parseInt(v);
+    document.getElementById('price-range-val').textContent = '₹' + maxPrice.toLocaleString();
+    applyFiltersAndSort();
+  }
+
+  // ===================================================================
+  // ============= NEW: RECENTLY VIEWED ================================
+  // ===================================================================
+  let recentlyViewed = [];
+  function loadRecent() {
+    try {
+      const r = localStorage.getItem('laxuage_recent');
+      if (r) recentlyViewed = JSON.parse(r);
+    } catch(e) {}
+  }
+  function saveRecent() {
+    try { localStorage.setItem('laxuage_recent', JSON.stringify(recentlyViewed)); } catch(e) {}
+  }
+  function addToRecentlyViewed(id) {
+    recentlyViewed = recentlyViewed.filter(x => x !== id);
+    recentlyViewed.unshift(id);
+    recentlyViewed = recentlyViewed.slice(0, 8);
+    saveRecent();
+    renderRecentlyViewed();
+  }
+  function clearRecent() {
+    recentlyViewed = [];
+    saveRecent();
+    renderRecentlyViewed();
+  }
+  function renderRecentlyViewed() {
+    const section = document.getElementById('recent-section');
+    const grid = document.getElementById('recent-grid');
+    if (!recentlyViewed.length) {
+      section.classList.remove('show');
+      return;
+    }
+    const items = recentlyViewed.map(id => products.find(p => p.id === id)).filter(Boolean);
+    if (!items.length) { section.classList.remove('show'); return; }
+    section.classList.add('show');
+    grid.innerHTML = items.map(p => `
+      <div class="recent-card" onclick="openModal(${p.id})">
+        <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <div class="recent-card-name">${p.name}</div>
+        <div class="recent-card-price">${p.price ? '₹'+p.price.toLocaleString() : 'On Request'}</div>
+      </div>`).join('');
+  }
+
+  // ===================================================================
+  // ============= NEW: NEWSLETTER =====================================
+  // ===================================================================
+  function subscribeNewsletter() {
+    const email = document.getElementById('newsletter-email').value.trim();
+    const msg = document.getElementById('newsletter-msg');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msg.className = 'newsletter-msg show';
+      msg.style.color = '#ffcfcf';
+      msg.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid email';
+      return;
+    }
+    try {
+      const subs = JSON.parse(localStorage.getItem('laxuage_newsletter') || '[]');
+      if (!subs.includes(email)) subs.push(email);
+      localStorage.setItem('laxuage_newsletter', JSON.stringify(subs));
+    } catch(e) {}
+    document.getElementById('newsletter-email').value = '';
+    msg.className = 'newsletter-msg show';
+    msg.style.color = 'var(--gold)';
+    msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> Welcome aboard! Check your email for a welcome offer.';
+    setTimeout(() => msg.classList.remove('show'), 5000);
+  }
+
   // ===== FIX URL # =====
   // Remove # from URL without page reload
   if (window.location.hash) {
@@ -2734,9 +4559,11 @@
   window.onload = () => {
     loadUser();
     loadData();
+    loadRecent();
     updateCartUI();
     updateNavProfile();
     applyFiltersAndSort();
+    renderRecentlyViewed();
     if (window.location.hash) {
       history.replaceState(null, '', window.location.pathname);
     }

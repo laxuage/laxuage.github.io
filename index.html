@@ -4272,9 +4272,28 @@
   }
   function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // Looks up the EXACT place (post office + district + state) for any Indian
-  // pincode via India Post's free API, then shows the delivery estimate.
-  // If the API is unreachable, it falls back to the built-in region map.
+  // Parse India Post API response → {found, place, district, state} | {found:false} | null
+  function parsePincodeResponse(d){
+    const rec = d && d[0];
+    if (rec && rec.Status === 'Success' && rec.PostOffice && rec.PostOffice.length){
+      const po = rec.PostOffice[0];
+      return { found:true, place:po.Name, district:po.District, state:po.State };
+    }
+    if (rec && rec.Status) return { found:false };   // valid response, pincode not in postal DB
+    return null;                                      // unexpected shape — treat as failure
+  }
+  // Try the API directly first (works on the live site); if the browser blocks
+  // it (CORS) or we're on a local file, retry through a free CORS proxy. Only
+  // if BOTH fail do we fall back to the region map.
+  async function lookupPincode(pin){
+    const api = 'https://api.postalpincode.in/pincode/' + pin;
+    try { const r = await fetch(api); if (r.ok){ const p = parsePincodeResponse(await r.json()); if (p) return p; } } catch(e){}
+    try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(api)); if (r.ok){ const p = parsePincodeResponse(await r.json()); if (p) return p; } } catch(e){}
+    return { error:true };
+  }
+
+  // Shows the EXACT place (post office + district + state) for any Indian pincode,
+  // plus the delivery estimate (Kerala 5 days, rest of India 6 days).
   async function checkPincode() {
     const pin = document.getElementById('pincode-input').value.trim();
     const result = document.getElementById('pincode-result');
@@ -4285,21 +4304,16 @@
     }
     result.className = 'pincode-result show';
     result.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking delivery…';
+    const info = await lookupPincode(pin);
     let place = null, district = null, state = null;
-    try {
-      const res = await fetch('https://api.postalpincode.in/pincode/' + pin);
-      const data = await res.json();
-      const rec = data && data[0];
-      if (rec && rec.Status === 'Success' && rec.PostOffice && rec.PostOffice.length) {
-        const po = rec.PostOffice[0];
-        place = po.Name; district = po.District; state = po.State;
-      } else {
-        result.className = 'pincode-result show error';
-        result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> This pincode was not found. Please re-check it.';
-        return;
-      }
-    } catch (e) {
-      // Network/API issue — fall back to the built-in region map.
+    if (info.found) {
+      place = info.place; district = info.district; state = info.state;
+    } else if (info.found === false) {
+      result.className = 'pincode-result show error';
+      result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> This pincode was not found. Please re-check it.';
+      return;
+    } else {
+      // Both API attempts failed (offline / blocked) — use the built-in region map.
       state = pinInfo(pin).region;
     }
     const days = deliveryDaysForState(state);

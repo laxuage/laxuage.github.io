@@ -2800,13 +2800,6 @@
 
 <!-- Products -->
 <div class="section-wrap">
-  <div class="section-header">
-    <div>
-      <div class="section-eyebrow">Shop the Collection</div>
-      <h2 class="section-title">Our <em>Collection</em></h2>
-    </div>
-    <button class="view-all" onclick="filterCat('all')">View All &rarr;</button>
-  </div>
   <div class="product-section">
     <div class="product-grid" id="product-grid"></div>
   </div>
@@ -4264,29 +4257,58 @@
     '80':['Bihar',5], '81':['Bihar',5], '82':['Bihar',5],
     '83':['Jharkhand',5], '84':['Bihar',5], '85':['Bihar',6]
   };
-  // Returns {valid, region, days} for any Indian PIN. Indian PINs are 6
-  // digits and never start with 0.
+  // Region label fallback + delivery days: Kerala = 5 days, rest of India = 6.
   function pinInfo(pin){
     pin = String(pin || '').trim();
     if (!/^[1-9]\d{5}$/.test(pin)) return { valid:false };
-    const info = PIN_REGIONS[pin.substring(0,2)]
-              || (pin[0] === '9' ? ['Army Postal (APO/FPO)',7] : ['India',5]);
-    return { valid:true, region:info[0], days:info[1] };
+    const k = pin.substring(0,2);
+    const region = (PIN_REGIONS[k] && PIN_REGIONS[k][0])
+                || (pin[0] === '9' ? 'Army Postal (APO/FPO)' : 'India');
+    const kerala = ['67','68','69'].includes(k);
+    return { valid:true, region, kerala, days: kerala ? 5 : 6 };
   }
+  function deliveryDaysForState(state){
+    return (state && String(state).toLowerCase() === 'kerala') ? 5 : 6;
+  }
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function checkPincode() {
+  // Looks up the EXACT place (post office + district + state) for any Indian
+  // pincode via India Post's free API, then shows the delivery estimate.
+  // If the API is unreachable, it falls back to the built-in region map.
+  async function checkPincode() {
     const pin = document.getElementById('pincode-input').value.trim();
     const result = document.getElementById('pincode-result');
-    const info = pinInfo(pin);
-    if (!info.valid) {
+    if (!/^[1-9]\d{5}$/.test(pin)) {
       result.className = 'pincode-result show error';
       result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 6-digit Indian pincode';
       return;
     }
-    const eta = new Date(Date.now() + info.days * 86400000);
-    const opts = { weekday: 'short', day: 'numeric', month: 'short' };
+    result.className = 'pincode-result show';
+    result.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking delivery…';
+    let place = null, district = null, state = null;
+    try {
+      const res = await fetch('https://api.postalpincode.in/pincode/' + pin);
+      const data = await res.json();
+      const rec = data && data[0];
+      if (rec && rec.Status === 'Success' && rec.PostOffice && rec.PostOffice.length) {
+        const po = rec.PostOffice[0];
+        place = po.Name; district = po.District; state = po.State;
+      } else {
+        result.className = 'pincode-result show error';
+        result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> This pincode was not found. Please re-check it.';
+        return;
+      }
+    } catch (e) {
+      // Network/API issue — fall back to the built-in region map.
+      state = pinInfo(pin).region;
+    }
+    const days = deliveryDaysForState(state);
+    const eta = new Date(Date.now() + days * 86400000);
+    const dateStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    let loc = escHtml(state);
+    if (place) loc = escHtml(place) + (district && district !== place ? ', ' + escHtml(district) : '') + ', ' + escHtml(state);
     result.className = 'pincode-result show success';
-    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivers to <strong>${info.region}</strong> — by <strong>${eta.toLocaleDateString('en-IN', opts)}</strong> · Free shipping`;
+    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivers to <strong>${loc}</strong> — within <strong>${days} days</strong> (by ${dateStr}) · Free shipping`;
   }
 
   // ===================================================================
@@ -4502,7 +4524,7 @@
     const orderId = 'LXG-' + Date.now().toString().slice(-7);
     // Determine ETA from pincode (all-India, same logic as the delivery checker)
     const pi = pinInfo(addr.pin);
-    const days = pi.valid ? pi.days : 5;
+    const days = pi.valid ? pi.days : 6;
     const eta = new Date(Date.now() + days * 86400000);
     const etaStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
     const order = {
@@ -4523,7 +4545,7 @@
     sendOrderToWhatsApp(order);   // <-- order is delivered to the shop's WhatsApp
     // Update success screen
     document.getElementById('ck-success-id').textContent = orderId;
-    document.getElementById('ck-success-eta').textContent = days <= 3 ? `By ${etaStr}` : `${days}–${days+2} business days`;
+    document.getElementById('ck-success-eta').textContent = `Within ${days} days (by ${etaStr})`;
     // Clear cart
     cart = [];
     appliedCoupon = null;

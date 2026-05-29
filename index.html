@@ -54,6 +54,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <!-- QR code generator (for instant UPI payment). If it fails to load, the Pay button + UPI ID still work. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     /* ===== DESIGN TOKENS — Modern, Unique, Simple ===== */
     :root {
@@ -2732,6 +2734,31 @@
       .rev-head { gap: 18px; }
     }
 
+    /* ----- INSTANT UPI PAY (Vazhi 1) ----- */
+    .ck-upi-pay {
+      margin: 18px auto 4px; max-width: 320px; padding: 20px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--cream-warm); text-align: center;
+    }
+    .ck-upi-title { font-size: 13px; font-weight: 800; color: var(--primary); letter-spacing: 0.04em; margin-bottom: 4px; }
+    .ck-upi-amount { font-family: var(--sans); font-size: 30px; font-weight: 800; color: var(--ink); margin-bottom: 14px; }
+    .ck-upi-qr { width: 180px; height: 180px; margin: 0 auto 8px; background: #fff; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .ck-upi-qr img, .ck-upi-qr canvas { display: block; }
+    .ck-upi-qr:empty { display: none; }
+    .ck-upi-scan-hint { font-size: 11.5px; color: var(--muted); margin-bottom: 14px; }
+    .ck-upi-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; background: var(--primary); color: var(--paper); text-decoration: none;
+      padding: 13px 0; border-radius: var(--radius); font-size: 13.5px; font-weight: 700;
+      letter-spacing: 0.03em; box-shadow: 0 6px 18px -6px rgba(126,45,73,0.5); transition: background 0.2s;
+    }
+    .ck-upi-btn:hover { background: var(--primary-dark); }
+    .ck-upi-id-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 6px; }
+    .ck-upi-id { font-family: var(--mono, monospace); font-size: 13px; color: var(--ink); background: var(--paper); border: 1px solid var(--border); padding: 6px 10px; border-radius: var(--radius-sm); }
+    .ck-upi-copy { background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+    .ck-upi-copy:hover { text-decoration: underline; }
+    .ck-upi-after { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 8px; }
+
   </style>
 </head>
 <body>
@@ -3408,7 +3435,7 @@
             <div class="ck-pay-icon"><i class="fa-solid fa-mobile-screen"></i></div>
             <div class="ck-pay-info">
               <div class="ck-pay-title">UPI / Online Payment</div>
-              <div class="ck-pay-desc">Confirm your order and we'll send a secure UPI request (GPay / PhonePe / Paytm) on WhatsApp</div>
+              <div class="ck-pay-desc">Pay instantly after placing your order — scan the UPI QR or tap to pay (GPay / PhonePe / Paytm)</div>
             </div>
             <div class="ck-pay-radio"></div>
           </div>
@@ -3446,6 +3473,21 @@
             <div class="ck-order-id-val" id="ck-success-id">LXG-000000</div>
           </div>
           <p style="font-size:13px"><i class="fa-solid fa-truck-fast" style="color:var(--primary);margin-right:4px"></i> Estimated delivery: <strong id="ck-success-eta">3–5 business days</strong></p>
+
+          <!-- Instant UPI pay-now (shown only for UPI orders) -->
+          <div class="ck-upi-pay" id="ck-upi-pay" style="display:none">
+            <div class="ck-upi-title"><i class="fa-solid fa-bolt"></i> Pay now via UPI</div>
+            <div class="ck-upi-amount" id="ck-upi-amount">₹0</div>
+            <div class="ck-upi-qr" id="ck-upi-qr"></div>
+            <div class="ck-upi-scan-hint">Scan with any UPI app (GPay / PhonePe / Paytm)</div>
+            <a class="ck-upi-btn" id="ck-upi-btn" href="#"><i class="fa-solid fa-mobile-screen-button"></i> Pay in UPI app</a>
+            <div class="ck-upi-id-row">
+              <span class="ck-upi-id" id="ck-upi-id">laxuage@okhdfcbank</span>
+              <button class="ck-upi-copy" onclick="copyUpiId()"><i class="fa-regular fa-copy"></i> Copy</button>
+            </div>
+            <div class="ck-upi-after">After paying, tap <strong>Confirm on WhatsApp</strong> below and send your payment screenshot.</div>
+          </div>
+
           <div class="ck-success-actions">
             <button class="btn-primary" onclick="if(window.lastOrderWaUrl) window.open(window.lastOrderWaUrl,'_blank')" style="padding:11px 22px;font-size:12px;background:#25D366;border-color:#25D366"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i> Confirm on WhatsApp</button>
             <button class="btn-outline" onclick="closeCheckout(); openOrders()" style="padding:11px 22px;font-size:12px">View My Orders</button>
@@ -3849,6 +3891,7 @@
   //    the text  919846923350  across the whole file.
   const SHOP = {
     whatsapp: '919846923350',         // country code + number, NO + or spaces
+    upi:      'laxuage@okhdfcbank',    // ⚠️ CHANGE THIS to YOUR real UPI ID (where the money should arrive). Format: name@bank
     email:    'laxuage@gmail.com',
     instagram:'laxuage',
     brand:    'Laxuage'
@@ -3877,6 +3920,57 @@
     const url = 'https://wa.me/' + SHOP.whatsapp + '?text=' + encodeURIComponent(buildOrderMessage(order));
     window.lastOrderWaUrl = url;
     window.open(url, '_blank');
+  }
+
+  // ----- Instant UPI payment (Vazhi 1: customer can pay immediately) -----
+  // Builds a standard UPI deep link. On a phone this opens GPay/PhonePe/Paytm
+  // with the amount pre-filled; on desktop the QR (which encodes the same link)
+  // can be scanned. Money goes straight to SHOP.upi — no backend involved.
+  function buildUpiLink(amount, orderId) {
+    // built manually with encodeURIComponent so spaces become %20 (UPI apps handle this
+    // more reliably than the '+' that URLSearchParams would produce in the note field)
+    const q =
+      'pa=' + encodeURIComponent(SHOP.upi) +
+      '&pn=' + encodeURIComponent(SHOP.brand) +
+      '&am=' + encodeURIComponent(String(amount)) +
+      '&cu=INR' +
+      '&tn=' + encodeURIComponent('Order ' + orderId);
+    return 'upi://pay?' + q;
+  }
+
+  function renderUpiPay(order) {
+    const box = document.getElementById('ck-upi-pay');
+    if (!box) return;
+    if (order.payment !== 'upi') { box.style.display = 'none'; return; } // COD: no pay box
+    box.style.display = 'block';
+    document.getElementById('ck-upi-amount').textContent = '₹' + order.total.toLocaleString('en-IN');
+    document.getElementById('ck-upi-id').textContent = SHOP.upi;
+
+    const link = buildUpiLink(order.total, order.id);
+    document.getElementById('ck-upi-btn').setAttribute('href', link);
+
+    // QR encodes the same UPI link (for scanning from a desktop screen)
+    const qr = document.getElementById('ck-upi-qr');
+    qr.style.display = '';   // reset any earlier hide
+    qr.innerHTML = '';
+    if (typeof QRCode !== 'undefined') {
+      try {
+        new QRCode(qr, { text: link, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+      } catch (e) {
+        qr.style.display = 'none'; // QR failed — button + UPI ID still work
+      }
+    } else {
+      qr.style.display = 'none';   // library didn't load — button + UPI ID still work
+    }
+  }
+
+  function copyUpiId() {
+    const id = SHOP.upi;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(id).then(() => showToast('UPI ID copied')).catch(() => showToast(id));
+    } else {
+      showToast(id);
+    }
   }
 
   // ====================================================================
@@ -4949,6 +5043,7 @@
     // Update success screen
     document.getElementById('ck-success-id').textContent = orderId;
     document.getElementById('ck-success-eta').textContent = `Within ${days} days (by ${etaStr})`;
+    renderUpiPay(order);          // <-- show instant UPI pay box for UPI orders
     // Clear cart
     cart = [];
     appliedCoupon = null;

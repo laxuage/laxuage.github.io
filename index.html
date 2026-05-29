@@ -4297,18 +4297,23 @@
         .catch(e => { clearTimeout(t); reject(e); });
     });
   }
-  // Ask the direct API AND two CORS proxies at the SAME TIME, and use whichever
-  // returns the place first. This is fast (no waiting in sequence) and reliable
-  // (if the browser blocks the direct call, a proxy still answers).
+  // Ask the direct API AND several CORS proxies at the SAME TIME, and use
+  // whichever returns the place first. Fast (parallel, not sequential) and
+  // reliable (if the browser blocks the direct call, a proxy still answers).
   async function lookupPincode(pin){
     const api = 'https://api.postalpincode.in/pincode/' + pin;
-    const urls = [
-      api,
-      'https://corsproxy.io/?url=' + encodeURIComponent(api),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(api)
+    const sources = [
+      { url: api },                                                                    // direct (works if API allows CORS)
+      { url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(api) },  // codetabs — reliable
+      { url: 'https://corsproxy.io/?url=' + encodeURIComponent(api) },
+      { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(api), wrapped: true }
     ];
     let sawNotFound = false;
-    const tasks = urls.map(u => fetchJsonWithTimeout(u, 4500).then(j => {
+    const tasks = sources.map(s => fetchJsonWithTimeout(s.url, 5000).then(j => {
+      // allorigins /get wraps the real JSON as a string inside {contents:"..."}
+      if (s.wrapped && j && typeof j.contents === 'string') {
+        try { j = JSON.parse(j.contents); } catch (e) { throw new Error('bad-wrap'); }
+      }
       const p = parsePincodeResponse(j);
       if (p && p.found) return p;            // success → wins the race
       if (p && p.found === false) sawNotFound = true;

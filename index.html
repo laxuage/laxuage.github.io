@@ -4282,14 +4282,39 @@
     if (rec && rec.Status) return { found:false };   // valid response, pincode not in postal DB
     return null;                                      // unexpected shape — treat as failure
   }
-  // Try the API directly first (works on the live site); if the browser blocks
-  // it (CORS) or we're on a local file, retry through a free CORS proxy. Only
-  // if BOTH fail do we fall back to the region map.
+  // Fetch JSON with a hard timeout so a slow source can never hang the UI.
+  function fetchJsonWithTimeout(url, ms){
+    return new Promise((resolve, reject) => {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      fetch(url, { signal: ctrl.signal })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)))
+        .then(j => { clearTimeout(t); resolve(j); })
+        .catch(e => { clearTimeout(t); reject(e); });
+    });
+  }
+  // Ask the direct API AND two CORS proxies at the SAME TIME, and use whichever
+  // returns the place first. This is fast (no waiting in sequence) and reliable
+  // (if the browser blocks the direct call, a proxy still answers).
   async function lookupPincode(pin){
     const api = 'https://api.postalpincode.in/pincode/' + pin;
-    try { const r = await fetch(api); if (r.ok){ const p = parsePincodeResponse(await r.json()); if (p) return p; } } catch(e){}
-    try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(api)); if (r.ok){ const p = parsePincodeResponse(await r.json()); if (p) return p; } } catch(e){}
-    return { error:true };
+    const urls = [
+      api,
+      'https://corsproxy.io/?url=' + encodeURIComponent(api),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(api)
+    ];
+    let sawNotFound = false;
+    const tasks = urls.map(u => fetchJsonWithTimeout(u, 5000).then(j => {
+      const p = parsePincodeResponse(j);
+      if (p && p.found) return p;            // success → wins the race
+      if (p && p.found === false) sawNotFound = true;
+      throw new Error('no-data');            // reject so the race tries the others
+    }));
+    try {
+      return await Promise.any(tasks);       // first source that finds the place
+    } catch (e) {
+      return sawNotFound ? { found:false } : { error:true };
+    }
   }
 
   // Shows the EXACT place (post office + district + state) for any Indian pincode,

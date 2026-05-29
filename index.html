@@ -4232,27 +4232,61 @@
   // ===================================================================
   // ============= NEW: PINCODE DELIVERY CHECK =========================
   // ===================================================================
+  // ===================================================================
+  // ===== ALL-INDIA PINCODE DELIVERY (covers every valid PIN) =========
+  // ===================================================================
+  // Region is read from the first 2 digits of the PIN; delivery days are
+  // estimated from Kerala. Edit the days below to match your courier.
+  const PIN_REGIONS = {
+    '11':['Delhi',4], '12':['Haryana',4], '13':['Haryana / Punjab',4],
+    '14':['Punjab',5], '15':['Punjab',5], '16':['Chandigarh / Punjab',5],
+    '17':['Himachal Pradesh',6], '18':['Jammu & Kashmir',7], '19':['J&K / Ladakh',7],
+    '20':['Uttar Pradesh',5], '21':['Uttar Pradesh',5], '22':['Uttar Pradesh',5],
+    '23':['Uttar Pradesh',5], '24':['Uttarakhand',6], '25':['Uttar Pradesh',5],
+    '26':['Uttarakhand',6], '27':['Uttar Pradesh',5], '28':['Uttar Pradesh',5],
+    '30':['Rajasthan',5], '31':['Rajasthan',5], '32':['Rajasthan',5],
+    '33':['Rajasthan',5], '34':['Rajasthan',5],
+    '36':['Gujarat',5], '37':['Gujarat',5], '38':['Gujarat',4], '39':['Gujarat',5],
+    '40':['Maharashtra / Goa',4], '41':['Maharashtra',4], '42':['Maharashtra',4],
+    '43':['Maharashtra',4], '44':['Maharashtra',5],
+    '45':['Madhya Pradesh',5], '46':['Madhya Pradesh',5], '47':['Madhya Pradesh',5],
+    '48':['Madhya Pradesh',5], '49':['Chhattisgarh',5],
+    '50':['Telangana',3], '51':['Andhra Pradesh',3], '52':['Andhra Pradesh',4],
+    '53':['Andhra Pradesh',4],
+    '56':['Karnataka',3], '57':['Karnataka',3], '58':['Karnataka',4], '59':['Karnataka',4],
+    '60':['Tamil Nadu',3], '61':['Tamil Nadu',3], '62':['Tamil Nadu',3],
+    '63':['Tamil Nadu',3], '64':['Tamil Nadu',3],
+    '67':['Kerala',2], '68':['Kerala',2], '69':['Kerala',2],
+    '70':['West Bengal',5], '71':['West Bengal',5], '72':['West Bengal',5],
+    '73':['West Bengal',5], '74':['West Bengal / Sikkim',6],
+    '75':['Odisha',5], '76':['Odisha',5], '77':['Odisha',6],
+    '78':['Assam',6], '79':['North-East India',7],
+    '80':['Bihar',5], '81':['Bihar',5], '82':['Bihar',5],
+    '83':['Jharkhand',5], '84':['Bihar',5], '85':['Bihar',6]
+  };
+  // Returns {valid, region, days} for any Indian PIN. Indian PINs are 6
+  // digits and never start with 0.
+  function pinInfo(pin){
+    pin = String(pin || '').trim();
+    if (!/^[1-9]\d{5}$/.test(pin)) return { valid:false };
+    const info = PIN_REGIONS[pin.substring(0,2)]
+              || (pin[0] === '9' ? ['Army Postal (APO/FPO)',7] : ['India',5]);
+    return { valid:true, region:info[0], days:info[1] };
+  }
+
   function checkPincode() {
     const pin = document.getElementById('pincode-input').value.trim();
     const result = document.getElementById('pincode-result');
-    if (!/^\d{6}$/.test(pin)) {
+    const info = pinInfo(pin);
+    if (!info.valid) {
       result.className = 'pincode-result show error';
-      result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 6-digit pincode';
+      result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 6-digit Indian pincode';
       return;
     }
-    // Simulate delivery: Kerala (67xxxx, 68xxxx, 69xxxx) = fast, metros = standard, else = slow
-    const prefix = pin.substring(0, 2);
-    let days = 5;
-    const keralaPrefixes = ['67','68','69'];
-    const metroPrefixes = ['11','12','40','50','56','60','70','80'];
-    if (keralaPrefixes.includes(prefix)) days = 2;
-    else if (metroPrefixes.includes(prefix)) days = 3;
-    else days = 5;
-    const today = new Date();
-    const eta = new Date(today.getTime() + days * 86400000);
+    const eta = new Date(Date.now() + info.days * 86400000);
     const opts = { weekday: 'short', day: 'numeric', month: 'short' };
     result.className = 'pincode-result show success';
-    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivery by <strong>${eta.toLocaleDateString('en-IN', opts)}</strong> · Free shipping`;
+    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivers to <strong>${info.region}</strong> — by <strong>${eta.toLocaleDateString('en-IN', opts)}</strong> · Free shipping`;
   }
 
   // ===================================================================
@@ -4466,11 +4500,9 @@
     const discount = computeDiscount(subtotal);
     const final = Math.max(0, subtotal - discount);
     const orderId = 'LXG-' + Date.now().toString().slice(-7);
-    // Determine ETA from pincode
-    const prefix = addr.pin.substring(0, 2);
-    let days = 5;
-    if (['67','68','69'].includes(prefix)) days = 2;
-    else if (['11','12','40','50','56','60','70','80'].includes(prefix)) days = 3;
+    // Determine ETA from pincode (all-India, same logic as the delivery checker)
+    const pi = pinInfo(addr.pin);
+    const days = pi.valid ? pi.days : 5;
     const eta = new Date(Date.now() + days * 86400000);
     const etaStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
     const order = {

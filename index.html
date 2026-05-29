@@ -4273,10 +4273,14 @@
   function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   // Parse India Post API response → {found, place, district, state} | {found:false} | null
+  // A pincode often has many post offices; pick the main one (Head → Sub → first).
   function parsePincodeResponse(d){
     const rec = d && d[0];
     if (rec && rec.Status === 'Success' && rec.PostOffice && rec.PostOffice.length){
-      const po = rec.PostOffice[0];
+      const list = rec.PostOffice;
+      const po = list.find(o => /head/i.test(o.BranchType || ''))
+              || list.find(o => /sub/i.test(o.BranchType || ''))
+              || list[0];
       return { found:true, place:po.Name, district:po.District, state:po.State };
     }
     if (rec && rec.Status) return { found:false };   // valid response, pincode not in postal DB

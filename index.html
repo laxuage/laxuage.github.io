@@ -4304,7 +4304,7 @@
       'https://api.allorigins.win/raw?url=' + encodeURIComponent(api)
     ];
     let sawNotFound = false;
-    const tasks = urls.map(u => fetchJsonWithTimeout(u, 5000).then(j => {
+    const tasks = urls.map(u => fetchJsonWithTimeout(u, 4500).then(j => {
       const p = parsePincodeResponse(j);
       if (p && p.found) return p;            // success → wins the race
       if (p && p.found === false) sawNotFound = true;
@@ -4317,8 +4317,102 @@
     }
   }
 
-  // Shows the EXACT place (post office + district + state) for any Indian pincode,
-  // plus the delivery estimate (Kerala 5 days, rest of India 6 days).
+  // Embedded area names (first 3 digits → district/city) for an INSTANT result
+  // with ZERO network wait. The exact post office name is added a moment later
+  // from India Post's API. This covers all states so the instant result is
+  // always a real district/region — never just "loading".
+  const PIN3 = {
+    // ---- Kerala (full) ----
+    '670':'Kannur','671':'Kasaragod','673':'Kozhikode','674':'Kozhikode','676':'Malappuram',
+    '677':'Kozhikode','678':'Palakkad','679':'Palakkad','680':'Thrissur','681':'Thrissur',
+    '682':'Ernakulam','683':'Ernakulam','684':'Ernakulam','685':'Idukki','686':'Kottayam',
+    '687':'Kottayam','688':'Alappuzha','689':'Pathanamthitta','690':'Kollam','691':'Kollam',
+    '692':'Kollam','695':'Thiruvananthapuram',
+    // ---- Delhi NCR ----
+    '110':'New Delhi','111':'Delhi','201':'Ghaziabad / Noida','122':'Gurugram','121':'Faridabad',
+    // ---- North ----
+    '124':'Rohtak','125':'Hisar','131':'Sonipat','132':'Karnal','133':'Ambala','134':'Panchkula',
+    '140':'Mohali','141':'Ludhiana','143':'Amritsar','144':'Jalandhar','146':'Hoshiarpur',
+    '147':'Patiala','148':'Sangrur','151':'Bathinda','152':'Ferozepur','160':'Chandigarh',
+    '171':'Shimla','173':'Solan','174':'Bilaspur (HP)','175':'Mandi','176':'Kangra','177':'Hamirpur',
+    '180':'Jammu','181':'Jammu','182':'Udhampur','190':'Srinagar','191':'Ganderbal','192':'Anantnag','193':'Baramulla',
+    // ---- Uttar Pradesh / Uttarakhand ----
+    '200':'Noida','203':'Bulandshahr','204':'Hathras','206':'Etawah','207':'Etah','208':'Kanpur',
+    '209':'Kanpur Dehat','210':'Banda','211':'Prayagraj','212':'Kaushambi','221':'Varanasi',
+    '224':'Faizabad / Ayodhya','226':'Lucknow','227':'Lucknow','228':'Sultanpur','229':'Rae Bareli',
+    '230':'Pratapgarh','231':'Mirzapur','232':'Ghazipur','241':'Hardoi','242':'Shahjahanpur',
+    '243':'Bareilly','244':'Moradabad','245':'Hapur','246':'Pauri Garhwal','247':'Saharanpur',
+    '248':'Dehradun','249':'Haridwar / Rishikesh','250':'Meerut','251':'Muzaffarnagar','261':'Sitapur',
+    '262':'Lakhimpur Kheri','263':'Nainital','271':'Bahraich','273':'Gorakhpur','274':'Deoria',
+    '276':'Azamgarh','277':'Ballia','281':'Mathura','282':'Agra','284':'Jhansi','285':'Jalaun',
+    // ---- Rajasthan ----
+    '301':'Alwar','302':'Jaipur','303':'Jaipur','305':'Ajmer','311':'Bhilwara','313':'Udaipur',
+    '321':'Bharatpur','324':'Kota','327':'Banswara','331':'Churu','332':'Sikar','334':'Bikaner',
+    '342':'Jodhpur','343':'Jalore','345':'Jaisalmer','361':'Jamnagar',
+    // ---- Gujarat ----
+    '360':'Rajkot','363':'Surendranagar','364':'Bhavnagar','370':'Kutch / Bhuj','380':'Ahmedabad',
+    '382':'Gandhinagar','384':'Mehsana','385':'Banaskantha','387':'Kheda','388':'Anand',
+    '390':'Vadodara','391':'Vadodara','392':'Bharuch','394':'Surat','395':'Surat','396':'Valsad',
+    // ---- Maharashtra / Goa ----
+    '400':'Mumbai','401':'Palghar','402':'Raigad','410':'Navi Mumbai','411':'Pune','412':'Pune',
+    '413':'Solapur','414':'Ahmednagar','415':'Sangli','416':'Kolhapur','421':'Thane','422':'Nashik',
+    '423':'Nashik','424':'Dhule','425':'Jalgaon','431':'Aurangabad','440':'Nagpur','441':'Nagpur',
+    '442':'Chandrapur','444':'Akola','445':'Yavatmal','403':'Goa',
+    // ---- Madhya Pradesh / Chhattisgarh ----
+    '450':'Khandwa','451':'Khargone','452':'Indore','453':'Indore','455':'Dewas','456':'Ujjain',
+    '457':'Ratlam','458':'Mandsaur','462':'Bhopal','464':'Vidisha','470':'Sagar','472':'Tikamgarh',
+    '474':'Gwalior','480':'Chhindwara','482':'Jabalpur','486':'Rewa','490':'Durg / Bhilai',
+    '492':'Raipur','494':'Jagdalpur','495':'Bilaspur (CG)','496':'Raigarh',
+    // ---- Telangana / Andhra Pradesh ----
+    '500':'Hyderabad','501':'Hyderabad','502':'Medak','505':'Karimnagar','506':'Warangal',
+    '507':'Khammam','508':'Nalgonda','509':'Mahbubnagar','515':'Anantapur','516':'Kadapa',
+    '517':'Chittoor','518':'Kurnool','520':'Vijayawada','521':'Krishna','522':'Guntur',
+    '523':'Prakasam','524':'Nellore','530':'Visakhapatnam','531':'Visakhapatnam','533':'East Godavari',
+    '534':'West Godavari','535':'Vizianagaram',
+    // ---- Karnataka ----
+    '560':'Bengaluru','561':'Bengaluru Rural','562':'Bengaluru Rural','563':'Kolar','570':'Mysuru',
+    '571':'Mandya','572':'Tumakuru','573':'Hassan','574':'Dakshina Kannada','575':'Mangaluru',
+    '576':'Udupi','577':'Shivamogga','580':'Dharwad','581':'Haveri','583':'Ballari','585':'Kalaburagi',
+    '586':'Vijayapura','587':'Bagalkot','590':'Belagavi','591':'Belagavi',
+    // ---- Tamil Nadu ----
+    '600':'Chennai','601':'Tiruvallur','602':'Tiruvallur','603':'Kanchipuram','605':'Cuddalore',
+    '606':'Villupuram','607':'Cuddalore','609':'Mayiladuthurai','610':'Tiruvarur','612':'Thanjavur',
+    '613':'Thanjavur','614':'Pudukkottai','620':'Tiruchirappalli','621':'Tiruchirappalli',
+    '623':'Ramanathapuram','624':'Dindigul','625':'Madurai','626':'Virudhunagar','627':'Tirunelveli',
+    '628':'Thoothukudi','629':'Kanyakumari','630':'Sivaganga','635':'Krishnagiri','636':'Salem',
+    '637':'Namakkal','638':'Erode','639':'Karur','641':'Coimbatore','642':'Tiruppur','643':'Nilgiris',
+    // ---- West Bengal / East ----
+    '700':'Kolkata','711':'Howrah','712':'Hooghly','713':'Bardhaman','721':'Purba Medinipur',
+    '722':'Bankura','723':'Purulia','731':'Birbhum','732':'Malda','733':'Uttar Dinajpur',
+    '734':'Darjeeling / Siliguri','735':'Jalpaiguri','736':'Cooch Behar','737':'Sikkim','741':'Nadia',
+    '742':'Murshidabad','743':'North 24 Parganas',
+    // ---- Odisha ----
+    '751':'Bhubaneswar','752':'Khordha / Puri','753':'Cuttack','754':'Cuttack','755':'Jajpur',
+    '756':'Balasore','757':'Mayurbhanj','758':'Keonjhar','759':'Angul','760':'Ganjam','761':'Ganjam',
+    '764':'Koraput','765':'Rayagada','766':'Kalahandi','767':'Balangir','768':'Sambalpur','769':'Rourkela',
+    // ---- Assam / North-East ----
+    '781':'Guwahati','782':'Nagaon','783':'Goalpara','784':'Sonitpur','785':'Jorhat','786':'Dibrugarh',
+    '787':'North Lakhimpur','788':'Cachar / Silchar','790':'Arunachal Pradesh','791':'Arunachal Pradesh',
+    '793':'Meghalaya / Shillong','794':'Meghalaya','795':'Manipur / Imphal','796':'Mizoram / Aizawl',
+    '797':'Nagaland / Kohima','798':'Nagaland','799':'Tripura / Agartala',
+    // ---- Bihar / Jharkhand ----
+    '800':'Patna','801':'Patna','802':'Bhojpur','803':'Nalanda','811':'Munger','812':'Bhagalpur',
+    '813':'Banka','814':'Dumka','815':'Deoghar','821':'Rohtas / Sasaram','823':'Gaya','824':'Aurangabad (Bihar)',
+    '831':'Jamshedpur','834':'Ranchi','835':'Ranchi','842':'Muzaffarpur','843':'Sitamarhi',
+    '845':'West Champaran','846':'Darbhanga','847':'Madhubani','848':'Samastipur','851':'Begusarai',
+    '852':'Khagaria','854':'Purnia','855':'Katihar'
+  };
+  // Instant {label, days} from the embedded data — no network needed.
+  function placeFromPin(pin){
+    const info = pinInfo(pin);
+    if (!info.valid) return null;
+    const d3 = PIN3[pin.substring(0,3)];
+    return { label: (d3 && d3 !== info.region) ? (d3 + ', ' + info.region) : info.region, days: info.days };
+  }
+
+  // Shows an INSTANT delivery result (district + state, zero wait), then quietly
+  // upgrades to the EXACT post office name once India Post's API responds.
+  let _pinReq = 0;   // guards against an old slow response overwriting a newer check
   async function checkPincode() {
     const pin = document.getElementById('pincode-input').value.trim();
     const result = document.getElementById('pincode-result');
@@ -4327,27 +4421,28 @@
       result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 6-digit Indian pincode';
       return;
     }
-    result.className = 'pincode-result show';
-    result.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking delivery…';
-    const info = await lookupPincode(pin);
-    let place = null, district = null, state = null;
-    if (info.found) {
-      place = info.place; district = info.district; state = info.state;
-    } else if (info.found === false) {
-      result.className = 'pincode-result show error';
-      result.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> This pincode was not found. Please re-check it.';
-      return;
-    } else {
-      // Both API attempts failed (offline / blocked) — use the built-in region map.
-      state = pinInfo(pin).region;
-    }
-    const days = deliveryDaysForState(state);
+    const reqId = ++_pinReq;
+    const base = placeFromPin(pin);
+    const days = base ? base.days : 6;
     const eta = new Date(Date.now() + days * 86400000);
     const dateStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-    let loc = escHtml(state);
-    if (place) loc = escHtml(place) + (district && district !== place ? ', ' + escHtml(district) : '') + ', ' + escHtml(state);
-    result.className = 'pincode-result show success';
-    result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivers to <strong>${loc}</strong> — within <strong>${days} days</strong> (by ${dateStr}) · Free shipping`;
+    const render = (locLabel) => {
+      if (reqId !== _pinReq) return;   // a newer check started — ignore this one
+      result.className = 'pincode-result show success';
+      result.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Delivers to <strong>${escHtml(locLabel)}</strong> — within <strong>${days} days</strong> (by ${dateStr}) · Free shipping`;
+    };
+    // 1) INSTANT result from embedded data (no network, never hangs)
+    render(base ? base.label : 'India');
+    // 2) Upgrade to the EXACT post office name from the API (works on the live
+    //    site). If it can't be reached, the instant district result just stays.
+    lookupPincode(pin).then(info => {
+      if (info && info.found && info.place) {
+        const exact = info.place
+          + (info.district && info.district !== info.place ? ', ' + info.district : '')
+          + (info.state ? ', ' + info.state : '');
+        render(exact);
+      }
+    }).catch(() => {});
   }
 
   // ===================================================================

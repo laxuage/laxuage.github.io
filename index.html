@@ -3,7 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laxuage — Premium Luxury Bags</title>
+  <title>Laxuage — Premium Luxury Bags | Made of Her</title>
+  <meta name="description" content="Laxuage — premium luxury handbags, crossbody bags, totes and clutches for the modern woman. Designed in India, crafted with care. Free shipping above ₹999, easy 7-day returns, COD & UPI.">
+  <meta name="keywords" content="luxury bags, handbags India, crossbody bag, designer tote, clutch, premium bags Kerala, Laxuage">
+  <meta name="author" content="Laxuage">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#7E2D49">
+  <!-- Open Graph / WhatsApp / Facebook preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Laxuage">
+  <meta property="og:title" content="Laxuage — Premium Luxury Bags">
+  <meta property="og:description" content="A handpicked edit of premium luxury bags. Designed in India, made with care, carried with intention.">
+  <meta property="og:locale" content="en_IN">
+  <!-- og:image: after launch, add a real share image at this path (1200x630) -->
+  <meta property="og:image" content="share-cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Laxuage — Premium Luxury Bags">
+  <meta name="twitter:description" content="A handpicked edit of premium luxury bags. Designed in India, made with care.">
+  <script>
+    /* Elegant on-brand placeholder so NO image ever appears broken.
+       If a product photo (bagN.jpg) is missing, this draws a refined
+       fallback instead. Replace with your real photos to remove it. */
+    function placeholderFor(name){
+      var label = String(name || 'Laxuage').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (label.length > 24) label = label.slice(0, 22) + '…';
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'>"
+        + "<defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>"
+        + "<stop offset='0' stop-color='#f7efe3'/><stop offset='1' stop-color='#ecddca'/></linearGradient></defs>"
+        + "<rect width='600' height='600' fill='url(#bg)'/>"
+        + "<g fill='none' stroke='#b08d57' stroke-width='6' stroke-linejoin='round' stroke-linecap='round'>"
+        + "<path d='M205 252 h190 l16 150 a22 22 0 0 1 -22 24 H211 a22 22 0 0 1 -22 -24 Z'/>"
+        + "<path d='M243 252 v-28 a57 57 0 0 1 114 0 v28'/></g>"
+        + "<circle cx='300' cy='322' r='9' fill='#7E2D49'/>"
+        + "<text x='300' y='474' text-anchor='middle' font-family='Georgia,serif' font-size='30' font-style='italic' fill='#5E1F37'>" + label + "</text>"
+        + "<text x='300' y='512' text-anchor='middle' font-family='Georgia,serif' font-size='13' letter-spacing='5' fill='#a07a4a'>LAXUAGE</text>"
+        + "</svg>";
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+    // Catch ANY broken image (static or dynamic) and swap to the placeholder.
+    document.addEventListener('error', function(e){
+      var t = e.target;
+      if (t && t.tagName === 'IMG' && !t.dataset.ph) {
+        t.dataset.ph = '1';
+        t.src = placeholderFor(t.alt || 'Laxuage');
+      }
+    }, true);
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='50%25' y='62%25' font-family='Georgia,serif' font-size='42' font-style='italic' text-anchor='middle' fill='%23b08d57'%3EL%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2804,19 +2849,21 @@
     <div class="footer-col">
       <h4>Explore</h4>
       <ul>
-        <li><button class="footer-link">Home</button></li>
-        <li><button class="footer-link">Collections</button></li>
-        <li><button class="footer-link">New Arrivals</button></li>
-        <li><button class="footer-link">Sale</button></li>
+        <li><button class="footer-link" onclick="window.scrollTo({top:0,behavior:'smooth'})">Home</button></li>
+        <li><button class="footer-link" onclick="filterCat('all'); document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">Collections</button></li>
+        <li><button class="footer-link" onclick="sortProducts('newest'); document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">New Arrivals</button></li>
+        <li><button class="footer-link" onclick="openInfo('shipping')">Shipping Info</button></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Customer Care</h4>
       <ul>
         <li><button class="footer-link" onclick="openOrders()">Track Order</button></li>
-        <li><button class="footer-link">Return Policy</button></li>
-        <li><button class="footer-link">Size Guide</button></li>
-        <li><button class="footer-link">FAQ</button></li>
+        <li><button class="footer-link" onclick="openInfo('shipping')">Shipping &amp; Delivery</button></li>
+        <li><button class="footer-link" onclick="openInfo('returns')">Returns &amp; Refunds</button></li>
+        <li><button class="footer-link" onclick="openInfo('size')">Size &amp; Care Guide</button></li>
+        <li><button class="footer-link" onclick="openInfo('faq')">FAQ</button></li>
+        <li><button class="footer-link" onclick="openInfo('contact')">Contact Us</button></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -2829,6 +2876,13 @@
     </div>
   </div>
   <div class="footer-bottom">
+    <div style="display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;margin-bottom:12px">
+      <button class="footer-link" onclick="openInfo('shipping')">Shipping</button>
+      <button class="footer-link" onclick="openInfo('returns')">Returns &amp; Refunds</button>
+      <button class="footer-link" onclick="openInfo('privacy')">Privacy Policy</button>
+      <button class="footer-link" onclick="openInfo('terms')">Terms &amp; Conditions</button>
+      <button class="footer-link" onclick="openInfo('contact')">Contact</button>
+    </div>
     © 2026 <span>Laxuage</span> — All Rights Reserved
   </div>
 </footer>
@@ -3185,24 +3239,8 @@
           <div class="ck-pay-opt selected" data-pay="upi" onclick="selectPay(this)">
             <div class="ck-pay-icon"><i class="fa-solid fa-mobile-screen"></i></div>
             <div class="ck-pay-info">
-              <div class="ck-pay-title">UPI Payment</div>
-              <div class="ck-pay-desc">Pay using Google Pay, PhonePe, Paytm, BHIM</div>
-            </div>
-            <div class="ck-pay-radio"></div>
-          </div>
-          <div class="ck-pay-opt" data-pay="card" onclick="selectPay(this)">
-            <div class="ck-pay-icon"><i class="fa-solid fa-credit-card"></i></div>
-            <div class="ck-pay-info">
-              <div class="ck-pay-title">Credit / Debit Card</div>
-              <div class="ck-pay-desc">Visa, Mastercard, RuPay — secure encrypted</div>
-            </div>
-            <div class="ck-pay-radio"></div>
-          </div>
-          <div class="ck-pay-opt" data-pay="netbanking" onclick="selectPay(this)">
-            <div class="ck-pay-icon"><i class="fa-solid fa-building-columns"></i></div>
-            <div class="ck-pay-info">
-              <div class="ck-pay-title">Net Banking</div>
-              <div class="ck-pay-desc">All major Indian banks supported</div>
+              <div class="ck-pay-title">UPI / Online Payment</div>
+              <div class="ck-pay-desc">Confirm your order and we'll send a secure UPI request (GPay / PhonePe / Paytm) on WhatsApp</div>
             </div>
             <div class="ck-pay-radio"></div>
           </div>
@@ -3214,6 +3252,10 @@
             </div>
             <div class="ck-pay-radio"></div>
           </div>
+        </div>
+        <div style="margin-top:14px;padding:13px 15px;background:var(--primary-soft);border-radius:var(--radius);font-size:12.5px;color:var(--primary-dark);line-height:1.6">
+          <i class="fa-solid fa-circle-info" style="margin-right:6px"></i>
+          When you place your order, it's sent to us on <strong>WhatsApp</strong>. We confirm stock &amp; delivery and share the payment details — quick, personal and secure.
         </div>
       </div>
 
@@ -3230,15 +3272,16 @@
         <div class="ck-success">
           <div class="ck-success-icon"><i class="fa-solid fa-check"></i></div>
           <h2>Order Placed Successfully!</h2>
-          <p>Thank you for shopping at Laxuage. We'll send confirmation shortly.</p>
+          <p>Thank you for shopping at Laxuage. Your order has been sent to us on WhatsApp — we'll confirm and share payment details shortly.</p>
           <div class="ck-order-id">
             <div class="ck-order-id-label">Order ID</div>
             <div class="ck-order-id-val" id="ck-success-id">LXG-000000</div>
           </div>
           <p style="font-size:13px"><i class="fa-solid fa-truck-fast" style="color:var(--primary);margin-right:4px"></i> Estimated delivery: <strong id="ck-success-eta">3–5 business days</strong></p>
           <div class="ck-success-actions">
+            <button class="btn-primary" onclick="if(window.lastOrderWaUrl) window.open(window.lastOrderWaUrl,'_blank')" style="padding:11px 22px;font-size:12px;background:#25D366;border-color:#25D366"><i class="fa-brands fa-whatsapp" style="margin-right:6px"></i> Confirm on WhatsApp</button>
             <button class="btn-outline" onclick="closeCheckout(); openOrders()" style="padding:11px 22px;font-size:12px">View My Orders</button>
-            <button class="btn-primary" onclick="closeCheckout()" style="padding:11px 22px;font-size:12px">Continue Shopping</button>
+            <button class="btn-outline" onclick="closeCheckout()" style="padding:11px 22px;font-size:12px">Continue Shopping</button>
           </div>
         </div>
       </div>
@@ -3280,6 +3323,24 @@
         <p>No saved addresses yet. Place an order to save one.</p>
       </div>
     </div>
+  </div>
+</div>
+
+<style>
+  #info-content p { margin: 0 0 12px; }
+  #info-content ul { margin: 0 0 12px; padding-left: 20px; }
+  #info-content li { margin: 0 0 7px; }
+  #info-content strong { color: var(--ink); }
+  #info-content p:last-child, #info-content ul:last-child { margin-bottom: 0; }
+</style>
+<!-- Info / Policy Modal -->
+<div class="orders-modal-overlay" id="info-overlay" onclick="infoOverlayClick(event)">
+  <div class="orders-modal-box">
+    <div class="modal-header">
+      <h3 id="info-title">Information</h3>
+      <button class="modal-close" onclick="closeInfo()">×</button>
+    </div>
+    <div id="info-content" style="padding:22px 24px;font-size:13.5px;line-height:1.7;color:var(--text-2)"></div>
   </div>
 </div>
 
@@ -3611,6 +3672,116 @@
     else list.sort((a,b) => b.reviews - a.reviews);
     renderProducts(list);
   }
+
+  // ====================================================================
+  // ====================  SHOP SETTINGS — EDIT THESE  ==================
+  // ====================================================================
+  // ⚠️ Your WhatsApp number also appears a few more times in the HTML
+  //    (footer, support button). To change it everywhere, find & replace
+  //    the text  919846923350  across the whole file.
+  const SHOP = {
+    whatsapp: '919846923350',         // country code + number, NO + or spaces
+    email:    'laxuage@gmail.com',
+    instagram:'laxuage',
+    brand:    'Laxuage'
+  };
+
+  // Build the order message that gets sent to the shop's WhatsApp.
+  function buildOrderMessage(order) {
+    const a = order.address;
+    const lines = order.items.map((i, n) =>
+      `${n + 1}. ${i.name}  ×${i.qty}  — ₹${(i.price * i.qty).toLocaleString('en-IN')}`
+    ).join('\n');
+    const payLabel = order.payment === 'cod' ? 'Cash on Delivery' : 'UPI / Online (send me a payment request)';
+    let msg = `*New Order — ${SHOP.brand}* 🛍️\n`;
+    msg += `Order ID: ${order.id}\n\n`;
+    msg += `*Items*\n${lines}\n\n`;
+    msg += `Subtotal: ₹${order.subtotal.toLocaleString('en-IN')}\n`;
+    if (order.discount > 0) msg += `Discount${order.coupon ? ' (' + order.coupon + ')' : ''}: −₹${order.discount.toLocaleString('en-IN')}\n`;
+    msg += `Shipping: Free\n`;
+    msg += `*Total: ₹${order.total.toLocaleString('en-IN')}*\n`;
+    msg += `Payment: ${payLabel}\n\n`;
+    msg += `*Deliver to*\n${a.name}\n${a.house}, ${a.area}\n${a.city}, ${a.state} – ${a.pin}\nPhone: ${a.phone}\n\n`;
+    msg += `_Sent from the ${SHOP.brand} website_`;
+    return msg;
+  }
+  function sendOrderToWhatsApp(order) {
+    const url = 'https://wa.me/' + SHOP.whatsapp + '?text=' + encodeURIComponent(buildOrderMessage(order));
+    window.lastOrderWaUrl = url;
+    window.open(url, '_blank');
+  }
+
+  // ====================================================================
+  // ==================  INFO / POLICY PAGES (footer)  =================
+  // ====================================================================
+  const INFO = {
+    shipping: { icon: 'fa-truck-fast', title: 'Shipping & Delivery', body: `
+      <p>We ship across India. Orders are dispatched within <strong>1–2 business days</strong> of confirmation.</p>
+      <ul>
+        <li><strong>Free shipping</strong> on all orders above ₹999.</li>
+        <li>Estimated delivery: <strong>2–5 business days</strong> depending on your location.</li>
+        <li>You'll receive tracking details on WhatsApp once your order ships.</li>
+      </ul>
+      <p>For any delivery query, message us on WhatsApp and we'll help right away.</p>` },
+    returns: { icon: 'fa-rotate-left', title: 'Returns & Refunds', body: `
+      <p>We want you to love your bag. If something isn't right, we offer a <strong>7-day easy return</strong> from the date of delivery.</p>
+      <ul>
+        <li>Item must be unused, with original tags and packaging.</li>
+        <li>Message us on WhatsApp with your Order ID to start a return.</li>
+        <li>Refunds are processed within 5–7 business days to your original payment method (or as UPI transfer for COD orders).</li>
+      </ul>
+      <p>Sale items and customised pieces may not be eligible for return.</p>` },
+    privacy: { icon: 'fa-shield-halved', title: 'Privacy Policy', body: `
+      <p>Your privacy matters to us. Here's how we handle your information:</p>
+      <ul>
+        <li>We collect only what's needed to fulfil your order — name, address, phone and email.</li>
+        <li>Your details are used to process and deliver orders and to provide support. We never sell your data.</li>
+        <li>Order and account information on this site is stored on your own device's browser.</li>
+        <li>Payments are collected directly by you and the customer (UPI/COD); we don't store card details.</li>
+      </ul>
+      <p>Questions? Email <strong>${'laxuage@gmail.com'}</strong>.</p>` },
+    terms: { icon: 'fa-file-lines', title: 'Terms & Conditions', body: `
+      <p>By placing an order with ${'Laxuage'}, you agree to the following:</p>
+      <ul>
+        <li>All prices are in Indian Rupees (₹) and inclusive of applicable taxes.</li>
+        <li>Orders are confirmed once we acknowledge them on WhatsApp.</li>
+        <li>Product colours may vary slightly from images due to lighting and screens.</li>
+        <li>We reserve the right to cancel any order in case of stock or pricing errors, with a full refund.</li>
+      </ul>` },
+    faq: { icon: 'fa-circle-question', title: 'Frequently Asked Questions', body: `
+      <p><strong>How do I place an order?</strong><br>Add items to your bag, go to checkout, fill your address, and confirm — your order is sent to us on WhatsApp where we confirm payment & delivery.</p>
+      <p><strong>What payment methods do you accept?</strong><br>UPI (Google Pay / PhonePe / Paytm) and Cash on Delivery.</p>
+      <p><strong>How long does delivery take?</strong><br>Usually 2–5 business days across India.</p>
+      <p><strong>Can I return a product?</strong><br>Yes — within 7 days of delivery. See our Returns policy.</p>
+      <p><strong>How do I track my order?</strong><br>We share tracking on WhatsApp, and you can view orders under "My Orders".</p>` },
+    size: { icon: 'fa-ruler-combined', title: 'Size & Care Guide', body: `
+      <p>Each product page lists dimensions. As a quick guide:</p>
+      <ul>
+        <li><strong>Mini / Clutch:</strong> ideal for essentials — phone, cards, lipstick.</li>
+        <li><strong>Crossbody:</strong> everyday hands-free carry.</li>
+        <li><strong>Handbag / Satchel:</strong> roomy for daily use.</li>
+        <li><strong>Tote:</strong> largest — fits a tablet, file or small umbrella.</li>
+      </ul>
+      <p><strong>Care:</strong> store in the dust bag, keep away from direct heat and water, and wipe gently with a soft dry cloth.</p>` },
+    contact: { icon: 'fa-headset', title: 'Contact Us', body: `
+      <p>We'd love to hear from you.</p>
+      <ul>
+        <li><strong>WhatsApp:</strong> +91 98469 23350</li>
+        <li><strong>Email:</strong> laxuage@gmail.com</li>
+        <li><strong>Instagram:</strong> @laxuage</li>
+        <li><strong>Based in:</strong> Kerala, India</li>
+      </ul>
+      <p>We usually reply within a few hours.</p>` }
+  };
+  function openInfo(key) {
+    const data = INFO[key];
+    if (!data) return;
+    document.getElementById('info-title').innerHTML = '<i class="fa-solid ' + data.icon + '"></i> ' + data.title;
+    document.getElementById('info-content').innerHTML = data.body;
+    document.getElementById('info-overlay').classList.add('open');
+  }
+  function closeInfo() { document.getElementById('info-overlay').classList.remove('open'); }
+  function infoOverlayClick(e) { if (e.target === document.getElementById('info-overlay')) closeInfo(); }
 
   const products = [
     { id:1, name:"Ivory Chain Shoulder Bag", price:1599, img:"bag1.jpg", description:"Elegant ivory leather bag with bold gold chain strap and signature clasp. Perfect for daily elegance and evening outings.", category:"handbag", badge:"new", rating:4.5, reviews:128 },
@@ -4279,7 +4450,7 @@
     document.getElementById('ck-review-list').innerHTML = itemsHtml;
     const discount = computeDiscount(subtotal);
     const final = Math.max(0, subtotal - discount);
-    const payLabels = { upi: 'UPI Payment', card: 'Credit / Debit Card', netbanking: 'Net Banking', cod: 'Cash on Delivery' };
+    const payLabels = { upi: 'UPI / Online Payment', cod: 'Cash on Delivery' };
     document.getElementById('ck-review-totals').innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString()}</span></div>
       ${discount > 0 ? `<div class="summary-row discount"><span>Discount (${appliedCoupon})</span><span>−₹${discount.toLocaleString()}</span></div>` : ''}
@@ -4317,6 +4488,7 @@
       etaDays: days
     };
     saveOrder(order);
+    sendOrderToWhatsApp(order);   // <-- order is delivered to the shop's WhatsApp
     // Update success screen
     document.getElementById('ck-success-id').textContent = orderId;
     document.getElementById('ck-success-eta').textContent = days <= 3 ? `By ${etaStr}` : `${days}–${days+2} business days`;

@@ -968,22 +968,22 @@
     .modal-actions { display: flex; gap: 10px; }
     .btn-cart-modal {
       flex: 1.4;
-      background: var(--primary);
-      color: var(--paper);
-      border: none;
-      padding: 14px 0;
+      background: var(--paper);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 13px 0;
       border-radius: var(--radius);
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       letter-spacing: 0.04em;
     }
-    .btn-cart-modal:hover { background: var(--primary-dark); }
+    .btn-cart-modal:hover { background: var(--primary-soft); }
     .btn-wishlist-modal {
       flex: 1;
       background: transparent;
@@ -2599,6 +2599,139 @@
       .modal-qty-share { gap: 10px; }
     }
 
+    /* ===================================================================
+       NEW FEATURES: gallery · reviews · buy now · related styling
+    =================================================================== */
+
+    /* ----- PRODUCT IMAGE GALLERY ----- */
+    .modal-gallery { display: flex; flex-direction: column; }
+    .mg-main { position: relative; }
+    .mg-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.92); border: 1px solid var(--border);
+      color: var(--ink); display: none; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px; box-shadow: var(--shadow);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .mg-nav:hover { background: var(--primary); color: var(--paper); border-color: var(--primary); }
+    .mg-prev { left: 12px; }
+    .mg-next { right: 12px; }
+    .mg-thumbs { display: flex; gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+    .mg-thumb {
+      width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden;
+      border: 2px solid transparent; background: var(--cream-warm); cursor: pointer; padding: 0;
+      transition: border-color 0.2s;
+    }
+    .mg-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .mg-thumb.active { border-color: var(--primary); }
+
+    /* ----- BUY NOW ----- */
+    .btn-buynow {
+      width: 100%; background: var(--primary); color: var(--paper); border: none;
+      padding: 15px 0; border-radius: var(--radius); font-size: 14px; font-weight: 800;
+      letter-spacing: 0.04em; cursor: pointer; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      box-shadow: 0 6px 18px -6px rgba(126,45,73,0.5);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-buynow:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(126,45,73,0.55); }
+    .btn-buynow i { font-size: 13px; }
+
+    /* ----- RELATED + REVIEWS span full modal width ----- */
+    .reviews-section, .related-section { grid-column: 1 / -1; }
+
+    /* ----- RELATED PRODUCTS (was previously unstyled) ----- */
+    .related-section { padding: 22px 28px 26px; border-top: 1px solid var(--border); }
+    .related-title, .rev-section-title {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 14px;
+    }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 12px; }
+    .related-card {
+      background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .related-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .related-card img { width: 100%; height: 110px; object-fit: cover; background: var(--cream-warm); }
+    .related-info { padding: 8px 10px 10px; }
+    .related-name {
+      font-size: 12px; color: var(--ink); line-height: 1.3; margin-bottom: 4px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height: 31px;
+    }
+    .related-price { font-size: 13px; font-weight: 800; color: var(--primary); }
+
+    /* ----- RATINGS & REVIEWS ----- */
+    .reviews-section { padding: 24px 28px; border-top: 1px solid var(--border); }
+    .rev-head { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .rev-overall { text-align: center; min-width: 110px; }
+    .rev-avg-num { font-family: var(--sans); font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1; }
+    .rev-avg-stars { margin: 6px 0 4px; }
+    .rev-count { font-size: 12px; color: var(--muted); }
+    .rev-bars { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 5px; }
+    .rev-bar-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+    .rev-bar-label { width: 26px; color: var(--muted); }
+    .rev-bar-track { flex: 1; height: 7px; background: var(--border-soft); border-radius: 4px; overflow: hidden; }
+    .rev-bar-fill { display:block; height: 100%; background: var(--gold); border-radius: 4px; transition: width 0.4s; }
+    .rev-bar-pct { width: 34px; text-align: right; color: var(--muted); }
+    .rev-write-btn {
+      background: var(--paper); border: 1px solid var(--primary); color: var(--primary);
+      padding: 10px 18px; border-radius: var(--radius); font-size: 12.5px; font-weight: 700;
+      letter-spacing: 0.03em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: background 0.2s; margin-bottom: 8px;
+    }
+    .rev-write-btn:hover { background: var(--primary-soft); }
+    .rev-form { background: var(--cream-warm); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin: 8px 0 18px; }
+    .rev-form-label { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+    .star-input { display: flex; gap: 6px; margin-bottom: 14px; }
+    .star-input i { font-size: 26px; color: #e8a13a; cursor: pointer; transition: transform 0.1s; }
+    .star-input i:hover { transform: scale(1.15); }
+    .rev-input, .rev-textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 11px 13px; font-size: 13px; color: var(--ink); background: var(--paper);
+      margin-bottom: 12px; outline: none; font-family: var(--sans);
+    }
+    .rev-input:focus, .rev-textarea:focus { border-color: var(--primary); }
+    .rev-textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
+    .rev-photo-label {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+      font-size: 12.5px; color: var(--primary); font-weight: 600; margin-bottom: 12px;
+      border: 1px dashed var(--primary); padding: 9px 14px; border-radius: var(--radius); background: var(--paper);
+    }
+    .rev-photo-label:hover { background: var(--primary-soft); }
+    .rev-photo-preview { width: 90px; height: 90px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; border: 1px solid var(--border); display: block; }
+    .rev-form-actions { display: flex; gap: 10px; align-items: center; }
+    .rev-submit {
+      background: var(--primary); color: var(--paper); border: none; padding: 11px 22px;
+      border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.03em; transition: background 0.2s;
+    }
+    .rev-submit:hover { background: var(--primary-dark); }
+    .rev-cancel { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; font-weight: 600; }
+    .rev-cancel:hover { color: var(--ink); }
+    .rev-form-msg { font-size: 12.5px; margin-top: 10px; font-weight: 600; min-height: 16px; }
+    .rev-list { display: flex; flex-direction: column; }
+    .rev-card { display: flex; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border-soft); }
+    .rev-card:first-child { border-top: none; }
+    .rev-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: var(--primary-soft); color: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;
+    }
+    .rev-card-body { flex: 1; min-width: 0; }
+    .rev-card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 3px; }
+    .rev-name { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+    .rev-verified { font-size: 11px; color: var(--success); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .rev-verified i { font-size: 11px; }
+    .rev-date { font-size: 11.5px; color: var(--muted-soft); margin-left: auto; }
+    .rev-stars-sm { margin-bottom: 7px; }
+    .rev-text { font-size: 13px; color: var(--text-2); line-height: 1.65; word-wrap: break-word; }
+    .rev-photo-thumb { width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius); margin-top: 10px; border: 1px solid var(--border); }
+    @media (max-width: 640px) {
+      .reviews-section, .related-section { padding-left: 20px; padding-right: 20px; }
+      .rev-head { gap: 18px; }
+    }
+
   </style>
 </head>
 <body>
@@ -3072,7 +3205,14 @@
       <button class="modal-close" onclick="closeModalDirect()">×</button>
     </div>
     <div class="modal-body">
-      <img id="modal-img" src="" class="modal-img" alt="">
+      <div class="modal-gallery">
+        <div class="mg-main">
+          <img id="modal-img" src="" class="modal-img" alt="">
+          <button class="mg-nav mg-prev" id="mg-prev" onclick="galleryGo(-1)" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="mg-nav mg-next" id="mg-next" onclick="galleryGo(1)" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="mg-thumbs" id="modal-thumbs"></div>
+      </div>
       <div class="modal-details">
         <div class="modal-category" id="modal-cat"></div>
         <div class="modal-name" id="modal-name"></div>
@@ -3093,6 +3233,9 @@
           </div>
           <button class="modal-share" onclick="shareProductWA()"><i class="fa-brands fa-whatsapp"></i> Share</button>
         </div>
+        <button class="btn-buynow" id="modal-buynow-btn">
+          <i class="fa-solid fa-bolt"></i> Buy Now
+        </button>
         <div class="modal-actions">
           <button class="btn-cart-modal" id="modal-add-btn">
             <i class="fa-solid fa-bag-shopping"></i> Add to Bag
@@ -3118,6 +3261,38 @@
             <div class="feat-item"><i class="fa-solid fa-check"></i> Easy 7-day returns</div>
           </div>
         </div>
+      </div>
+      <div class="reviews-section" id="reviews-section">
+        <div class="rev-section-title">Ratings &amp; Reviews</div>
+        <div class="rev-head">
+          <div class="rev-overall">
+            <div class="rev-avg-num" id="rev-avg">0.0</div>
+            <div class="rev-avg-stars" id="rev-avg-stars"></div>
+            <div class="rev-count" id="rev-count">0 reviews</div>
+          </div>
+          <div class="rev-bars" id="rev-bars"></div>
+        </div>
+        <button class="rev-write-btn" id="rev-write-btn" onclick="toggleReviewForm()"><i class="fa-solid fa-pen"></i> Write a Review</button>
+        <div class="rev-form" id="rev-form" style="display:none">
+          <div class="rev-form-label">Your Rating</div>
+          <div class="star-input" id="star-input">
+            <i class="fa-solid fa-star" data-v="1" onclick="setReviewStar(1)"></i>
+            <i class="fa-solid fa-star" data-v="2" onclick="setReviewStar(2)"></i>
+            <i class="fa-solid fa-star" data-v="3" onclick="setReviewStar(3)"></i>
+            <i class="fa-solid fa-star" data-v="4" onclick="setReviewStar(4)"></i>
+            <i class="fa-solid fa-star" data-v="5" onclick="setReviewStar(5)"></i>
+          </div>
+          <input type="text" id="rev-name" class="rev-input" placeholder="Your name" maxlength="40">
+          <textarea id="rev-text" class="rev-textarea" placeholder="Share your experience with this bag…" maxlength="500"></textarea>
+          <label class="rev-photo-label"><i class="fa-solid fa-camera"></i> <span id="rev-photo-text">Add a photo (optional)</span><input type="file" id="rev-photo" accept="image/*" onchange="handleReviewPhoto(event)" hidden></label>
+          <img id="rev-photo-preview" class="rev-photo-preview" style="display:none" alt="preview">
+          <div class="rev-form-actions">
+            <button class="rev-submit" onclick="submitReview()"><i class="fa-solid fa-paper-plane"></i> Submit Review</button>
+            <button class="rev-cancel" onclick="toggleReviewForm()">Cancel</button>
+          </div>
+          <div class="rev-form-msg" id="rev-form-msg"></div>
+        </div>
+        <div class="rev-list" id="rev-list"></div>
       </div>
       <div class="related-section" id="related-section" style="display:none">
         <div class="related-title">You May Also Like</div>
@@ -3788,6 +3963,82 @@
     { id:9, name:"Pearl & Gold Clutch Set", price:1597, img:"bag9.jpg", description:"Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.", category:"clutch", badge:"new", rating:4.9, reviews:77 }
   ];
 
+  // ===================================================================
+  // ============= NEW: SEED REVIEWS (sample reviews per product) ======
+  // A real shop can edit/remove these. Customer-written reviews are stored
+  // separately in localStorage and always appear ABOVE these.
+  // ===================================================================
+  const SEED_REVIEWS = {
+    1: [
+      { name:'Ananya R.', rating:5, daysAgo:5,  verified:true,  text:'The gold chain looks even better in person and the leather feels properly premium. Gets compliments every single time.' },
+      { name:'Meghna P.', rating:4, daysAgo:18, verified:true,  text:'Beautiful bag, a touch smaller than I imagined but perfect for evenings. Packaging was lovely too.' },
+      { name:'Sneha K.', rating:5, daysAgo:33, verified:false, text:'Worth every rupee. The clasp is sturdy and the ivory shade goes with everything I own.' }
+    ],
+    2: [
+      { name:'Riya M.', rating:5, daysAgo:7,  verified:true,  text:'The quilting is so neat and the gold emblem is gorgeous. Surprisingly roomy for a crossbody.' },
+      { name:'Fathima S.', rating:4, daysAgo:22, verified:true, text:'Lovely white that actually looks clean and bright. Strap is comfy on the shoulder.' }
+    ],
+    3: [
+      { name:'Divya N.', rating:4, daysAgo:11, verified:true,  text:'Classy monogram pattern, feels sturdy. The adjustable strap is a nice touch for daily use.' },
+      { name:'Pooja V.', rating:5, daysAgo:29, verified:false, text:'Goes with both ethnic and western. Great everyday satchel for the price.' }
+    ],
+    4: [
+      { name:'Aishwarya T.', rating:5, daysAgo:9,  verified:true, text:'Holds my laptop, files and lunch easily. The pleats give it a really premium structured look.' },
+      { name:'Nikita J.', rating:4, daysAgo:26, verified:true, text:'Perfect office tote. Black goes with everything and it stands upright on its own.' },
+      { name:'Lakshmi G.', rating:5, daysAgo:41, verified:false, text:'Big, sturdy and elegant. Exactly what I needed for work.' }
+    ],
+    5: [
+      { name:'Catherine D.', rating:5, daysAgo:4,  verified:true, text:'The star charm is adorable and the cream leather is buttery soft. My favourite bag right now.' },
+      { name:'Anjali R.', rating:5, daysAgo:16, verified:true, text:'Statement piece for sure. Quality is fantastic, chain feels solid not flimsy.' },
+      { name:'Hiba A.', rating:4, daysAgo:38, verified:false, text:'Stunning bag, just wish it had one more inside pocket. Still love it.' }
+    ],
+    6: [
+      { name:'Sara P.', rating:4, daysAgo:13, verified:true, text:'So cute and compact, fits phone, cards and lip balm. The clover emblem is lovely.' },
+      { name:'Krithika S.', rating:5, daysAgo:31, verified:false, text:'Perfect little going-out bag. Looks much more expensive than it is.' }
+    ],
+    7: [
+      { name:'Veena K.', rating:5, daysAgo:8,  verified:true, text:'Loved the dual-tone set, both pieces feel premium. Great value bundle.' },
+      { name:'Reshma B.', rating:4, daysAgo:24, verified:true, text:'Versatile and well made. The textured one is my everyday pick now.' }
+    ],
+    8: [
+      { name:'Maria J.', rating:5, daysAgo:6,  verified:true, text:'Rich brown that ages beautifully. The gold hardware really elevates the whole look.' },
+      { name:'Gayatri N.', rating:5, daysAgo:20, verified:true, text:'Timeless and sturdy. Carried it daily for a month and zero wear.' },
+      { name:'Irene T.', rating:4, daysAgo:37, verified:false, text:'Classic crossbody, fits more than expected. Very happy.' }
+    ],
+    9: [
+      { name:'Nidhi A.', rating:5, daysAgo:3,  verified:true, text:'The pearl beadwork is exquisite — wore it to a wedding and got endless compliments.' },
+      { name:'Sanjana R.', rating:5, daysAgo:15, verified:true, text:'Handcrafted detail is stunning. Feels like a couture accessory.' }
+    ]
+  };
+
+  // ===================================================================
+  // ============= NEW: PRODUCT IMAGES (multi-photo gallery) ===========
+  // ===================================================================
+  // demoShot() draws a distinct, labelled placeholder image so the gallery is
+  // visibly multi-image even before real photos exist.
+  function demoShot(label){
+    var tint = { 'Side view':['#f3ead9','#e7d6bd'], 'Interior':['#efe7f0','#e3d2dc'] }[label] || ['#f7efe3','#ecddca'];
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'>"
+      + "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='"+tint[0]+"'/><stop offset='1' stop-color='"+tint[1]+"'/></linearGradient></defs>"
+      + "<rect width='600' height='600' fill='url(#g)'/>"
+      + "<g fill='none' stroke='#b08d57' stroke-width='6' stroke-linejoin='round' stroke-linecap='round'>"
+      + "<path d='M205 252 h190 l16 150 a22 22 0 0 1 -22 24 H211 a22 22 0 0 1 -22 -24 Z'/>"
+      + "<path d='M243 252 v-28 a57 57 0 0 1 114 0 v28'/></g>"
+      + "<circle cx='300' cy='322' r='9' fill='#7E2D49'/>"
+      + "<text x='300' y='470' text-anchor='middle' font-family='Georgia,serif' font-size='30' font-style='italic' fill='#5E1F37'>"+label+"</text>"
+      + "<text x='300' y='510' text-anchor='middle' font-family='Georgia,serif' font-size='13' letter-spacing='5' fill='#a07a4a'>LAXUAGE</text></svg>";
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+  // Returns the list of photos for a product.
+  // To add real photos to ANY product, give it an images array, e.g.:
+  //   { id:2, name:"...", img:"bag2.jpg", images:["bag2.jpg","bag2-back.jpg","bag2-inside.jpg"], ... }
+  function getImages(p){
+    if (Array.isArray(p.images) && p.images.length) return p.images;
+    // DEMO: show a 3-photo gallery on the first product so you can see how it works.
+    if (p.id === 1) return [p.img, demoShot('Side view'), demoShot('Interior')];
+    return [p.img];
+  }
+
   // ===== LOCALSTORAGE SAVE / LOAD =====
   function saveData() {
     try {
@@ -3959,7 +4210,7 @@
     currentModalProductId = id;
     modalQty = 1;
     document.getElementById('modal-qty-val').textContent = modalQty;
-    document.getElementById('modal-img').src = p.img;
+    renderGallery(p);
     document.getElementById('modal-title').textContent = p.name;
     document.getElementById('modal-cat').textContent = p.category.toUpperCase();
     document.getElementById('modal-name').textContent = p.name;
@@ -4015,6 +4266,15 @@
     } else {
       relSec.style.display = 'none';
     }
+
+    // Reviews + Buy Now
+    renderReviews(id);
+    document.getElementById('rev-form').style.display = 'none';
+    document.getElementById('rev-photo-preview').style.display = 'none';
+    document.getElementById('rev-photo-text').textContent = 'Add a photo (optional)';
+    document.getElementById('rev-form-msg').textContent = '';
+    reviewPhotoData = null;
+    document.getElementById('modal-buynow-btn').onclick = () => buyNow(id, modalQty);
 
     // Track recently viewed
     addToRecentlyViewed(id);
@@ -4923,6 +5183,223 @@
   // Remove # from URL without page reload
   if (window.location.hash) {
     history.replaceState(null, '', window.location.pathname);
+  }
+
+  // ===================================================================
+  // ============= NEW: IMAGE GALLERY NAVIGATION =======================
+  // ===================================================================
+  let galleryImgs = [];
+  let galleryIndex = 0;
+  let mgSwipeBound = false;
+
+  function renderGallery(p){
+    galleryImgs = getImages(p);
+    galleryIndex = 0;
+    const main = document.getElementById('modal-img');
+    main.alt = p.name;
+    gallerySet(0);
+    const thumbs = document.getElementById('modal-thumbs');
+    const multi = galleryImgs.length > 1;
+    document.getElementById('mg-prev').style.display = multi ? 'flex' : 'none';
+    document.getElementById('mg-next').style.display = multi ? 'flex' : 'none';
+    if (!multi){ thumbs.innerHTML = ''; thumbs.style.display = 'none'; }
+    else {
+      thumbs.style.display = 'flex';
+      thumbs.innerHTML = galleryImgs.map((src,i) =>
+        `<button class="mg-thumb ${i===0?'active':''}" onclick="gallerySet(${i})" aria-label="View ${i+1}"><img src="${src}" alt="${escHtml(p.name)} view ${i+1}" loading="lazy"></button>`
+      ).join('');
+    }
+    bindGallerySwipe();
+  }
+  function gallerySet(i){
+    if (!galleryImgs.length) return;
+    galleryIndex = (i + galleryImgs.length) % galleryImgs.length;
+    const main = document.getElementById('modal-img');
+    main.dataset.ph = '';                 // let the placeholder fallback re-run for the new src
+    main.src = galleryImgs[galleryIndex];
+    document.querySelectorAll('#modal-thumbs .mg-thumb').forEach((t,idx) => t.classList.toggle('active', idx === galleryIndex));
+  }
+  function galleryGo(delta){ gallerySet(galleryIndex + delta); }
+  function bindGallerySwipe(){
+    if (mgSwipeBound) return;
+    const main = document.querySelector('.mg-main');
+    if (!main) return;
+    mgSwipeBound = true;
+    let sx = 0;
+    main.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive:true });
+    main.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40 && galleryImgs.length > 1) galleryGo(dx < 0 ? 1 : -1);
+    }, { passive:true });
+  }
+
+  // ===================================================================
+  // ============= NEW: CUSTOMER REVIEWS ===============================
+  // ===================================================================
+  function reviewKey(pid){ return 'laxuage_reviews_' + pid; }
+  function loadUserReviews(pid){
+    try { return JSON.parse(localStorage.getItem(reviewKey(pid)) || '[]'); } catch(e){ return []; }
+  }
+  function saveUserReview(pid, rev){
+    try {
+      const all = loadUserReviews(pid);
+      all.unshift(rev);
+      localStorage.setItem(reviewKey(pid), JSON.stringify(all.slice(0, 50)));
+    } catch(e){}
+  }
+  function getReviewList(pid){
+    const seed = (SEED_REVIEWS[pid] || []).map(r => ({ ...r, date: Date.now() - r.daysAgo * 86400000 }));
+    return loadUserReviews(pid).concat(seed);   // user reviews (newest) first, then samples
+  }
+  function timeAgo(ts){
+    const d = Math.floor((Date.now() - ts) / 86400000);
+    if (d <= 0) return 'Today';
+    if (d === 1) return 'Yesterday';
+    if (d < 30) return d + ' days ago';
+    if (d < 60) return 'a month ago';
+    return Math.floor(d / 30) + ' months ago';
+  }
+  // Build a believable star breakdown from an overall average + total count.
+  function starDistribution(avg, total){
+    let t;
+    if (avg >= 4.7) t = [0.78, 0.16, 0.04, 0.01, 0.01];
+    else if (avg >= 4.4) t = [0.64, 0.25, 0.07, 0.025, 0.015];
+    else if (avg >= 4.0) t = [0.50, 0.30, 0.13, 0.045, 0.025];
+    else t = [0.38, 0.30, 0.18, 0.09, 0.05];
+    let c = t.map(x => Math.round(x * total));
+    c[0] += total - c.reduce((a,b) => a + b, 0);   // absorb rounding into the 5★ bucket
+    if (c[0] < 0) c[0] = 0;
+    return c;   // [5★,4★,3★,2★,1★]
+  }
+  function starsHtml(r, size){
+    let s = ''; size = size || 13;
+    for (let i = 1; i <= 5; i++){
+      const cls = i <= Math.round(r) ? 'fa-solid' : 'fa-regular';
+      s += `<i class="${cls} fa-star" style="color:#e8a13a;font-size:${size}px"></i>`;
+    }
+    return s;
+  }
+  function renderReviews(pid){
+    const p = products.find(x => x.id === pid);
+    if (!p) return;
+    const userRevs = loadUserReviews(pid);
+    const headlineCount = (p.reviews || 0) + userRevs.length;
+    const userSum = userRevs.reduce((a,b) => a + (b.rating || 0), 0);
+    const blended = headlineCount ? ((p.rating * (p.reviews || 0)) + userSum) / headlineCount : p.rating;
+    const avg = Math.round(blended * 10) / 10;
+
+    document.getElementById('rev-avg').textContent = avg.toFixed(1);
+    document.getElementById('rev-avg-stars').innerHTML = starsHtml(avg, 15);
+    document.getElementById('rev-count').textContent = headlineCount.toLocaleString() + ' review' + (headlineCount === 1 ? '' : 's');
+
+    // breakdown bars (modelled distribution + the user's own reviews on top)
+    const dist = starDistribution(avg, headlineCount);
+    userRevs.forEach(r => { const idx = 5 - Math.round(r.rating); if (dist[idx] != null) dist[idx]++; });
+    const distTotal = dist.reduce((a,b) => a + b, 0) || 1;
+    document.getElementById('rev-bars').innerHTML = [5,4,3,2,1].map((star,i) => {
+      const pct = Math.round(dist[i] / distTotal * 100);
+      return `<div class="rev-bar-row"><span class="rev-bar-label">${star}★</span><span class="rev-bar-track"><span class="rev-bar-fill" style="width:${pct}%"></span></span><span class="rev-bar-pct">${pct}%</span></div>`;
+    }).join('');
+
+    // the written-review list
+    const list = getReviewList(pid);
+    document.getElementById('rev-list').innerHTML = list.map(r => {
+      const initial = (r.name || 'A').trim().charAt(0).toUpperCase();
+      const photo = r.photo ? `<img class="rev-photo-thumb" src="${r.photo}" alt="review photo">` : '';
+      const verified = r.verified ? `<span class="rev-verified"><i class="fa-solid fa-circle-check"></i> Verified Buyer</span>` : '';
+      return `<div class="rev-card">
+        <div class="rev-avatar">${escHtml(initial)}</div>
+        <div class="rev-card-body">
+          <div class="rev-card-head"><span class="rev-name">${escHtml(r.name || 'Anonymous')}</span>${verified}<span class="rev-date">${timeAgo(r.date)}</span></div>
+          <div class="rev-stars-sm">${starsHtml(r.rating, 12)}</div>
+          <div class="rev-text">${escHtml(r.text || '')}</div>
+          ${photo}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ----- write-a-review form -----
+  let reviewStar = 5;
+  let reviewPhotoData = null;
+  function setReviewStar(v){
+    reviewStar = v;
+    document.querySelectorAll('#star-input i').forEach((el, idx) => {
+      el.className = (idx < v ? 'fa-solid' : 'fa-regular') + ' fa-star';
+    });
+  }
+  function toggleReviewForm(){
+    const f = document.getElementById('rev-form');
+    if (f.style.display !== 'none'){ f.style.display = 'none'; return; }
+    requireLogin(() => {
+      f.style.display = 'block';
+      if (currentUser && currentUser.name && !document.getElementById('rev-name').value) {
+        document.getElementById('rev-name').value = currentUser.name;
+      }
+      setReviewStar(5);
+      document.getElementById('rev-form-msg').textContent = '';
+      f.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    });
+  }
+  function handleReviewPhoto(e){
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const m = document.getElementById('rev-form-msg');
+    if (file.size > 3 * 1024 * 1024){
+      m.style.color = 'var(--danger)';
+      m.textContent = 'Image too large (max 3MB).';
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      reviewPhotoData = ev.target.result;
+      const pv = document.getElementById('rev-photo-preview');
+      pv.src = reviewPhotoData;
+      pv.style.display = 'block';
+      document.getElementById('rev-photo-text').textContent = 'Photo added ✓';
+    };
+    reader.readAsDataURL(file);
+  }
+  function submitReview(){
+    const text = document.getElementById('rev-text').value.trim();
+    const m = document.getElementById('rev-form-msg');
+    if (text.length < 4){
+      m.style.color = 'var(--danger)';
+      m.textContent = 'Please write a few words about the product.';
+      return;
+    }
+    requireLogin(() => {
+      const name = document.getElementById('rev-name').value.trim() || (currentUser && currentUser.name) || 'Anonymous';
+      const rev = { name, rating: reviewStar, text, date: Date.now(), verified: true, helpful: 0 };
+      if (reviewPhotoData) rev.photo = reviewPhotoData;
+      saveUserReview(currentModalProductId, rev);
+      document.getElementById('rev-text').value = '';
+      document.getElementById('rev-photo-preview').style.display = 'none';
+      document.getElementById('rev-photo-text').textContent = 'Add a photo (optional)';
+      document.getElementById('rev-photo').value = '';
+      reviewPhotoData = null;
+      reviewStar = 5;
+      document.getElementById('rev-form').style.display = 'none';
+      renderReviews(currentModalProductId);
+      showToast('Thank you! Your review is posted.');
+    });
+  }
+
+  // ===================================================================
+  // ============= NEW: BUY NOW (skip cart, go straight to checkout) ===
+  // ===================================================================
+  function buyNow(id, qty){
+    qty = qty || 1;
+    requireLogin(() => {
+      const p = products.find(x => x.id === id);
+      const ex = cart.find(x => x.id === id);
+      if (ex) ex.qty += qty; else cart.push({ ...p, qty });
+      saveData();
+      updateCartUI();
+      closeModalDirect();
+      openCheckout();
+    });
   }
 
   window.onload = () => {

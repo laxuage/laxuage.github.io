@@ -4046,15 +4046,15 @@
   function infoOverlayClick(e) { if (e.target === document.getElementById('info-overlay')) closeInfo(); }
 
   const products = [
-    { id:1, name:"Ivory Chain Shoulder Bag", price:1599, img:"bag1.jpg", description:"Elegant ivory leather bag with bold gold chain strap and signature clasp. Perfect for daily elegance and evening outings.", category:"handbag", badge:"new", rating:4.5, reviews:128 },
-    { id:2, name:"Quilted White Crossbody", price:1497, img:"bag2.jpg", description:"Luxurious quilted white crossbody with beautiful gold flower emblem. Spacious and stylish for casual and formal use.", category:"crossbody", badge:"hot", rating:4.7, reviews:96 },
-    { id:3, name:"Beige Monogram Satchel", price:1497, img:"bag3.jpg", description:"Sophisticated beige and white patterned satchel with adjustable strap. Classic design with modern comfort.", category:"handbag", badge:"", rating:4.3, reviews:74 },
-    { id:4, name:"Black Pleated Tote Bag", price:1397, img:"bag4.jpg", description:"Chic black pleated tote with structured design. Spacious interior perfect for office and weekend use.", category:"tote", badge:"exclusive", rating:4.6, reviews:112 },
-    { id:5, name:"Cream Star Chain Bag", price:1597, img:"bag5.jpg", description:"Premium cream leather bag with gold chain and star charm detail. A true statement piece.", category:"handbag", badge:"new", rating:4.8, reviews:203 },
-    { id:6, name:"White Quilted Mini Bag", price:1899, img:"bag6.jpg", description:"Adorable white quilted mini bag with gold clover emblem. Compact yet stylish for everyday essentials.", category:"crossbody", badge:"hot", rating:4.4, reviews:88 },
-    { id:7, name:"Dual Tone Beige Set", price:1497, img:"bag7.jpg", description:"Elegant beige collection featuring textured and patterned designs. Versatile and luxurious.", category:"handbag", badge:"", rating:4.5, reviews:61 },
-    { id:8, name:"Brown Leather Crossbody", price:1599, img:"bag8.jpg", description:"Rich brown leather crossbody with gold hardware and signature logo. Timeless and sophisticated.", category:"crossbody", badge:"exclusive", rating:4.6, reviews:145 },
-    { id:9, name:"Pearl & Gold Clutch Set", price:1597, img:"bag9.jpg", description:"Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.", category:"clutch", badge:"new", rating:4.9, reviews:77 }
+    { id:1, name:"Ivory Chain Shoulder Bag", price:1599, mrp:2499, img:"bag1.jpg", description:"Elegant ivory leather bag with bold gold chain strap and signature clasp. Perfect for daily elegance and evening outings.", category:"handbag", badge:"new", rating:4.5, reviews:128, color:"Ivory", material:"Vegan Leather", stock:6 },
+    { id:2, name:"Quilted White Crossbody", price:1497, mrp:2299, img:"bag2.jpg", description:"Luxurious quilted white crossbody with beautiful gold flower emblem. Spacious and stylish for casual and formal use.", category:"crossbody", badge:"hot", rating:4.7, reviews:96, color:"White", material:"Quilted Faux Leather", stock:4 },
+    { id:3, name:"Beige Monogram Satchel", price:1497, mrp:2199, img:"bag3.jpg", description:"Sophisticated beige and white patterned satchel with adjustable strap. Classic design with modern comfort.", category:"handbag", badge:"", rating:4.3, reviews:74, color:"Beige", material:"Monogram Canvas", stock:12 },
+    { id:4, name:"Black Pleated Tote Bag", price:1397, mrp:2099, img:"bag4.jpg", description:"Chic black pleated tote with structured design. Spacious interior perfect for office and weekend use.", category:"tote", badge:"exclusive", rating:4.6, reviews:112, color:"Black", material:"Pleated PU", stock:9 },
+    { id:5, name:"Cream Star Chain Bag", price:1597, mrp:2399, img:"bag5.jpg", description:"Premium cream leather bag with gold chain and star charm detail. A true statement piece.", category:"handbag", badge:"new", rating:4.8, reviews:203, color:"Cream", material:"Vegan Leather", stock:3 },
+    { id:6, name:"White Quilted Mini Bag", price:1899, mrp:2799, img:"bag6.jpg", description:"Adorable white quilted mini bag with gold clover emblem. Compact yet stylish for everyday essentials.", category:"crossbody", badge:"hot", rating:4.4, reviews:88, color:"White", material:"Quilted Faux Leather", stock:7 },
+    { id:7, name:"Dual Tone Beige Set", price:1497, mrp:2299, img:"bag7.jpg", description:"Elegant beige collection featuring textured and patterned designs. Versatile and luxurious.", category:"handbag", badge:"", rating:4.5, reviews:61, color:"Beige", material:"Textured PU", stock:10 },
+    { id:8, name:"Brown Leather Crossbody", price:1599, mrp:2499, img:"bag8.jpg", description:"Rich brown leather crossbody with gold hardware and signature logo. Timeless and sophisticated.", category:"crossbody", badge:"exclusive", rating:4.6, reviews:145, color:"Brown", material:"Vegan Leather", stock:5 },
+    { id:9, name:"Pearl & Gold Clutch Set", price:1597, mrp:2599, img:"bag9.jpg", description:"Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.", category:"clutch", badge:"new", rating:4.9, reviews:77, color:"Gold", material:"Pearl & Beadwork", stock:2 }
   ];
 
   // ===================================================================
@@ -5511,5 +5511,515 @@
   };
 
 </script>
+<!-- ===================================================================== -->
+<!-- ============= PROFESSIONAL ENHANCEMENTS (added layer) =============== -->
+<!-- ===================================================================== -->
+<script type="application/ld+json" id="ld-org">
+{
+  "@context":"https://schema.org",
+  "@type":"Store",
+  "name":"Laxuage",
+  "description":"Premium luxury handbags, crossbody bags, totes and clutches for the modern woman. Designed in India.",
+  "image":"share-cover.jpg",
+  "address":{"@type":"PostalAddress","addressRegion":"Kerala","addressCountry":"IN"},
+  "email":"laxuage@gmail.com",
+  "telephone":"+919846923350",
+  "sameAs":["https://instagram.com/laxuage"],
+  "priceRange":"₹₹"
+}
+</script>
+<script>
+(function(){
+  "use strict";
+  /* ---------------- inject enhancement CSS ---------------- */
+  var css = `
+  /* ---- Announcement bar ---- */
+  .ann-bar{background:linear-gradient(90deg,var(--primary-dark),var(--primary));color:#fff;font-size:12px;overflow:hidden;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.12)}
+  .ann-track{display:inline-block;padding:8px 0;animation:annScroll 26s linear infinite}
+  .ann-track span{margin:0 38px;letter-spacing:.04em;font-weight:500}
+  .ann-track i{color:var(--gold);margin-right:8px}
+  @keyframes annScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  /* ---- theme toggle button ---- */
+  #theme-toggle i{font-size:17px}
+  /* ---- Filter chips bar ---- */
+  .filter-bar{background:var(--paper);border-bottom:1px solid var(--border);padding:10px 22px}
+  .filter-inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .filter-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .filter-glabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:2px}
+  .chip{border:1px solid var(--border);background:var(--paper);color:var(--text-2);font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;cursor:pointer;transition:all .18s;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px}
+  .chip:hover{border-color:var(--primary);color:var(--primary)}
+  .chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .chip .sw{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.18);display:inline-block}
+  .filter-clear{margin-left:auto;background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer}
+  .filter-clear:hover{text-decoration:underline}
+  /* ---- stock + compare on cards ---- */
+  .card-stock{font-size:11px;font-weight:700;margin:0 0 9px;display:flex;align-items:center;gap:6px;letter-spacing:.02em}
+  .card-stock.low{color:var(--danger)}
+  .card-stock.ok{color:var(--success)}
+  .card-stock.out{color:var(--muted)}
+  .card-compare{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);margin:2px 0 0;cursor:pointer;user-select:none;font-weight:600}
+  .card-compare input{accent-color:var(--primary);width:14px;height:14px;cursor:pointer}
+  .card-compare:hover{color:var(--primary)}
+  /* ---- compare floating bar ---- */
+  .cmp-bar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);background:var(--ink);color:#fff;border-radius:var(--radius);box-shadow:0 14px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:16px;padding:12px 16px;z-index:170;transition:transform .35s cubic-bezier(.16,1,.3,1);max-width:94vw}
+  .cmp-bar.show{transform:translateX(-50%) translateY(0)}
+  .cmp-thumbs{display:flex;gap:8px}
+  .cmp-thumbs img{width:38px;height:46px;object-fit:cover;border-radius:4px;background:var(--cream-warm)}
+  .cmp-bar button{border:none;border-radius:var(--radius);font-weight:700;font-size:12.5px;padding:10px 16px;cursor:pointer;font-family:var(--sans)}
+  .cmp-go{background:var(--gold);color:#1a1a1a}
+  .cmp-go:disabled{opacity:.45;cursor:not-allowed}
+  .cmp-clear{background:transparent;color:rgba(255,255,255,.8);padding:10px 6px!important}
+  /* ---- generic enhancement modal ---- */
+  .xmodal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:260;align-items:center;justify-content:center;padding:20px}
+  .xmodal-overlay.open{display:flex}
+  .xmodal{background:var(--paper);border-radius:var(--radius);max-width:860px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}
+  .xmodal.narrow{max-width:480px}
+  .xmodal-head{padding:16px 22px;background:var(--primary);color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+  .xmodal-head h3{font-size:16px;font-weight:700}
+  .xmodal-close{background:rgba(255,255,255,.16);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1}
+  .xmodal-body{padding:22px 24px}
+  /* ---- compare table ---- */
+  .cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+  .cmp-table th,.cmp-table td{border:1px solid var(--border);padding:11px 12px;text-align:left;vertical-align:top;color:var(--text-2)}
+  .cmp-table th{background:var(--cream-warm);color:var(--ink);font-weight:700;width:120px}
+  .cmp-table img{width:100%;max-width:130px;height:120px;object-fit:cover;border-radius:var(--radius);background:var(--cream-warm)}
+  .cmp-pname{font-weight:700;color:var(--ink);font-size:13px}
+  .cmp-buy{background:var(--primary);color:#fff;border:none;padding:8px 12px;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+  .cmp-wrap{overflow-x:auto}
+  /* ---- testimonials ---- */
+  .tst{max-width:1320px;margin:54px auto 10px;padding:0 22px}
+  .tst-head{text-align:center;margin-bottom:30px}
+  .tst-eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--primary);margin-bottom:6px}
+  .tst-title{font-family:var(--sans);font-size:clamp(22px,2.6vw,30px);font-weight:800;color:var(--ink)}
+  .tst-title em{font-family:var(--display);font-style:italic;color:var(--primary);font-weight:500}
+  .tst-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .tst-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);position:relative}
+  .tst-quote{position:absolute;top:14px;right:20px;font-family:var(--display);font-size:60px;color:var(--primary-soft);line-height:1}
+  .tst-stars{color:#e8a13a;font-size:13px;margin-bottom:12px}
+  .tst-text{font-size:13.5px;line-height:1.7;color:var(--text-2);margin-bottom:18px;position:relative;z-index:1}
+  .tst-who{display:flex;align-items:center;gap:12px}
+  .tst-av{width:42px;height:42px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800}
+  .tst-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .tst-loc{font-size:11.5px;color:var(--muted)}
+  /* ---- payment badges ---- */
+  .pay-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:0 0 14px}
+  .pay-badges .pb-label{font-size:11px;color:var(--muted-soft);letter-spacing:.06em;text-transform:uppercase;margin-right:4px}
+  .pay-badges .pb{background:var(--paper);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--text-2);display:inline-flex;align-items:center;gap:5px}
+  .pay-badges .pb i{color:var(--primary)}
+  /* ---- back to top ---- */
+  #back-top{position:fixed;right:24px;bottom:96px;width:46px;height:46px;border-radius:50%;background:var(--paper);border:1px solid var(--border);color:var(--primary);font-size:16px;cursor:pointer;box-shadow:var(--shadow);z-index:120;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+  #back-top.show{opacity:1;pointer-events:auto}
+  #back-top:hover{background:var(--primary);color:#fff;border-color:var(--primary);transform:translateY(-2px)}
+  /* ---- cookie banner ---- */
+  .cookie{position:fixed;left:16px;right:16px;bottom:16px;max-width:520px;margin:0 auto;background:var(--ink);color:#fff;border-radius:var(--radius);box-shadow:0 14px 40px rgba(0,0,0,.3);padding:16px 18px;z-index:200;display:flex;gap:14px;align-items:center;font-size:12.5px;line-height:1.55;animation:toastIn .4s}
+  .cookie p{flex:1;color:rgba(255,255,255,.88)}
+  .cookie a{color:var(--gold);cursor:pointer;text-decoration:underline}
+  .cookie button{background:var(--gold);color:#1a1a1a;border:none;border-radius:var(--radius);font-weight:700;font-size:12.5px;padding:9px 16px;cursor:pointer;white-space:nowrap}
+  /* ---- reveal anim ---- */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  /* ---- tracking timeline ---- */
+  .trk{position:relative;margin:6px 0 22px;padding-left:6px}
+  .trk-step{display:flex;gap:14px;position:relative;padding-bottom:22px}
+  .trk-step:last-child{padding-bottom:0}
+  .trk-line{position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--border)}
+  .trk-step.done .trk-line{background:var(--success)}
+  .trk-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid var(--border);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);z-index:1}
+  .trk-step.done .trk-dot{background:var(--success);border-color:var(--success);color:#fff}
+  .trk-step.current .trk-dot{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+  .trk-info .t1{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .trk-info .t2{font-size:12px;color:var(--muted);margin-top:2px}
+  .trk-items{border-top:1px solid var(--border);padding-top:14px;margin-top:6px}
+  .trk-irow{display:flex;align-items:center;gap:12px;padding:8px 0}
+  .trk-irow img{width:46px;height:56px;object-fit:cover;border-radius:4px;background:var(--cream-warm)}
+  .trk-irow .n{flex:1;font-size:13px;color:var(--ink)}
+  .trk-irow .p{font-weight:700;color:var(--primary);font-size:13px}
+  .trk-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .trk-actions button{flex:1;min-width:150px;border:none;border-radius:var(--radius);padding:12px;font-weight:700;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .trk-inv{background:var(--paper);border:1px solid var(--primary)!important;color:var(--primary)}
+  .trk-wa{background:#25D366;color:#fff}
+  .xfield{margin-bottom:14px}
+  .xfield label{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .xfield input,.xfield textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;font-size:13px;font-family:var(--sans);color:var(--ink);background:var(--paper);outline:none}
+  .xfield input:focus,.xfield textarea:focus{border-color:var(--primary)}
+  .xfield textarea{min-height:90px;resize:vertical}
+  .xbtn{background:var(--primary);color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:13px;font-weight:700;cursor:pointer;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .xbtn:hover{background:var(--primary-dark)}
+  /* ---- DARK MODE ---- */
+  body.dark{--bg:#16110f;--paper:#1f1813;--cream-warm:#2a211b;--ink:#f4ece3;--ink-soft:#e9ded2;--text-2:#cdbdad;--muted:#a3948440;--muted:#a89a8c;--muted-soft:#7c7064;--border:#3a302a;--border-soft:#332a25;--primary-soft:#3c2330;--success:#3cb371;--shadow:0 4px 14px -4px rgba(0,0,0,.5);--shadow-lg:0 20px 50px -16px rgba(0,0,0,.7);--shadow-sm:0 1px 2px rgba(0,0,0,.3)}
+  body.dark .product-grid{background:var(--border)}
+  body.dark .ann-bar{border-bottom-color:rgba(255,255,255,.08)}
+  body.dark .hero{background:linear-gradient(135deg,#241b22,#16110f)}
+  body.dark .promo-strip,body.dark .filter-bar,body.dark nav,body.dark .cat-bar,body.dark .sort-bar{background:var(--paper)}
+  body.dark .ck-upi-qr,body.dark .ck-upi-qr canvas,body.dark .ck-upi-qr img{background:#fff}
+  body.dark img{filter:brightness(.96)}
+  @media(max-width:760px){#back-top{bottom:88px;right:16px}.cmp-bar{gap:10px;padding:10px}.cmp-thumbs img{width:32px;height:40px}}
+  `;
+  var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+
+  function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+  function money(n){return '₹'+Number(n||0).toLocaleString('en-IN');}
+
+  /* ================= ANNOUNCEMENT BAR ================= */
+  var nav=document.querySelector('nav');
+  if(nav){
+    var msgs='<span><i class="fa-solid fa-truck-fast"></i>Free shipping on orders above ₹999</span>'
+      +'<span><i class="fa-solid fa-rotate-left"></i>Easy 7-day returns</span>'
+      +'<span><i class="fa-solid fa-lock"></i>Secure UPI &amp; Cash on Delivery</span>'
+      +'<span><i class="fa-solid fa-gift"></i>Use code WELCOME10 for 10% off your first order</span>'
+      +'<span><i class="fa-solid fa-headset"></i>Personal concierge on WhatsApp</span>';
+    var ann=el('div','ann-bar','<div class="ann-track">'+msgs+msgs+'</div>');
+    nav.parentNode.insertBefore(ann,nav);
+  }
+
+  /* ================= DARK MODE ================= */
+  function applyTheme(t){
+    if(t==='dark'){document.body.classList.add('dark');}
+    else{document.body.classList.remove('dark');}
+    var ic=document.querySelector('#theme-toggle i');
+    if(ic) ic.className = t==='dark'?'fa-solid fa-sun':'fa-solid fa-moon';
+    var lbl=document.querySelector('#theme-toggle span');
+    if(lbl) lbl.textContent = t==='dark'?'Light':'Dark';
+  }
+  var savedTheme='light'; try{savedTheme=localStorage.getItem('laxuage_theme')||'light';}catch(e){}
+  var navActions=document.querySelector('.nav-actions');
+  if(navActions){
+    var tBtn=el('button','nav-btn','<i class="fa-solid fa-moon"></i><span>Dark</span>');
+    tBtn.id='theme-toggle'; tBtn.setAttribute('aria-label','Toggle dark mode');
+    tBtn.onclick=function(){
+      var now=document.body.classList.contains('dark')?'light':'dark';
+      try{localStorage.setItem('laxuage_theme',now);}catch(e){}
+      applyTheme(now);
+    };
+    navActions.insertBefore(tBtn,navActions.firstChild);
+  }
+  applyTheme(savedTheme);
+
+  /* ================= FILTER CHIPS (color / material) ================= */
+  window.activeColor='all'; window.activeMaterial='all';
+  var colors=[...new Set(products.map(p=>p.color).filter(Boolean))];
+  var materials=[...new Set(products.map(p=>p.material).filter(Boolean))];
+  var swatch={Ivory:'#f3ead9',White:'#ffffff',Beige:'#e7d6bd',Black:'#222',Cream:'#f5ecd8',Brown:'#7a4e2c',Gold:'#c9a26a'};
+  function chip(text,active,sw){return '<button class="chip'+(active?' active':'')+'">'+(sw?'<span class="sw" style="background:'+sw+'"></span>':'')+text+'</button>';}
+  function buildFilterBar(){
+    var sortBar=document.querySelector('.sort-bar'); if(!sortBar) return;
+    var bar=el('div','filter-bar');
+    var colorChips='<span class="filter-glabel">Colour</span>'+chip('All',true);
+    colors.forEach(c=>colorChips+=chip(c,false,swatch[c]||'#ccc'));
+    var matChips='<span class="filter-glabel">Material</span>'+chip('All',true);
+    materials.forEach(m=>matChips+=chip(m,false));
+    bar.innerHTML='<div class="filter-inner">'
+      +'<div class="filter-group" id="fg-color">'+colorChips+'</div>'
+      +'<div class="filter-group" id="fg-mat">'+matChips+'</div>'
+      +'<button class="filter-clear" id="fclear"><i class="fa-solid fa-xmark"></i> Reset</button>'
+      +'</div>';
+    sortBar.parentNode.insertBefore(bar,sortBar.nextSibling);
+    function wire(groupId,setter,values){
+      var g=document.getElementById(groupId);
+      var chips=g.querySelectorAll('.chip');
+      chips.forEach((ch,i)=>{
+        ch.onclick=function(){
+          chips.forEach(c=>c.classList.remove('active')); ch.classList.add('active');
+          setter(i===0?'all':values[i-1]); applyFiltersAndSort();
+        };
+      });
+    }
+    wire('fg-color',v=>window.activeColor=v,colors);
+    wire('fg-mat',v=>window.activeMaterial=v,materials);
+    document.getElementById('fclear').onclick=function(){
+      window.activeColor='all'; window.activeMaterial='all';
+      document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));
+      document.querySelectorAll('.filter-bar .filter-group').forEach(g=>g.querySelector('.chip').classList.add('active'));
+      applyFiltersAndSort();
+    };
+  }
+  buildFilterBar();
+
+  /* override applyFiltersAndSort to honour colour/material */
+  applyFiltersAndSort=function(){
+    var list = currentCat==='all' ? products.slice() : products.filter(p=>p.category===currentCat);
+    var q=(document.getElementById('search').value||'').toLowerCase();
+    if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)||(p.color||'').toLowerCase().includes(q)||(p.material||'').toLowerCase().includes(q));
+    if(typeof maxPrice!=='undefined'&&maxPrice<3000) list=list.filter(p=>!p.price||p.price<=maxPrice);
+    if(window.activeColor!=='all') list=list.filter(p=>p.color===window.activeColor);
+    if(window.activeMaterial!=='all') list=list.filter(p=>p.material===window.activeMaterial);
+    if(currentSort==='low') list.sort((a,b)=>a.price-b.price);
+    else if(currentSort==='high') list.sort((a,b)=>b.price-a.price);
+    else if(currentSort==='rating') list.sort((a,b)=>b.rating-a.rating);
+    else if(currentSort==='newest') list.sort((a,b)=>b.id-a.id);
+    else list.sort((a,b)=>b.reviews-a.reviews);
+    renderProducts(list);
+  };
+
+  /* ================= DECORATE CARDS: stock + compare ================= */
+  window.compareSet=new Set();
+  var _origRender=renderProducts;
+  renderProducts=function(list){
+    _origRender(list);
+    var cards=document.querySelectorAll('#product-grid .product-card');
+    cards.forEach(function(card,i){
+      var p=list[i]; if(!p) return;
+      var info=card.querySelector('.product-info');
+      var addBtn=info?info.querySelector('.add-cart-btn'):null;
+      if(info&&addBtn){
+        var s=p.stock==null?99:p.stock;
+        var sc=s<=0?'out':(s<=4?'low':'ok');
+        var stxt=s<=0?'<i class="fa-solid fa-circle-xmark"></i> Out of stock':(s<=4?'<i class="fa-solid fa-fire"></i> Only '+s+' left':'<i class="fa-solid fa-check-circle"></i> In stock');
+        var stk=el('div','card-stock '+sc,stxt);
+        info.insertBefore(stk,addBtn);
+        var checked=window.compareSet.has(p.id)?'checked':'';
+        var cmp=el('label','card-compare','<input type="checkbox" '+checked+'> Compare');
+        cmp.querySelector('input').onchange=function(ev){ev.stopPropagation();toggleCompare(p.id,ev.target.checked);};
+        cmp.onclick=function(ev){ev.stopPropagation();};
+        info.appendChild(cmp);
+        if(s<=0){addBtn.disabled=true;addBtn.style.opacity=.5;addBtn.style.cursor='not-allowed';addBtn.innerHTML='<i class="fa-solid fa-ban"></i> Sold Out';}
+      }
+    });
+  };
+
+  /* ================= COMPARE ================= */
+  var cmpBar=el('div','cmp-bar');
+  cmpBar.innerHTML='<div class="cmp-thumbs" id="cmp-thumbs"></div>'
+    +'<button class="cmp-go" id="cmp-go" disabled>Compare</button>'
+    +'<button class="cmp-clear" id="cmp-clear">Clear</button>';
+  document.body.appendChild(cmpBar);
+  document.getElementById('cmp-clear').onclick=function(){window.compareSet.clear();syncCompare();};
+  document.getElementById('cmp-go').onclick=openCompare;
+  window.toggleCompare=function(id,on){
+    if(on){ if(window.compareSet.size>=4){showToast('You can compare up to 4 bags');syncCompare();return;} window.compareSet.add(id);}
+    else window.compareSet.delete(id);
+    syncCompare();
+  };
+  function syncCompare(){
+    var ids=[...window.compareSet];
+    var thumbs=document.getElementById('cmp-thumbs');
+    thumbs.innerHTML=ids.map(id=>{var p=products.find(x=>x.id===id);return '<img src="'+p.img+'" alt="'+p.name+'">';}).join('');
+    document.getElementById('cmp-go').disabled=ids.length<2;
+    document.getElementById('cmp-go').textContent='Compare ('+ids.length+')';
+    cmpBar.classList.toggle('show',ids.length>0);
+    document.querySelectorAll('.card-compare input').forEach(function(inp){
+      var lbl=inp.closest('.product-card'); // sync checkbox state on re-render handled in render
+    });
+  }
+  function openCompare(){
+    var ids=[...window.compareSet]; if(ids.length<2) return;
+    var ps=ids.map(id=>products.find(x=>x.id===id));
+    var rows=[
+      ['',ps.map(p=>'<img src="'+p.img+'" alt="'+p.name+'"><div class="cmp-pname">'+p.name+'</div><button class="cmp-buy" onclick="addToCart('+p.id+');showToast(\'Added to bag\')">Add to Bag</button>').map(c=>'<td>'+c+'</td>').join('')],
+      ['Price',ps.map(p=>'<td><strong style="color:var(--ink)">'+money(p.price)+'</strong>'+(p.mrp?' <span style="text-decoration:line-through;color:var(--muted);font-size:11px">'+money(p.mrp)+'</span>':'')+'</td>').join('')],
+      ['Category',ps.map(p=>'<td>'+p.category+'</td>').join('')],
+      ['Colour',ps.map(p=>'<td>'+(p.color||'-')+'</td>').join('')],
+      ['Material',ps.map(p=>'<td>'+(p.material||'-')+'</td>').join('')],
+      ['Rating',ps.map(p=>'<td>'+p.rating+' ★ <span style="color:var(--muted)">('+p.reviews+')</span></td>').join('')],
+      ['Availability',ps.map(p=>'<td>'+(p.stock<=0?'Out of stock':(p.stock<=4?'Only '+p.stock+' left':'In stock'))+'</td>').join('')]
+    ];
+    var thead='<tr><th></th>'+ps.map(()=>'<th style="background:var(--paper)"></th>').join('')+'</tr>';
+    var body=rows.map(r=>'<tr><th>'+r[0]+'</th>'+r[1]+'</tr>').join('');
+    openX('Compare Bags','<div class="cmp-wrap"><table class="cmp-table">'+body+'</table></div>');
+  }
+
+  /* ================= GENERIC ENHANCEMENT MODAL ================= */
+  var xov=el('div','xmodal-overlay');
+  xov.innerHTML='<div class="xmodal" id="xmodal"><div class="xmodal-head"><h3 id="xmodal-title"></h3><button class="xmodal-close">&times;</button></div><div class="xmodal-body" id="xmodal-body"></div></div>';
+  document.body.appendChild(xov);
+  xov.addEventListener('click',function(e){if(e.target===xov)closeX();});
+  xov.querySelector('.xmodal-close').onclick=closeX;
+  function openX(title,html,narrow){
+    document.getElementById('xmodal-title').innerHTML=title;
+    document.getElementById('xmodal-body').innerHTML=html;
+    document.getElementById('xmodal').classList.toggle('narrow',!!narrow);
+    xov.classList.add('open');
+  }
+  function closeX(){xov.classList.remove('open');}
+  window.__openX=openX; window.__closeX=closeX;
+
+  /* ================= ENHANCE PRODUCT MODAL (stock + specs) ================= */
+  var _origOpenModal=window.openModal;
+  if(typeof _origOpenModal==='function'){
+    openModal=function(id){
+      _origOpenModal(id);
+      var p=products.find(x=>x.id===id); if(!p) return;
+      var stockEl=document.getElementById('modal-stock');
+      if(stockEl){
+        if(p.stock<=0){stockEl.className='stock-info';stockEl.style.color='var(--muted)';stockEl.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Out of Stock';}
+        else if(p.stock<=4){stockEl.className='stock-info';stockEl.style.color='var(--danger)';stockEl.innerHTML='<i class="fa-solid fa-fire"></i> Hurry — only '+p.stock+' left in stock';}
+        else{stockEl.className='stock-info in-stock';stockEl.style.color='';stockEl.innerHTML='<i class="fa-solid fa-check-circle"></i> In Stock';}
+      }
+      var descEl=document.getElementById('modal-desc');
+      if(descEl){
+        var chipStyle='font-size:11.5px;background:var(--cream-warm);border:1px solid var(--border);border-radius:14px;padding:5px 11px;color:var(--text-2)';
+        var spec=el('div',null,'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">'
+          +'<span style="'+chipStyle+'"><i class="fa-solid fa-palette" style="color:var(--primary);margin-right:5px"></i>'+(p.color||'-')+'</span>'
+          +'<span style="'+chipStyle+'"><i class="fa-solid fa-layer-group" style="color:var(--primary);margin-right:5px"></i>'+(p.material||'-')+'</span>'
+          +'</div>');
+        descEl.appendChild(spec);
+      }
+    };
+  }
+
+  /* ================= TESTIMONIALS ================= */
+  var tdata=[
+    {n:'Aarya Menon',l:'Kochi, Kerala',r:5,t:'Absolutely in love with my Ivory Chain Shoulder bag. The finish is so premium and it arrived beautifully packed. Laxuage feels like a real luxury label.'},
+    {n:'Priya Sharma',l:'Bengaluru',r:5,t:'Ordered the black tote for work and it has become my everyday companion. Sturdy, spacious and elegant. The WhatsApp support was super quick too.'},
+    {n:'Fathima Rashid',l:'Calicut',r:4,t:'Lovely clutch set for my sister\'s wedding — got so many compliments. Delivery was on time and COD made it stress-free.'}
+  ];
+  function stars(n){var s='';for(var i=0;i<5;i++)s+='<i class="fa'+(i<n?'-solid':'-regular')+' fa-star"></i>';return s;}
+  var tst=el('section','tst reveal');
+  tst.innerHTML='<div class="tst-head"><div class="tst-eyebrow">Loved by 5,000+ women</div><div class="tst-title">What Our <em>Clients</em> Say</div></div>'
+    +'<div class="tst-grid">'+tdata.map(d=>'<div class="tst-card"><div class="tst-quote">&#8220;</div><div class="tst-stars">'+stars(d.r)+'</div><div class="tst-text">'+d.t+'</div><div class="tst-who"><div class="tst-av">'+d.n[0]+'</div><div><div class="tst-name">'+d.n+'</div><div class="tst-loc">'+d.l+'</div></div></div></div>').join('')+'</div>';
+  var newsletter=document.querySelector('.newsletter');
+  if(newsletter) newsletter.parentNode.insertBefore(tst,newsletter);
+
+  /* ================= PAYMENT BADGES IN FOOTER ================= */
+  var fbottom=document.querySelector('.footer-bottom');
+  if(fbottom){
+    var pb=el('div','pay-badges','<span class="pb-label">We accept</span>'
+      +'<span class="pb"><i class="fa-solid fa-mobile-screen"></i> UPI</span>'
+      +'<span class="pb"><i class="fa-brands fa-google-pay"></i> GPay</span>'
+      +'<span class="pb"><i class="fa-solid fa-wallet"></i> PhonePe</span>'
+      +'<span class="pb"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery</span>'
+      +'<span class="pb"><i class="fa-solid fa-shield-halved"></i> Secure</span>');
+    fbottom.insertBefore(pb,fbottom.firstChild);
+  }
+
+  /* ================= BACK TO TOP ================= */
+  var bt=el('button','','<i class="fa-solid fa-arrow-up"></i>'); bt.id='back-top'; bt.setAttribute('aria-label','Back to top');
+  bt.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};
+  document.body.appendChild(bt);
+  window.addEventListener('scroll',function(){bt.classList.toggle('show',window.scrollY>500);},{passive:true});
+
+  /* ================= COOKIE CONSENT ================= */
+  var cookieOk=false; try{cookieOk=localStorage.getItem('laxuage_cookie')==='1';}catch(e){}
+  if(!cookieOk){
+    var ck=el('div','cookie','<p>We use cookies and local storage to keep your bag, wishlist and orders on this device. By using Laxuage you agree to our <a onclick="openInfo(\'privacy\')">Privacy Policy</a>.</p><button id="cookie-ok">Got it</button>');
+    document.body.appendChild(ck);
+    document.getElementById('cookie-ok').onclick=function(){try{localStorage.setItem('laxuage_cookie','1');}catch(e){}ck.remove();};
+  }
+
+  /* ================= SCROLL REVEAL ================= */
+  ['.promo-strip','.section-wrap','.recent-section','.newsletter','footer'].forEach(sel=>{var n=document.querySelector(sel);if(n)n.classList.add('reveal');});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(ents){ents.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.08});
+    document.querySelectorAll('.reveal').forEach(n=>io.observe(n));
+  } else {document.querySelectorAll('.reveal').forEach(n=>n.classList.add('in'));}
+
+  /* ================= ABOUT + CONTACT FORM (enrich INFO modal) ================= */
+  if(typeof INFO!=='undefined'){
+    INFO.about={icon:'fa-gem',title:'About Laxuage',body:`
+      <p><strong>Laxuage — Made of Her.</strong> We are a homegrown luxury bag label born in Kerala, India, crafting premium handbags, crossbody bags, totes and clutches for the modern woman.</p>
+      <p>Every piece is chosen for its refined materials, considered details and timeless silhouette — designed to move effortlessly from day to evening. We believe luxury should feel personal, which is why every order is confirmed by us directly and shipped with care.</p>
+      <ul>
+        <li><strong>5,000+</strong> happy clients across India</li>
+        <li><strong>40+</strong> handpicked designs</li>
+        <li><strong>4.8★</strong> average customer rating</li>
+        <li>Free shipping above ₹999 &amp; easy 7-day returns</li>
+      </ul>
+      <p>Questions or styling help? Message us anytime on WhatsApp at <strong>+91 98469 23350</strong>.</p>`};
+    INFO.contact={icon:'fa-headset',title:'Contact Us',body:`
+      <p>We'd love to hear from you — usually reply within a few hours.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px">
+        <a class="pb" style="text-decoration:none;cursor:pointer" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="color:#25D366"></i> +91 98469 23350</a>
+        <span class="pb"><i class="fa-solid fa-envelope" style="color:var(--primary)"></i> laxuage@gmail.com</span>
+        <a class="pb" style="text-decoration:none;cursor:pointer" onclick="window.open('https://instagram.com/laxuage','_blank')"><i class="fa-brands fa-instagram" style="color:var(--primary)"></i> @laxuage</a>
+      </div>
+      <div class="xfield"><label>Your Name</label><input id="cf-name" placeholder="Your name"></div>
+      <div class="xfield"><label>Phone / Email</label><input id="cf-contact" placeholder="How can we reach you?"></div>
+      <div class="xfield"><label>Message</label><textarea id="cf-msg" placeholder="Tell us how we can help…"></textarea></div>
+      <button class="xbtn" onclick="sendContactForm()"><i class="fa-brands fa-whatsapp"></i> Send via WhatsApp</button>`};
+  }
+  window.sendContactForm=function(){
+    var n=(document.getElementById('cf-name')||{}).value||'';
+    var c=(document.getElementById('cf-contact')||{}).value||'';
+    var m=(document.getElementById('cf-msg')||{}).value||'';
+    if(!m.trim()){showToast('Please write a message');return;}
+    var txt='*Contact — Laxuage*%0A%0AName: '+encodeURIComponent(n)+'%0AContact: '+encodeURIComponent(c)+'%0A%0A'+encodeURIComponent(m);
+    window.open('https://wa.me/919846923350?text='+txt,'_blank');
+  };
+  /* add About + Contact entries into the "More" dropdown */
+  var moreMenu=document.getElementById('more-menu');
+  if(moreMenu){
+    var ab=el('button','dropdown-item','<i class="fa-solid fa-gem"></i> About Laxuage'); ab.onclick=function(){openInfo('about');toggleDropdown('more-menu');};
+    var cu=el('button','dropdown-item','<i class="fa-solid fa-headset"></i> Contact Us'); cu.onclick=function(){openInfo('contact');toggleDropdown('more-menu');};
+    moreMenu.appendChild(ab); moreMenu.appendChild(cu);
+  }
+
+  /* ================= PROFILE EDIT ================= */
+  var ddProfile=document.getElementById('dd-profile');
+  if(ddProfile) ddProfile.onclick=function(){requireLogin(openProfileEdit);};
+  window.openProfileEdit=function(){
+    var u=currentUser||{};
+    openX('<i class="fa-regular fa-user"></i> My Profile',
+      '<div class="xfield"><label>Full Name</label><input id="pf-name" value="'+(u.name||'').replace(/"/g,'&quot;')+'"></div>'
+      +'<div class="xfield"><label>Phone</label><input id="pf-phone" value="'+(u.phone||'')+'"></div>'
+      +'<div class="xfield"><label>Email</label><input id="pf-email" value="'+(u.email||'')+'"></div>'
+      +'<button class="xbtn" onclick="saveProfileEdit()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>',true);
+  };
+  window.saveProfileEdit=function(){
+    if(!currentUser)return;
+    currentUser.name=(document.getElementById('pf-name').value||'').trim()||currentUser.name;
+    currentUser.phone=(document.getElementById('pf-phone').value||'').trim();
+    currentUser.email=(document.getElementById('pf-email').value||'').trim();
+    saveUser(currentUser); updateNavProfile(); closeX(); showToast('Profile updated');
+  };
+
+  /* ================= ORDER TRACKING TIMELINE + INVOICE ================= */
+  function orderStatusIndex(o){
+    var ageDays=(Date.now()-new Date(o.date).getTime())/86400000;
+    var eta=(o.etaDays||5);
+    if(ageDays>eta+1) return 4;        // delivered
+    if(ageDays>eta-1) return 3;        // out for delivery
+    if(ageDays>1) return 2;            // shipped
+    if(ageDays>0.25) return 1;         // confirmed
+    return 0;                          // placed
+  }
+  window.viewOrderDetail=function(orderId){
+    var o=loadOrders().find(x=>x.id===orderId); if(!o) return;
+    var a=o.address; var idx=orderStatusIndex(o);
+    var placed=new Date(o.date);
+    var steps=[
+      {t:'Order Placed',d:placed.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' · '+placed.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),ic:'fa-receipt'},
+      {t:'Order Confirmed',d:'Confirmed on WhatsApp',ic:'fa-circle-check'},
+      {t:'Shipped',d:'On the way to your city',ic:'fa-box'},
+      {t:'Out for Delivery',d:'Arriving soon',ic:'fa-truck-fast'},
+      {t:'Delivered',d:o.eta||'Estimated 3–5 days',ic:'fa-house-circle-check'}
+    ];
+    var timeline='<div class="trk">'+steps.map(function(s,i){
+      var cls=i<idx?'done':(i===idx?'current':'');
+      var icon=i<idx?'<i class="fa-solid fa-check"></i>':(i===idx?'<i class="fa-solid '+s.ic+'"></i>':(i+1));
+      return '<div class="trk-step '+cls+'">'+(i<steps.length-1?'<div class="trk-line"></div>':'')+'<div class="trk-dot">'+icon+'</div><div class="trk-info"><div class="t1">'+s.t+'</div><div class="t2">'+s.d+'</div></div></div>';
+    }).join('')+'</div>';
+    var items='<div class="trk-items">'+o.items.map(i=>'<div class="trk-irow"><img src="'+i.img+'" alt="'+i.name+'"><div class="n">'+i.name+' <span style="color:var(--muted)">×'+i.qty+'</span></div><div class="p">'+money(i.price*i.qty)+'</div></div>').join('')+'</div>';
+    var addr='<div style="background:var(--cream-warm);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;font-size:13px;color:var(--text-2);line-height:1.6;margin-top:6px"><strong style="color:var(--ink)"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:6px"></i>Delivering to</strong><br>'+a.name+', '+a.phone+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'</div>';
+    var totals='<div style="display:flex;justify-content:space-between;font-weight:800;font-size:16px;color:var(--ink);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><span>Total ('+o.payment.toUpperCase()+')</span><span>'+money(o.total)+'</span></div>';
+    var actions='<div class="trk-actions"><button class="trk-inv" onclick="downloadInvoice(\''+o.id+'\')"><i class="fa-solid fa-file-invoice"></i> Download Invoice</button><button class="trk-wa" onclick="window.open(\'https://wa.me/919846923350\',\'_blank\')"><i class="fa-brands fa-whatsapp"></i> Need Help?</button></div>';
+    openX('<i class="fa-solid fa-truck-fast"></i> Track Order '+o.id, timeline+addr+items+totals+actions);
+  };
+  window.downloadInvoice=function(orderId){
+    var o=loadOrders().find(x=>x.id===orderId); if(!o) return;
+    var a=o.address; var d=new Date(o.date).toLocaleString('en-IN');
+    var rows=o.items.map((i,n)=>'<tr><td>'+(n+1)+'</td><td>'+i.name+'</td><td style="text-align:center">'+i.qty+'</td><td style="text-align:right">'+money(i.price)+'</td><td style="text-align:right">'+money(i.price*i.qty)+'</td></tr>').join('');
+    var html='<!doctype html><html><head><meta charset="utf-8"><title>Invoice '+o.id+'</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#222;max-width:720px;margin:24px auto;padding:0 20px}h1{font-style:italic;color:#7E2D49;margin:0}.sub{letter-spacing:4px;font-size:11px;color:#a07a4a;text-transform:uppercase}.row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;margin:18px 0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #e0d8c8;padding:9px 10px;font-size:13px}th{background:#f5ede0;text-align:left}.tot{text-align:right;font-weight:bold;font-size:15px;margin-top:14px}.muted{color:#777;font-size:12px}.box{border:1px solid #e0d8c8;border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.6}@media print{button{display:none}}</style></head><body>'
+      +'<div class="row"><div><h1>Laxuage</h1><div class="sub">Made of Her</div></div><div style="text-align:right"><strong>TAX INVOICE</strong><br><span class="muted">'+o.id+'<br>'+d+'</span></div></div>'
+      +'<div class="row"><div class="box"><strong>Billed &amp; Shipped to</strong><br>'+a.name+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'<br>Phone: '+a.phone+'</div><div class="box"><strong>Seller</strong><br>Laxuage<br>Kerala, India<br>laxuage@gmail.com<br>+91 98469 23350</div></div>'
+      +'<table><thead><tr><th>#</th><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'
+      +'<div class="tot">Subtotal: '+money(o.subtotal)+'</div>'
+      +(o.discount>0?'<div class="tot">Discount'+(o.coupon?' ('+o.coupon+')':'')+': −'+money(o.discount)+'</div>':'')
+      +'<div class="tot">Shipping: Free</div>'
+      +'<div class="tot" style="font-size:18px;color:#7E2D49">Grand Total: '+money(o.total)+'</div>'
+      +'<p class="muted" style="margin-top:18px">Payment method: '+o.payment.toUpperCase()+'. This is a computer-generated invoice. Thank you for shopping with Laxuage.</p>'
+      +'<button onclick="window.print()" style="margin-top:14px;background:#7E2D49;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-weight:bold;cursor:pointer">Print / Save as PDF</button>'
+      +'</body></html>';
+    var w=window.open('','_blank');
+    if(w){w.document.write(html);w.document.close();} else {showToast('Allow pop-ups to download the invoice');}
+  };
+
+  /* close enhancement modals on Escape */
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeX();}});
+
+  /* re-sync compare bar after first product render */
+  setTimeout(syncCompare,60);
+})();
+</script>
+
 </body>
 </html>

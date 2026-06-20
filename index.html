@@ -20,6 +20,38 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Laxuage — Premium Luxury Bags">
   <meta name="twitter:description" content="A handpicked edit of premium luxury bags. Designed in India, made with care.">
+  <!-- Canonical: tells Google laxuage.com is the official address (no www/non-www duplicate issues) -->
+  <link rel="canonical" href="https://laxuage.com/">
+  <meta property="og:url" content="https://laxuage.com/">
+  <!--
+    Google Search Console is verified via DNS (Domain property) — no meta tag needed.
+    If you ever switch to a URL-prefix property, paste the code here and uncomment:
+    <meta name="google-site-verification" content="PASTE_CODE_HERE">
+  -->
+  <!-- Organization + WebSite structured data (complements the Store block below; helps brand logo & sitelinks) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://laxuage.com/#organization",
+        "name": "Laxuage",
+        "url": "https://laxuage.com/",
+        "logo": "https://laxuage.com/share-cover.jpg",
+        "email": "laxuage@gmail.com",
+        "sameAs": ["https://instagram.com/laxuage"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://laxuage.com/#website",
+        "name": "Laxuage",
+        "url": "https://laxuage.com/",
+        "publisher": { "@id": "https://laxuage.com/#organization" }
+      }
+    ]
+  }
+  </script>
   <script>
     /* Elegant on-brand placeholder so NO image ever appears broken.
        If a product photo (bagN.jpg) is missing, this draws a refined

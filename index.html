@@ -3708,34 +3708,69 @@
     }
   }
 
-  // ===== EMAIL VERIFICATION =====
-  function sendEmailCode() {
+  // ===== EMAIL VERIFICATION (real OTP via Brevo) =====
+  async function sendEmailCode() {
     const email = document.getElementById('signup-email').value.trim();
     if (!email || !email.includes('@') || !email.includes('.')) {
       showToast('⚠️ Valid email enter cheyyuka'); return;
     }
-    _emailCode = Math.floor(100000 + Math.random() * 900000).toString();
-    _emailVerified = false;
-    const grp = document.getElementById('email-verify-group');
-    grp.style.display = 'flex';
-    grp.style.flexDirection = 'column';
-    document.getElementById('signup-email-code').value = '';
-    document.getElementById('email-code-hint').textContent = '';
-    document.getElementById('send-email-code-btn').textContent = 'Resend';
-    showToast(`📧 Email code: ${_emailCode}  (Demo – real app-il mail varum)`);
+    const btn = document.getElementById('send-email-code-btn');
+    const prevLabel = btn.textContent;
+    btn.textContent = '...'; btn.disabled = true;
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showToast('⚠️ ' + (data.error || 'Could not send code'));
+        btn.textContent = prevLabel; btn.disabled = false;
+        return;
+      }
+      _emailVerified = false;
+      const grp = document.getElementById('email-verify-group');
+      grp.style.display = 'flex';
+      grp.style.flexDirection = 'column';
+      document.getElementById('signup-email-code').value = '';
+      document.getElementById('email-code-hint').textContent = '';
+      btn.textContent = 'Resend'; btn.disabled = false;
+      showToast('📧 Verification code email-il ayachu. Inbox / Spam nokku.');
+    } catch (e) {
+      showToast('⚠️ Network error. Try again.');
+      btn.textContent = prevLabel; btn.disabled = false;
+    }
   }
 
-  function verifyEmailCode() {
+  async function verifyEmailCode() {
     const entered = document.getElementById('signup-email-code').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
     const hint = document.getElementById('email-code-hint');
-    if (entered === _emailCode) {
-      _emailVerified = true;
-      hint.textContent = '✓ Email verified';
-      hint.style.color = '#16a34a';
-      showToast('✅ Email verified!');
-    } else {
+    if (!/^\d{6}$/.test(entered)) {
+      hint.textContent = '✗ Enter the 6-digit code'; hint.style.color = '#dc2626'; return;
+    }
+    hint.textContent = 'Checking...'; hint.style.color = '#707070';
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, code: entered })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        _emailVerified = true;
+        hint.textContent = '✓ Email verified';
+        hint.style.color = '#16a34a';
+        showToast('✅ Email verified!');
+      } else {
+        _emailVerified = false;
+        hint.textContent = '✗ ' + (data.error || 'Wrong code. Try again.');
+        hint.style.color = '#dc2626';
+      }
+    } catch (e) {
       _emailVerified = false;
-      hint.textContent = '✗ Wrong code. Try again.';
+      hint.textContent = '✗ Network error. Try again.';
       hint.style.color = '#dc2626';
     }
   }

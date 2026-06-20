@@ -2,7 +2,7 @@
 // Generates a 6-digit OTP, stores it in OTP_KV (10 min TTL), emails it via Brevo.
 // Secrets/bindings used: env.BREVO_API_KEY (secret), env.OTP_KV (KV namespace).
 
-const SENDER = { name: 'Laxuage', email: 'laxuage@gmail.com' };
+const SENDER = { name: 'Laxuage', email: 'support@laxuage.com' };
 const TTL_SECONDS = 600;        // OTP valid for 10 minutes
 const RESEND_COOLDOWN_MS = 45000; // 45s between sends per email
 

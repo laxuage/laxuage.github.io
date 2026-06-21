@@ -5727,17 +5727,8 @@
   function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
   function money(n){return '₹'+Number(n||0).toLocaleString('en-IN');}
 
-  /* ================= ANNOUNCEMENT BAR ================= */
+  /* ================= ANNOUNCEMENT BAR (removed per request) ================= */
   var nav=document.querySelector('nav');
-  if(nav){
-    var msgs='<span><i class="fa-solid fa-truck-fast"></i>Free shipping on orders above ₹999</span>'
-      +'<span><i class="fa-solid fa-rotate-left"></i>Easy 7-day returns</span>'
-      +'<span><i class="fa-solid fa-lock"></i>Secure UPI &amp; Cash on Delivery</span>'
-      +'<span><i class="fa-solid fa-gift"></i>Use code WELCOME10 for 10% off your first order</span>'
-      +'<span><i class="fa-solid fa-headset"></i>Personal concierge on WhatsApp</span>';
-    var ann=el('div','ann-bar','<div class="ann-track">'+msgs+msgs+'</div>');
-    nav.parentNode.insertBefore(ann,nav);
-  }
 
   /* ================= DARK MODE ================= */
   function applyTheme(t){

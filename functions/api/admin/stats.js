@@ -10,7 +10,7 @@ export async function onRequestGet(context) {
   const pending = await db.prepare("SELECT COUNT(*) AS c FROM orders WHERE status='new'").first();
   const delivered = await db.prepare("SELECT COUNT(*) AS c FROM orders WHERE status='delivered'").first();
   const pendingReviews = await db.prepare('SELECT COUNT(*) AS c FROM reviews WHERE approved=0').first();
-  const lowStock = await db.prepare('SELECT COUNT(*) AS c FROM stock WHERE stock<=4').first();
+  const lowStock = await db.prepare('SELECT COUNT(*) AS c FROM products WHERE stock IS NOT NULL AND stock<=4 AND active=1').first();
   return json({
     ok: true,
     stats: {

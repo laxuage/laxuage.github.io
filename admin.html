@@ -92,6 +92,38 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px;transition:transform .3s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.3)}
   .toast.show{transform:translateX(-50%) translateY(0)}
   .muted{color:var(--muted)}
+  /* ---- Products list ---- */
+  .prod-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .prod-row:last-child{border-bottom:none}
+  .prod-thumb{width:54px;height:54px;border-radius:8px;object-fit:cover;background:var(--bg);border:1px solid var(--border);flex-shrink:0}
+  .prod-main{flex:1;min-width:0}
+  .prod-main .pn{font-weight:700}
+  .prod-main .pm{font-size:12px;color:var(--muted);margin-top:2px}
+  .prod-price{font-weight:800;white-space:nowrap}
+  .prod-price s{color:var(--muted-soft);font-weight:400;font-size:12px;margin-left:5px}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#f1ece2;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-left:6px}
+  .tag.hidden{background:#fdecea;color:var(--danger)}
+  .tag.low{background:#fef4e2;color:var(--warn)}
+  /* ---- Product modal ---- */
+  .pmodal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,.55);z-index:60;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+  .pmodal-overlay.open{display:flex}
+  .pmodal{background:var(--paper);border-radius:14px;width:100%;max-width:560px;margin:auto;box-shadow:0 24px 60px -16px rgba(0,0,0,.4);animation:pin .25s cubic-bezier(.16,1,.3,1)}
+  @keyframes pin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .pmodal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--primary);color:#fff;border-radius:14px 14px 0 0;position:sticky;top:0}
+  .pmodal-head h3{font-size:16px;font-weight:700}
+  .pmodal-x{background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1}
+  .pmodal-body{padding:18px 20px}
+  .pmodal-body textarea{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical}
+  .pmodal-body textarea:focus{outline:none;border-color:var(--primary)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pmodal-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--paper);border-radius:0 0 14px 14px}
+  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .photos .ph{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .photos .ph img{width:100%;height:100%;object-fit:cover}
+  .photos .ph button{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;line-height:1;cursor:pointer}
+  .upload-btn{display:inline-block;border:1px dashed var(--primary);color:var(--primary);border-radius:8px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer}
+  .upload-btn:hover{background:var(--bg)}
+  @media(max-width:480px){ .grid2{grid-template-columns:1fr} }
   @media(max-width:560px){ th:nth-child(4),td:nth-child(4){display:none} header .h-right a{display:none} }
 </style>
 </head>
@@ -124,7 +156,7 @@
   <nav class="tabs">
     <button data-tab="dash" class="active" onclick="switchTab('dash')">📊 Dashboard</button>
     <button data-tab="orders" onclick="switchTab('orders')">📦 Orders</button>
-    <button data-tab="stock" onclick="switchTab('stock')">🏷️ Stock</button>
+    <button data-tab="products" onclick="switchTab('products')">🏷️ Products</button>
     <button data-tab="reviews" onclick="switchTab('reviews')">⭐ Reviews <span class="pill" id="rev-pill" style="display:none">0</span></button>
   </nav>
   <main>
@@ -138,10 +170,13 @@
       <h2 class="section">Orders</h2>
       <div class="panel" id="orders-panel"><div class="empty">Loading…</div></div>
     </section>
-    <!-- Stock -->
-    <section class="tabpane" id="tab-stock">
-      <h2 class="section">Stock &amp; Price</h2>
-      <div class="panel" id="stock-panel"></div>
+    <!-- Products -->
+    <section class="tabpane" id="tab-products">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <h2 class="section" style="margin:0">Products</h2>
+        <button class="btn" onclick="openProduct()">+ Add Product</button>
+      </div>
+      <div class="panel" id="products-panel"><div class="empty">Loading…</div></div>
     </section>
     <!-- Reviews -->
     <section class="tabpane" id="tab-reviews">
@@ -151,20 +186,75 @@
   </main>
 </div>
 
+<!-- Product editor -->
+<div class="pmodal-overlay" id="prod-modal" onclick="if(event.target===this)closeProduct()">
+  <div class="pmodal">
+    <div class="pmodal-head">
+      <h3 id="prod-title">Add Product</h3>
+      <button class="pmodal-x" onclick="closeProduct()">×</button>
+    </div>
+    <div class="pmodal-body">
+      <input type="hidden" id="p-id">
+      <div class="field"><label>Product Name *</label><input type="text" id="p-name" placeholder="e.g. Ivory Chain Shoulder Bag"></div>
+      <div class="grid2">
+        <div class="field"><label>Price ₹ *</label><input type="number" id="p-price" min="0" placeholder="1599"></div>
+        <div class="field"><label>MRP ₹ (old price)</label><input type="number" id="p-mrp" min="0" placeholder="2499"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Category</label>
+          <select id="p-category">
+            <option value="handbag">Handbag</option>
+            <option value="crossbody">Crossbody</option>
+            <option value="tote">Tote</option>
+            <option value="clutch">Clutch</option>
+          </select>
+        </div>
+        <div class="field"><label>Stock (blank = unlimited)</label><input type="number" id="p-stock" min="0" placeholder="∞"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Colour</label><input type="text" id="p-color" placeholder="Ivory"></div>
+        <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Weight (grams)</label><input type="number" id="p-weight" min="0" placeholder="650"></div>
+        <div class="field"><label>Size / Dimensions</label><input type="text" id="p-size" placeholder="28 × 18 × 10 cm"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Badge</label>
+          <select id="p-badge">
+            <option value="">None</option>
+            <option value="new">New</option>
+            <option value="hot">Hot</option>
+            <option value="exclusive">Exclusive</option>
+          </select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select id="p-active"><option value="1">Active (shown on site)</option><option value="0">Hidden</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="p-desc" rows="3" placeholder="Describe the product…"></textarea></div>
+      <div class="field">
+        <label>Photos</label>
+        <div class="photos" id="p-photos"></div>
+        <label class="upload-btn" id="upload-label">
+          <input type="file" accept="image/*" multiple onchange="uploadPhotos(this)" style="display:none">
+          <span id="upload-text">📷 Upload photo(s)</span>
+        </label>
+      </div>
+      <div class="err" id="p-err"></div>
+    </div>
+    <div class="pmodal-foot">
+      <button class="btn-ghost" onclick="closeProduct()">Cancel</button>
+      <button class="btn" id="p-save-btn" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const PRODUCTS = [
-  {id:1,name:"Ivory Chain Shoulder Bag",price:1599},
-  {id:2,name:"Quilted White Crossbody",price:1497},
-  {id:3,name:"Beige Monogram Satchel",price:1497},
-  {id:4,name:"Black Pleated Tote Bag",price:1397},
-  {id:5,name:"Cream Star Chain Bag",price:1597},
-  {id:6,name:"White Quilted Mini Bag",price:1899},
-  {id:7,name:"Dual Tone Beige Set",price:1597},
-  {id:8,name:"Brown Leather Crossbody",price:1599},
-  {id:9,name:"Pearl & Gold Clutch Set",price:1597}
-];
+let PRODUCTS = [];          // loaded from /api/admin/products
+let curPhotos = [];         // image urls currently in the editor
 const STATUSES = ['new','confirmed','shipped','delivered','cancelled'];
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -197,7 +287,7 @@ async function logout(){ await api('/api/admin/logout','POST'); location.reload(
 function showApp(){
   document.getElementById('login-view').style.display='none';
   document.getElementById('app-view').style.display='block';
-  loadDashboard(); loadOrders(); loadStock(); loadReviews();
+  loadDashboard(); loadOrders(); loadProducts(); loadReviews();
 }
 
 function switchTab(t){
@@ -257,31 +347,89 @@ async function setStatus(id,status){
   loadDashboard();
 }
 
-/* ---- Stock ---- */
-async function loadStock(){
-  const {data}=await api('/api/admin/stock');
-  const map={}; (data.stock||[]).forEach(s=>map[s.product_id]=s);
+/* ---- Products ---- */
+async function loadProducts(){
+  const {data}=await api('/api/admin/products');
+  if(data.ok) PRODUCTS=data.products||[];
+  const panel=document.getElementById('products-panel');
+  if(!data.ok){panel.innerHTML='<div class="empty">Could not load products.</div>';return;}
+  if(!PRODUCTS.length){panel.innerHTML='<div class="empty">No products yet. Click “+ Add Product”.</div>';return;}
   let h='';
   PRODUCTS.forEach(function(p){
-    const s=map[p.id]||{};
-    const stock=(s.stock!=null)?s.stock:'';
-    const price=(s.price!=null)?s.price:'';
-    h+='<div class="stock-row">'
-      +'<div class="pname">'+esc(p.name)+' <span class="pid">#'+p.id+'</span></div>'
-      +'<div><label>Stock</label><input type="number" min="0" id="stk-'+p.id+'" value="'+esc(stock)+'" placeholder="∞"></div>'
-      +'<div><label>Price ₹</label><input type="number" min="0" id="prc-'+p.id+'" value="'+esc(price)+'" placeholder="'+p.price+'"></div>'
-      +'<button class="mini" onclick="saveStock('+p.id+')">Save</button>'
+    const img=p.img||'';
+    const low=(p.stock!=null && p.stock<=4);
+    const lowTxt=low?'<span class="tag low">'+(p.stock<=0?'Out of stock':'Only '+p.stock)+'</span>':'';
+    h+='<div class="prod-row">'
+      +(img?'<img class="prod-thumb" src="'+esc(img)+'" alt="">':'<div class="prod-thumb"></div>')
+      +'<div class="prod-main"><div class="pn">'+esc(p.name)
+        +(p.active===0?'<span class="tag hidden">Hidden</span>':'')
+        +(p.badge?'<span class="tag">'+esc(p.badge)+'</span>':'')+lowTxt+'</div>'
+        +'<div class="pm">'+esc(p.category||'')+' · '+esc(p.color||'—')+' · '+esc(p.size||'—')+(p.weight_g?' · '+p.weight_g+'g':'')+' · Stock: '+(p.stock==null?'∞':p.stock)+'</div></div>'
+      +'<div class="prod-price">'+money(p.price)+(p.mrp&&p.mrp>p.price?'<s>'+money(p.mrp)+'</s>':'')+'</div>'
+      +'<div class="row-actions"><button class="mini" onclick="openProduct('+p.id+')">Edit</button><button class="mini no" onclick="deleteProduct('+p.id+')">Delete</button></div>'
       +'</div>';
   });
-  h+='<div style="padding:12px 14px;font-size:12px" class="muted">Leave Stock blank = unlimited. Leave Price blank = default catalogue price.</div>';
-  document.getElementById('stock-panel').innerHTML=h;
+  document.getElementById('products-panel').innerHTML=h;
 }
-async function saveStock(pid){
-  const stock=document.getElementById('stk-'+pid).value;
-  const price=document.getElementById('prc-'+pid).value;
-  const {data}=await api('/api/admin/stock','POST',{product_id:pid,stock:stock===''?0:stock,price:price});
-  toast(data.ok?'Saved ✓':'Save failed');
-  loadDashboard();
+function val(id,v){document.getElementById(id).value=(v==null?'':v);}
+function openProduct(id){
+  const p = id ? PRODUCTS.find(x=>x.id===id) : null;
+  document.getElementById('prod-title').textContent = p?'Edit Product':'Add Product';
+  val('p-id', p?p.id:''); val('p-name', p?p.name:''); val('p-price', p?p.price:'');
+  val('p-mrp', p?p.mrp:''); val('p-category', p?(p.category||'handbag'):'handbag');
+  val('p-stock', (p&&p.stock!=null)?p.stock:''); val('p-color', p?p.color:'');
+  val('p-material', p?p.material:''); val('p-weight', (p&&p.weight_g)?p.weight_g:'');
+  val('p-size', p?p.size:''); val('p-badge', p?(p.badge||''):'');
+  val('p-active', (p&&p.active===0)?'0':'1'); val('p-desc', p?p.description:'');
+  curPhotos = (p&&Array.isArray(p.images))?p.images.slice():[];
+  renderPhotos();
+  document.getElementById('p-err').textContent='';
+  document.getElementById('prod-modal').classList.add('open');
+}
+function closeProduct(){ document.getElementById('prod-modal').classList.remove('open'); }
+function renderPhotos(){
+  document.getElementById('p-photos').innerHTML = curPhotos.map(function(u,i){
+    return '<div class="ph"><img src="'+esc(u)+'"><button onclick="removePhoto('+i+')">×</button></div>';
+  }).join('');
+}
+function removePhoto(i){ curPhotos.splice(i,1); renderPhotos(); }
+async function uploadPhotos(input){
+  const files = Array.from(input.files||[]);
+  if(!files.length) return;
+  const txt=document.getElementById('upload-text'); const old=txt.textContent;
+  for(const f of files){
+    txt.textContent='Uploading…';
+    const fd=new FormData(); fd.append('file',f);
+    let d={};
+    try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
+    if(d.ok && d.url){ curPhotos.push(d.url); renderPhotos(); }
+    else { toast('⚠️ '+((d&&d.error)||'Upload failed')); }
+  }
+  txt.textContent=old; input.value='';
+}
+async function saveProduct(){
+  const err=document.getElementById('p-err'); err.textContent='';
+  const name=document.getElementById('p-name').value.trim();
+  if(!name){ err.textContent='Product name is required.'; return; }
+  const gv=id=>document.getElementById(id).value;
+  const body={
+    id: gv('p-id') || undefined, name:name, price: gv('p-price'), mrp: gv('p-mrp'),
+    category: gv('p-category'), stock: gv('p-stock'), color: gv('p-color'),
+    material: gv('p-material'), weight_g: gv('p-weight'), size: gv('p-size'),
+    badge: gv('p-badge'), active: parseInt(gv('p-active'),10),
+    description: gv('p-desc'), images: curPhotos
+  };
+  const btn=document.getElementById('p-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  const {data}=await api('/api/admin/products','POST',body);
+  btn.disabled=false; btn.textContent='Save Product';
+  if(data.ok){ toast('Product saved ✓'); closeProduct(); loadProducts(); loadDashboard(); }
+  else { err.textContent=data.error||'Save failed'; }
+}
+async function deleteProduct(id){
+  if(!confirm('Delete this product permanently?')) return;
+  const {data}=await api('/api/admin/products','POST',{action:'delete',id:id});
+  toast(data.ok?'Deleted ✓':'Failed');
+  loadProducts(); loadDashboard();
 }
 
 /* ---- Reviews ---- */

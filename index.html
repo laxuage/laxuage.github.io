@@ -5119,6 +5119,23 @@
       etaDays: days
     };
     saveOrder(order);
+    /* Save the order to the shop's database so it appears in the admin Orders panel. */
+    try {
+      fetch('/api/order/create', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          id: orderId,
+          items: order.items.map(function(i){ return { id:i.id, name:i.name, price:i.price, qty:i.qty }; }),
+          subtotal: subtotal, shipping: 0, total: final,
+          customer_name: addr.name || (currentUser && currentUser.name) || '',
+          customer_phone: addr.phone || (currentUser && currentUser.phone) || '',
+          customer_email: (currentUser && currentUser.email) || '',
+          address: [addr.house, addr.area, addr.city, addr.state].filter(Boolean).join(', ') + (addr.pin ? ' - ' + addr.pin : ''),
+          payment_method: (ckPayMethod === 'cod' ? 'cod' : (ckPayMethod || 'cod')),
+          payment_status: (ckPayMethod === 'cod' ? 'cod' : 'pending')
+        })
+      }).catch(function(){});
+    } catch(e) {}
     sendOrderToWhatsApp(order);   // <-- order is delivered to the shop's WhatsApp
     // Update success screen
     document.getElementById('ck-success-id').textContent = orderId;
@@ -5549,6 +5566,13 @@
       const rev = { name, rating: reviewStar, text, date: Date.now(), verified: true, helpful: 0 };
       if (reviewPhotoData) rev.photo = reviewPhotoData;
       saveUserReview(currentModalProductId, rev);
+      /* Also send to the shop for moderation -> appears in the admin Reviews panel. */
+      try {
+        fetch('/api/reviews', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ product_id: currentModalProductId, name: name, rating: reviewStar, text: text })
+        }).catch(function(){});
+      } catch(e) {}
       document.getElementById('rev-text').value = '';
       document.getElementById('rev-photo-preview').style.display = 'none';
       document.getElementById('rev-photo-text').textContent = 'Add a photo (optional)';

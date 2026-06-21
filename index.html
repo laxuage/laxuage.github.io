@@ -4244,11 +4244,17 @@
       const badgeHtml = p.badge ? `<span class="badge badge-${p.badge}">${p.badge.toUpperCase()}</span>` : '';
       const priceHtml = p.price ? `<span class="price-main">₹${p.price.toLocaleString()}</span>` : `<span class="price-request">Price on Request</span>`;
       const isWishlisted = wishlist.has(p.id);
+      const imgs = (Array.isArray(p.images) && p.images.length) ? p.images : [p.img];
+      const slidesHtml = imgs.map(u => `<img class="pcard-slide" src="${u}" alt="${p.name}" loading="lazy">`).join('');
+      const dotsHtml = imgs.length > 1 ? `<div class="pcard-dots">${imgs.map((_, i) => `<span class="pcard-dot${i === 0 ? ' on' : ''}"></span>`).join('')}</div>` : '';
+      const arrowsHtml = imgs.length > 1 ? `<button class="pcard-arr pcard-prev" type="button" aria-label="Previous photo">‹</button><button class="pcard-arr pcard-next" type="button" aria-label="Next photo">›</button>` : '';
       const card = document.createElement('div');
       card.className = 'product-card';
       card.innerHTML = `
-        <div class="product-img-wrap" onclick="openModal(${p.id})">
-          <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <div class="product-img-wrap${imgs.length > 1 ? '' : ' single'}" onclick="openModal(${p.id})">
+          <div class="pcard-track">${slidesHtml}</div>
+          ${arrowsHtml}
+          ${dotsHtml}
           ${badgeHtml}
           <button class="wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist(this, ${p.id})">
             <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
@@ -4265,6 +4271,25 @@
           <button class="add-cart-btn" onclick="addToCart(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
         </div>`;
       grid.appendChild(card);
+    });
+    initCardSliders();
+  }
+
+  /* Per-card image slider: native swipe + dots + hover arrows. */
+  function initCardSliders(){
+    document.querySelectorAll('#product-grid .product-img-wrap').forEach(function(wrap){
+      if(wrap.dataset.sl) return; wrap.dataset.sl='1';
+      var track = wrap.querySelector('.pcard-track'); if(!track) return;
+      var slides = track.querySelectorAll('.pcard-slide'); if(slides.length < 2) return;
+      var dots = wrap.querySelectorAll('.pcard-dot');
+      function idx(){ return Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); }
+      function upd(){ var i = idx(); dots.forEach(function(d,k){ d.classList.toggle('on', k===i); }); }
+      track.addEventListener('scroll', function(){ requestAnimationFrame(upd); }, { passive:true });
+      function go(dir){ track.scrollTo({ left:(idx()+dir)*track.clientWidth, behavior:'smooth' }); }
+      var prev = wrap.querySelector('.pcard-prev'), next = wrap.querySelector('.pcard-next');
+      if(prev) prev.addEventListener('click', function(e){ e.stopPropagation(); go(-1); });
+      if(next) next.addEventListener('click', function(e){ e.stopPropagation(); go(1); });
+      dots.forEach(function(d,k){ d.addEventListener('click', function(e){ e.stopPropagation(); track.scrollTo({ left:k*track.clientWidth, behavior:'smooth' }); }); });
     });
   }
 
@@ -6266,6 +6291,21 @@
   body.dark .fsum-chip { background: #3a2330; border-color: #553546; color: #f0d7e1; }
   body.dark .promo-strip { border-top: 1px solid var(--border); }
   body.dark .product-card:hover { box-shadow: 0 20px 44px -18px rgba(0,0,0,.6); }
+
+  /* ===== Product-card image slider (Gucci-style) ===== */
+  .pcard-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; height:260px; }
+  .pcard-track::-webkit-scrollbar{ display:none; }
+  .pcard-slide{ flex:0 0 100%; width:100%; height:260px; object-fit:cover; scroll-snap-align:center; display:block; }
+  /* keep the original subtle hover-zoom ONLY for single-image cards */
+  .product-card:hover .product-img-wrap.single .pcard-slide{ transform:scale(1.05); }
+  .product-card:hover .product-img-wrap:not(.single) .pcard-slide{ transform:none; }
+  .pcard-dots{ position:absolute; left:0; right:0; bottom:10px; display:flex; gap:5px; justify-content:center; z-index:3; }
+  .pcard-dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.55); box-shadow:0 0 3px rgba(0,0,0,.35); cursor:pointer; transition:all .25s; }
+  .pcard-dot.on{ background:#fff; width:18px; border-radius:4px; }
+  .pcard-arr{ position:absolute; top:46%; transform:translateY(-50%); width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.9); border:none; color:#1a1a1a; font-size:18px; font-weight:700; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:opacity .2s; z-index:3; box-shadow:0 2px 8px rgba(0,0,0,.22); }
+  .pcard-prev{ left:8px; } .pcard-next{ right:8px; }
+  .product-card:hover .pcard-arr{ opacity:1; }
+  @media (hover:none){ .pcard-arr{ display:none; } }
 </style>
 <script>
 (function(){

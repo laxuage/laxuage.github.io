@@ -6203,6 +6203,32 @@
     .filter-bar .filter-clear { margin-left: 0; }
     .filter-panel .filter-group { align-items: flex-start; }
   }
+
+  /* ===== Dark-theme clarity fixes ===== */
+  /* Brighter wine accent + warmer text/borders so the deep-wine brand colour
+     and white-on-colour text stay legible on a near-black background. */
+  body.dark {
+    --primary: #c66e8b;
+    --primary-dark: #ad5a76;
+    --primary-soft: #3a2330;
+    --border: #4a3d36;
+    --border-soft: #3f332d;
+    --muted: #b6a897;
+    --text-2: #daccbd;
+  }
+  /* Elements that use --paper as a *text* colour (white-on-colour in light mode)
+     would turn dark-on-dark in dark mode — force them light/correct again. */
+  body.dark .logo-text { color: #f4ece3; }          /* nav brand "Laxuage" */
+  body.dark .btn-primary { color: #fff; }            /* "Shop Now" label */
+  body.dark .hc-name { color: #f6efe7; }             /* hero carousel product names */
+  body.dark .hc-badge.hc-b-hot { color: #fff; }
+  body.dark .badge-new { background: #2c2219; color: #f4ece3; }
+  body.dark .badge-hot { color: #fff; }
+  body.dark .badge-exclusive { color: #1a1a1a; }
+  body.dark .filter-toggle { background: var(--paper); }
+  body.dark .fsum-chip { background: #3a2330; border-color: #553546; color: #f0d7e1; }
+  body.dark .promo-strip { border-top: 1px solid var(--border); }
+  body.dark .product-card:hover { box-shadow: 0 20px 44px -18px rgba(0,0,0,.6); }
 </style>
 <script>
 (function(){

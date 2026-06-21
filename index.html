@@ -2910,23 +2910,6 @@
         <button class="btn-primary" onclick="document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">
           <span>Shop Now</span> <i class="fa-solid fa-arrow-right"></i>
         </button>
-        <button class="btn-outline" onclick="filterCat('clutch', document.querySelectorAll('.cat-btn')[4]); document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">
-          New Arrivals
-        </button>
-      </div>
-      <div class="hero-stats">
-        <div>
-          <div class="stat-num">5,000<em>+</em></div>
-          <div class="stat-label">Happy Clients</div>
-        </div>
-        <div>
-          <div class="stat-num">40<em>+</em></div>
-          <div class="stat-label">Designs</div>
-        </div>
-        <div>
-          <div class="stat-num">4.8</div>
-          <div class="stat-label">Avg. Rating</div>
-        </div>
       </div>
     </div>
 
@@ -3322,15 +3305,8 @@
         </div>
       </div>
       <div class="reviews-section" id="reviews-section">
-        <div class="rev-section-title">Ratings &amp; Reviews</div>
-        <div class="rev-head">
-          <div class="rev-overall">
-            <div class="rev-avg-num" id="rev-avg">0.0</div>
-            <div class="rev-avg-stars" id="rev-avg-stars"></div>
-            <div class="rev-count" id="rev-count">0 reviews</div>
-          </div>
-          <div class="rev-bars" id="rev-bars"></div>
-        </div>
+        <div class="rev-section-title">Share Your Feedback</div>
+        <p style="font-size:13px;color:var(--muted);margin:-2px 0 14px;line-height:1.55">Tell us about your experience with this bag. Your feedback goes privately to our team to help us improve — it is <strong>not shown publicly</strong>.</p>
         <button class="rev-write-btn" id="rev-write-btn" onclick="toggleReviewForm()"><i class="fa-solid fa-pen"></i> Write a Review</button>
         <div class="rev-form" id="rev-form" style="display:none">
           <div class="rev-form-label">Your Rating</div>
@@ -3351,7 +3327,6 @@
           </div>
           <div class="rev-form-msg" id="rev-form-msg"></div>
         </div>
-        <div class="rev-list" id="rev-list"></div>
       </div>
       <div class="related-section" id="related-section" style="display:none">
         <div class="related-title">You May Also Like</div>
@@ -4263,10 +4238,6 @@
         <div class="product-info">
           <div class="product-category">${p.category}</div>
           <div class="product-name">${p.name}</div>
-          <div class="product-rating">
-            <span class="rating-badge">${p.rating} <i class="fa-solid fa-star" style="font-size:9px"></i></span>
-            <span class="rating-count">(${p.reviews})</span>
-          </div>
           <div class="product-price">${priceHtml}</div>
           <button class="add-cart-btn" onclick="addToCart(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
         </div>`;
@@ -5496,45 +5467,8 @@
     }
     return s;
   }
-  function renderReviews(pid){
-    const p = products.find(x => x.id === pid);
-    if (!p) return;
-    const userRevs = loadUserReviews(pid);
-    const headlineCount = (p.reviews || 0) + userRevs.length;
-    const userSum = userRevs.reduce((a,b) => a + (b.rating || 0), 0);
-    const blended = headlineCount ? ((p.rating * (p.reviews || 0)) + userSum) / headlineCount : p.rating;
-    const avg = Math.round(blended * 10) / 10;
-
-    document.getElementById('rev-avg').textContent = avg.toFixed(1);
-    document.getElementById('rev-avg-stars').innerHTML = starsHtml(avg, 15);
-    document.getElementById('rev-count').textContent = headlineCount.toLocaleString() + ' review' + (headlineCount === 1 ? '' : 's');
-
-    // breakdown bars (modelled distribution + the user's own reviews on top)
-    const dist = starDistribution(avg, headlineCount);
-    userRevs.forEach(r => { const idx = 5 - Math.round(r.rating); if (dist[idx] != null) dist[idx]++; });
-    const distTotal = dist.reduce((a,b) => a + b, 0) || 1;
-    document.getElementById('rev-bars').innerHTML = [5,4,3,2,1].map((star,i) => {
-      const pct = Math.round(dist[i] / distTotal * 100);
-      return `<div class="rev-bar-row"><span class="rev-bar-label">${star}★</span><span class="rev-bar-track"><span class="rev-bar-fill" style="width:${pct}%"></span></span><span class="rev-bar-pct">${pct}%</span></div>`;
-    }).join('');
-
-    // the written-review list
-    const list = getReviewList(pid);
-    document.getElementById('rev-list').innerHTML = list.map(r => {
-      const initial = (r.name || 'A').trim().charAt(0).toUpperCase();
-      const photo = r.photo ? `<img class="rev-photo-thumb" src="${r.photo}" alt="review photo">` : '';
-      const verified = r.verified ? `<span class="rev-verified"><i class="fa-solid fa-circle-check"></i> Verified Buyer</span>` : '';
-      return `<div class="rev-card">
-        <div class="rev-avatar">${escHtml(initial)}</div>
-        <div class="rev-card-body">
-          <div class="rev-card-head"><span class="rev-name">${escHtml(r.name || 'Anonymous')}</span>${verified}<span class="rev-date">${timeAgo(r.date)}</span></div>
-          <div class="rev-stars-sm">${starsHtml(r.rating, 12)}</div>
-          <div class="rev-text">${escHtml(r.text || '')}</div>
-          ${photo}
-        </div>
-      </div>`;
-    }).join('');
-  }
+  /* Reviews are PRIVATE (admin-only). Nothing is rendered publicly. */
+  function renderReviews(pid){ /* intentionally empty */ }
 
   // ----- write-a-review form -----
   let reviewStar = 5;
@@ -5588,10 +5522,7 @@
     }
     requireLogin(() => {
       const name = document.getElementById('rev-name').value.trim() || (currentUser && currentUser.name) || 'Anonymous';
-      const rev = { name, rating: reviewStar, text, date: Date.now(), verified: true, helpful: 0 };
-      if (reviewPhotoData) rev.photo = reviewPhotoData;
-      saveUserReview(currentModalProductId, rev);
-      /* Also send to the shop for moderation -> appears in the admin Reviews panel. */
+      /* Feedback is PRIVATE — sent only to the shop's admin, never shown publicly. */
       try {
         fetch('/api/reviews', {
           method: 'POST', headers: { 'content-type': 'application/json' },
@@ -5605,8 +5536,7 @@
       reviewPhotoData = null;
       reviewStar = 5;
       document.getElementById('rev-form').style.display = 'none';
-      renderReviews(currentModalProductId);
-      showToast('Thank you! Your review is posted.');
+      showToast('Thank you for your feedback — it helps us improve! 💛');
     });
   }
 

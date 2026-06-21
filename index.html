@@ -6088,5 +6088,77 @@
 })();
 </script>
 
+<!-- ===================== PREMIUM POLISH (additive · safe · reversible) ===================== -->
+<style>
+  /* Smooth, intentional scrolling */
+  html { scroll-behavior: smooth; }
+
+  /* Refined on-brand scrollbar */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: var(--cream-warm); }
+  ::-webkit-scrollbar-thumb { background: #d9c4ab; border-radius: 10px; border: 3px solid var(--cream-warm); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* Accessible, elegant focus ring (keyboard users) */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px;
+  }
+
+  /* Deeper, softer, more layered product-card hover */
+  .product-card { transition: box-shadow .32s cubic-bezier(.16,1,.3,1), transform .32s cubic-bezier(.16,1,.3,1); }
+  .product-card:hover {
+    box-shadow: 0 20px 44px -18px rgba(94,31,55,.30), 0 6px 16px -8px rgba(26,26,26,.10);
+    transform: translateY(-6px);
+  }
+  .product-card:hover .product-img-wrap img { transform: scale(1.075); }
+
+  /* Primary button — subtle gold sheen sweep on hover */
+  .btn-primary { position: relative; overflow: hidden; }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent 32%, rgba(201,162,106,.40) 50%, transparent 68%);
+    transform: translateX(-130%); transition: transform .75s ease; pointer-events: none;
+  }
+  .btn-primary:hover::after { transform: translateX(130%); }
+  .btn-primary:hover { box-shadow: 0 12px 28px -6px rgba(126,45,73,.55); }
+
+  /* Hero headline — a touch more refined */
+  .hero h1 { text-wrap: balance; }
+
+  /* ---- Scroll-reveal (graceful: nothing is hidden unless JS opts in, and a
+         safety timer guarantees everything is shown even if the observer misses) ---- */
+  .rv-on .rv { opacity: 0; transform: translateY(20px);
+    transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+  .rv-on .rv.rv-in, .rv-on.rv-done .rv { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rv-on .rv { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .product-card:hover, .product-card:hover .product-img-wrap img { transition: none; }
+  }
+</style>
+<script>
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  var root = document.documentElement;
+  root.classList.add('rv-on');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('rv-in'); io.unobserve(e.target); } });
+  }, { threshold: 0.05, rootMargin: '0px 0px -28px 0px' });
+  function reveal(el){ if(el && !el.classList.contains('rv')){ el.classList.add('rv'); io.observe(el); } }
+  function scan(){
+    document.querySelectorAll('.promo-item, .product-card, .recent-section, .newsletter, footer')
+      .forEach(reveal);
+  }
+  scan();
+  window.addEventListener('load', scan);
+  // Catch product cards rendered dynamically into the grid.
+  var grid = document.getElementById('product-grid');
+  if(grid){ try { new MutationObserver(scan).observe(grid, { childList: true }); } catch(e){} }
+  // SAFETY NET: never leave content hidden — force-reveal everything after 2.6s.
+  setTimeout(function(){ root.classList.add('rv-done'); }, 2600);
+})();
+</script>
+
 </body>
 </html>

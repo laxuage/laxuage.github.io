@@ -27,6 +27,21 @@ export async function isAdmin(env, request) {
   return !!(await env.OTP_KV.get('adminsess:' + token));
 }
 
+// Returns the logged-in customer { id, email, name, phone } or null.
+export async function getSessionUser(env, request) {
+  if (!env.OTP_KV || !env.DB) return null;
+  const token = getCookie(request, 'lax_session');
+  if (!token) return null;
+  const uid = await env.OTP_KV.get('usersess:' + token);
+  if (!uid) return null;
+  try {
+    const u = await env.DB.prepare('SELECT id,email,name,phone FROM users WHERE id=?').bind(parseInt(uid, 10)).first();
+    return u || null;
+  } catch (e) {
+    return null; // users table may not exist yet
+  }
+}
+
 // Idempotent schema creation. Cheap (CREATE TABLE IF NOT EXISTS); safe to call per request.
 export async function ensureSchema(db) {
   if (!db) throw new Error('D1 binding "DB" missing');
@@ -58,6 +73,14 @@ export async function ensureSchema(db) {
       type TEXT, value INTEGER,
       active INTEGER DEFAULT 1,
       min_order INTEGER DEFAULT 0
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE,
+      name TEXT,
+      phone TEXT,
+      created_at INTEGER,
+      last_login INTEGER
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

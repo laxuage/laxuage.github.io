@@ -5770,24 +5770,63 @@
   function chip(text,active,sw){return '<button class="chip'+(active?' active':'')+'">'+(sw?'<span class="sw" style="background:'+sw+'"></span>':'')+text+'</button>';}
   function buildFilterBar(){
     var sortBar=document.querySelector('.sort-bar'); if(!sortBar) return;
+    if(window.activeColor===undefined) window.activeColor='all';
+    if(window.activeMaterial===undefined) window.activeMaterial='all';
     var bar=el('div','filter-bar');
     var colorChips='<span class="filter-glabel">Colour</span>'+chip('All',true);
     colors.forEach(c=>colorChips+=chip(c,false,swatch[c]||'#ccc'));
     var matChips='<span class="filter-glabel">Material</span>'+chip('All',true);
     materials.forEach(m=>matChips+=chip(m,false));
     bar.innerHTML='<div class="filter-inner">'
-      +'<div class="filter-group" id="fg-color">'+colorChips+'</div>'
-      +'<div class="filter-group" id="fg-mat">'+matChips+'</div>'
-      +'<button class="filter-clear" id="fclear"><i class="fa-solid fa-xmark"></i> Reset</button>'
+      +'<div class="filter-head">'
+        +'<button class="filter-toggle" id="ftoggle" aria-expanded="false">'
+          +'<i class="fa-solid fa-sliders"></i> Filters'
+          +'<span class="filter-count" id="fcount" hidden>0</span>'
+          +'<i class="fa-solid fa-chevron-down fchev"></i>'
+        +'</button>'
+        +'<div class="filter-summary" id="fsummary"></div>'
+        +'<button class="filter-clear" id="fclear" hidden><i class="fa-solid fa-xmark"></i> Reset</button>'
+      +'</div>'
+      +'<div class="filter-panel" id="fpanel">'
+        +'<div class="filter-group" id="fg-color">'+colorChips+'</div>'
+        +'<div class="filter-group" id="fg-mat">'+matChips+'</div>'
       +'</div>';
     sortBar.parentNode.insertBefore(bar,sortBar.nextSibling);
+
+    document.getElementById('ftoggle').onclick=function(){
+      var open=bar.classList.toggle('filters-open');
+      this.setAttribute('aria-expanded',open?'true':'false');
+    };
+    function resetGroup(id){
+      var g=document.getElementById(id); if(!g) return;
+      g.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      g.querySelector('.chip').classList.add('active');
+    }
+    function refreshSummary(){
+      var sum=document.getElementById('fsummary'); var items=[];
+      if(window.activeColor&&window.activeColor!=='all') items.push({g:'color',v:window.activeColor});
+      if(window.activeMaterial&&window.activeMaterial!=='all') items.push({g:'mat',v:window.activeMaterial});
+      sum.innerHTML=items.map(function(it){
+        return '<button class="fsum-chip" data-g="'+it.g+'">'+it.v+' <i class="fa-solid fa-xmark"></i></button>';
+      }).join('');
+      var cEl=document.getElementById('fcount');
+      cEl.textContent=items.length; cEl.hidden=items.length===0;
+      document.getElementById('fclear').hidden=items.length===0;
+      sum.querySelectorAll('.fsum-chip').forEach(function(b){
+        b.onclick=function(){
+          if(b.getAttribute('data-g')==='color'){ window.activeColor='all'; resetGroup('fg-color'); }
+          else { window.activeMaterial='all'; resetGroup('fg-mat'); }
+          applyFiltersAndSort(); refreshSummary();
+        };
+      });
+    }
     function wire(groupId,setter,values){
       var g=document.getElementById(groupId);
       var chips=g.querySelectorAll('.chip');
       chips.forEach((ch,i)=>{
         ch.onclick=function(){
           chips.forEach(c=>c.classList.remove('active')); ch.classList.add('active');
-          setter(i===0?'all':values[i-1]); applyFiltersAndSort();
+          setter(i===0?'all':values[i-1]); applyFiltersAndSort(); refreshSummary();
         };
       });
     }
@@ -5795,10 +5834,10 @@
     wire('fg-mat',v=>window.activeMaterial=v,materials);
     document.getElementById('fclear').onclick=function(){
       window.activeColor='all'; window.activeMaterial='all';
-      document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));
-      document.querySelectorAll('.filter-bar .filter-group').forEach(g=>g.querySelector('.chip').classList.add('active'));
-      applyFiltersAndSort();
+      resetGroup('fg-color'); resetGroup('fg-mat');
+      applyFiltersAndSort(); refreshSummary();
     };
+    refreshSummary();
   }
   buildFilterBar();
 
@@ -6135,6 +6174,43 @@
     html { scroll-behavior: auto; }
     .rv-on .rv { opacity: 1 !important; transform: none !important; transition: none !important; }
     .product-card:hover, .product-card:hover .product-img-wrap img { transition: none; }
+  }
+
+  /* ---- Collapsible, mobile-friendly Filters ---- */
+  .filter-bar .filter-inner { flex-direction: column; align-items: stretch; gap: 0; }
+  .filter-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding: 3px 0; }
+  .filter-toggle {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--paper); border: 1px solid var(--border); color: var(--ink);
+    font-family: var(--sans); font-size: 12.5px; font-weight: 700;
+    padding: 8px 15px; border-radius: 22px; cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .filter-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  .filter-bar.filters-open .filter-toggle { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .filter-toggle .fchev { font-size: 10px; transition: transform .25s; }
+  .filter-bar.filters-open .filter-toggle .fchev { transform: rotate(180deg); }
+  .filter-count {
+    background: var(--gold); color: #1a1a1a; font-size: 10px; font-weight: 800;
+    min-width: 17px; height: 17px; border-radius: 9px; display: inline-flex;
+    align-items: center; justify-content: center; padding: 0 4px;
+  }
+  .filter-summary { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; flex: 1; min-width: 0; }
+  .fsum-chip {
+    background: var(--primary-soft); border: 1px solid #eccfdb; color: var(--primary-dark);
+    font-family: var(--sans); font-size: 11.5px; font-weight: 600; padding: 5px 11px;
+    border-radius: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .fsum-chip i { font-size: 10px; opacity: .7; }
+  .fsum-chip:hover { background: #f3d9e3; }
+  .filter-bar .filter-clear { margin-left: auto; background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .filter-bar .filter-clear:hover { text-decoration: underline; }
+  .filter-panel { display: none; flex-wrap: wrap; gap: 16px 22px; padding: 13px 0 5px; }
+  .filter-bar.filters-open .filter-panel { display: flex; animation: fpIn .25s cubic-bezier(.16,1,.3,1); }
+  @keyframes fpIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @media (max-width: 600px) {
+    .filter-summary { order: 3; flex-basis: 100%; }
+    .filter-bar .filter-clear { margin-left: 0; }
+    .filter-panel .filter-group { align-items: flex-start; }
   }
 </style>
 <script>

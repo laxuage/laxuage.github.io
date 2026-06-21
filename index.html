@@ -4124,6 +4124,19 @@
     { id:9, name:"Pearl & Gold Clutch Set", price:1597, mrp:2599, img:"bag9.jpg", description:"Stunning handcrafted pearl and gold beaded clutches. Perfect for parties and special occasions.", category:"clutch", badge:"new", rating:4.9, reviews:77, color:"Gold", material:"Pearl & Beadwork", stock:2 }
   ];
 
+  /* Load the LIVE catalogue from the admin-managed database. The hard-coded list
+     above is the instant-render fallback (used if the API is slow/unavailable),
+     so the store always shows products even offline. */
+  (function(){
+    fetch('/api/products').then(function(r){ return r.json(); }).then(function(d){
+      if(d && d.ok && Array.isArray(d.products) && d.products.length){
+        products.length = 0;
+        d.products.forEach(function(p){ products.push(p); });
+        if(typeof applyFiltersAndSort === 'function') applyFiltersAndSort();
+      }
+    }).catch(function(){ /* keep the fallback catalogue */ });
+  })();
+
   // ===================================================================
   // ============= NEW: SEED REVIEWS (sample reviews per product) ======
   // A real shop can edit/remove these. Customer-written reviews are stored

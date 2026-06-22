@@ -100,7 +100,29 @@ export async function ensureSchema(db) {
       sort_order INTEGER DEFAULT 0,
       created_at INTEGER
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at INTEGER
+    )`),
   ]);
+}
+
+// Read a JSON setting by key (returns parsed object or null).
+export async function getSetting(db, key) {
+  try {
+    const row = await db.prepare('SELECT value FROM settings WHERE key=?').bind(key).first();
+    if (row && row.value) return JSON.parse(row.value);
+  } catch (e) {}
+  return null;
+}
+
+// Write a JSON setting by key (upsert).
+export async function setSetting(db, key, obj) {
+  await db.prepare(
+    `INSERT INTO settings (key, value, updated_at) VALUES (?,?,?)
+     ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at`
+  ).bind(key, JSON.stringify(obj), Date.now()).run();
 }
 
 // The original 9 catalogue items — used to seed the products table the first

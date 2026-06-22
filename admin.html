@@ -125,6 +125,27 @@
   .upload-btn:hover{background:var(--bg)}
   @media(max-width:480px){ .grid2{grid-template-columns:1fr} }
   @media(max-width:560px){ th:nth-child(4),td:nth-child(4){display:none} header .h-right a{display:none} }
+
+  /* ---- Homepage showcase ---- */
+  .sc-field{margin-bottom:16px}
+  .sc-field>label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .sc-field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink)}
+  .sc-field input:focus{outline:none;border-color:var(--primary)}
+  .sc-modes{display:flex;gap:18px;flex-wrap:wrap}
+  .sc-modes label{display:flex;align-items:center;gap:7px;font-weight:600;cursor:pointer}
+  .sc-modes input,.sc-check input,.sc-prow input{width:auto;accent-color:var(--primary)}
+  .sc-check{display:flex;align-items:center;gap:8px;margin:4px 0 8px;font-weight:600;cursor:pointer}
+  .sc-pane{border-top:1px solid var(--border);margin-top:16px;padding-top:16px}
+  #sc-products{max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+  .sc-prow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#fff}
+  .sc-prow:hover{border-color:var(--primary)}
+  .sc-prow img,.sc-noimg{width:42px;height:42px;border-radius:6px;object-fit:cover;background:var(--bg);flex:0 0 auto}
+  .sc-prow>span{flex:1;font-weight:600}
+  .sc-prow b{color:var(--primary)}
+  .sc-vid{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .sc-vid input{flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff}
+  .mini-up{display:inline-block;border:1px dashed var(--primary);color:var(--primary);border-radius:8px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
+  .mini-up:hover{background:var(--bg)}
 </style>
 </head>
 <body>
@@ -157,6 +178,7 @@
     <button data-tab="dash" class="active" onclick="switchTab('dash')">📊 Dashboard</button>
     <button data-tab="orders" onclick="switchTab('orders')">📦 Orders</button>
     <button data-tab="products" onclick="switchTab('products')">🏷️ Products</button>
+    <button data-tab="home" onclick="switchTab('home')">🏠 Homepage</button>
     <button data-tab="reviews" onclick="switchTab('reviews')">⭐ Reviews <span class="pill" id="rev-pill" style="display:none">0</span></button>
   </nav>
   <main>
@@ -177,6 +199,54 @@
         <button class="btn" onclick="openProduct()">+ Add Product</button>
       </div>
       <div class="panel" id="products-panel"><div class="empty">Loading…</div></div>
+    </section>
+    <!-- Homepage showcase -->
+    <section class="tabpane" id="tab-home">
+      <h2 class="section">Homepage Showcase</h2>
+      <div class="panel" style="padding:20px">
+        <p class="muted" style="margin-top:0">Control the big section beside the hero. Choose <b>Products</b>, a <b>single Banner</b>, or <b>1–3 Videos</b>.</p>
+        <div class="sc-field">
+          <label>Section title</label>
+          <input id="sc-title" placeholder="Featured Collection">
+        </div>
+        <div class="sc-field">
+          <label>What to show</label>
+          <div class="sc-modes">
+            <label><input type="radio" name="sc-mode" value="products" onchange="scMode('products')"> 🛍️ Products</label>
+            <label><input type="radio" name="sc-mode" value="banner" onchange="scMode('banner')"> 🖼️ Single Banner</label>
+            <label><input type="radio" name="sc-mode" value="videos" onchange="scMode('videos')"> 🎬 Videos (1–3)</label>
+          </div>
+        </div>
+        <label class="sc-check"><input type="checkbox" id="sc-autoplay" checked> Auto-rotate slides</label>
+
+        <!-- products -->
+        <div class="sc-pane" id="sc-pane-products">
+          <p class="muted">Tick the bags to feature (shown in this order). None ticked = newest products automatically.</p>
+          <div id="sc-products"><div class="muted">Loading products…</div></div>
+        </div>
+
+        <!-- banner -->
+        <div class="sc-pane" id="sc-pane-banner" style="display:none">
+          <div class="sc-field">
+            <label>Banner image</label>
+            <div id="sc-banner-preview" style="margin-bottom:8px"></div>
+            <input type="file" accept="image/*" onchange="scUploadBanner(this)">
+            <input id="sc-banner-image" placeholder="…or paste an image URL" oninput="scBannerPreview()" style="margin-top:8px">
+          </div>
+          <div class="sc-field"><label>Caption (optional)</label><input id="sc-banner-caption" placeholder="Eg: Festive Edit — up to 40% off"></div>
+          <div class="sc-field"><label>Link when clicked (optional)</label><input id="sc-banner-link" placeholder="Eg: #shop  or  https://…"></div>
+        </div>
+
+        <!-- videos -->
+        <div class="sc-pane" id="sc-pane-videos" style="display:none">
+          <p class="muted">Add 1–3 videos. Paste a <b>YouTube link</b>, or upload a video file (max 40 MB).</p>
+          <div class="sc-vid"><input id="sc-vid-0" placeholder="Video 1 — YouTube link or URL"><label class="mini-up">Upload<input type="file" accept="video/*" hidden onchange="scUploadVideo(this,0)"></label></div>
+          <div class="sc-vid"><input id="sc-vid-1" placeholder="Video 2 — YouTube link or URL"><label class="mini-up">Upload<input type="file" accept="video/*" hidden onchange="scUploadVideo(this,1)"></label></div>
+          <div class="sc-vid"><input id="sc-vid-2" placeholder="Video 3 — YouTube link or URL"><label class="mini-up">Upload<input type="file" accept="video/*" hidden onchange="scUploadVideo(this,2)"></label></div>
+        </div>
+
+        <div style="margin-top:20px"><button class="btn" onclick="saveShowcase()">💾 Save Showcase</button></div>
+      </div>
     </section>
     <!-- Reviews -->
     <section class="tabpane" id="tab-reviews">
@@ -287,12 +357,14 @@ async function logout(){ await api('/api/admin/logout','POST'); location.reload(
 function showApp(){
   document.getElementById('login-view').style.display='none';
   document.getElementById('app-view').style.display='block';
-  loadDashboard(); loadOrders(); loadProducts(); loadReviews();
+  loadDashboard(); loadOrders(); loadReviews();
+  loadProducts().then(loadShowcase);
 }
 
 function switchTab(t){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
+  if(t==='home' && typeof renderScProducts==='function') renderScProducts();
 }
 
 /* ---- Dashboard ---- */
@@ -430,6 +502,75 @@ async function deleteProduct(id){
   const {data}=await api('/api/admin/products','POST',{action:'delete',id:id});
   toast(data.ok?'Deleted ✓':'Failed');
   loadProducts(); loadDashboard();
+}
+
+/* ---- Homepage showcase ---- */
+let SHOWCASE = null;
+async function loadShowcase(){
+  const {data}=await api('/api/admin/showcase');
+  SHOWCASE = (data && data.ok && data.showcase) ? data.showcase
+    : { mode:'products', title:'Featured Collection', productIds:[], videos:[], banner:null, autoplay:true };
+  document.getElementById('sc-title').value = SHOWCASE.title || '';
+  document.getElementById('sc-autoplay').checked = SHOWCASE.autoplay !== false;
+  document.querySelectorAll('input[name="sc-mode"]').forEach(r=>{ r.checked = (r.value === (SHOWCASE.mode||'products')); });
+  const b = SHOWCASE.banner || {};
+  document.getElementById('sc-banner-image').value = b.image||'';
+  document.getElementById('sc-banner-caption').value = b.caption||'';
+  document.getElementById('sc-banner-link').value = b.link||'';
+  scBannerPreview();
+  for(let i=0;i<3;i++){ const el=document.getElementById('sc-vid-'+i); if(el) el.value=(SHOWCASE.videos&&SHOWCASE.videos[i])||''; }
+  renderScProducts();
+  scMode(SHOWCASE.mode || 'products');
+}
+function renderScProducts(){
+  const box=document.getElementById('sc-products'); if(!box) return;
+  // keep any ticks the admin already made; otherwise use the saved config
+  const current=new Set(Array.from(document.querySelectorAll('#sc-products input:checked')).map(c=>parseInt(c.value,10)));
+  const sel = current.size ? current : new Set((SHOWCASE&&SHOWCASE.productIds)||[]);
+  if(!PRODUCTS.length){ box.innerHTML='<div class="muted">No products yet — add some in the Products tab.</div>'; return; }
+  box.innerHTML = PRODUCTS.map(function(p){
+    const img=p.img||'';
+    return '<label class="sc-prow"><input type="checkbox" value="'+p.id+'"'+(sel.has(p.id)?' checked':'')+'>'
+      +(img?'<img src="'+esc(img)+'">':'<span class="sc-noimg"></span>')
+      +'<span>'+esc(p.name)+'</span><b>'+money(p.price)+'</b></label>';
+  }).join('');
+}
+function scMode(m){
+  document.getElementById('sc-pane-products').style.display = m==='products'?'block':'none';
+  document.getElementById('sc-pane-banner').style.display   = m==='banner'?'block':'none';
+  document.getElementById('sc-pane-videos').style.display   = m==='videos'?'block':'none';
+}
+function scBannerPreview(){
+  const u=document.getElementById('sc-banner-image').value.trim();
+  document.getElementById('sc-banner-preview').innerHTML = u ? '<img src="'+esc(u)+'" style="max-width:100%;max-height:170px;border-radius:8px;display:block">' : '';
+}
+async function scUploadBanner(input){
+  const f=(input.files||[])[0]; if(!f) return;
+  const fd=new FormData(); fd.append('file',f); toast('Uploading…');
+  let d={}; try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
+  if(d.ok && d.url){ document.getElementById('sc-banner-image').value=d.url; scBannerPreview(); toast('Banner uploaded ✓'); }
+  else toast('⚠️ '+((d&&d.error)||'Upload failed'));
+  input.value='';
+}
+async function scUploadVideo(input, idx){
+  const f=(input.files||[])[0]; if(!f) return;
+  const fd=new FormData(); fd.append('file',f); toast('Uploading video…');
+  let d={}; try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
+  if(d.ok && d.url){ document.getElementById('sc-vid-'+idx).value=d.url; toast('Video uploaded ✓'); }
+  else toast('⚠️ '+((d&&d.error)||'Upload failed'));
+  input.value='';
+}
+async function saveShowcase(){
+  const mode=(document.querySelector('input[name="sc-mode"]:checked')||{}).value||'products';
+  const productIds=Array.from(document.querySelectorAll('#sc-products input:checked')).map(c=>parseInt(c.value,10));
+  const videos=[0,1,2].map(i=>document.getElementById('sc-vid-'+i).value.trim()).filter(Boolean);
+  const banner={ image:document.getElementById('sc-banner-image').value.trim(), caption:document.getElementById('sc-banner-caption').value.trim(), link:document.getElementById('sc-banner-link').value.trim() };
+  if(mode==='banner' && !banner.image){ toast('⚠️ Add a banner image first'); return; }
+  if(mode==='videos' && !videos.length){ toast('⚠️ Add at least one video'); return; }
+  const body={ mode, title:document.getElementById('sc-title').value.trim()||'Featured Collection', autoplay:document.getElementById('sc-autoplay').checked, productIds, videos, banner: banner.image?banner:null };
+  const {data}=await api('/api/admin/showcase','POST',body);
+  if(data.ok){ SHOWCASE=data.showcase; toast('Showcase saved ✓ — refresh the site to see it'); }
+  else toast('⚠️ '+((data&&data.error)||'Save failed'));
 }
 
 /* ---- Reviews ---- */

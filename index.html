@@ -636,6 +636,17 @@
     }
     .hc-arr:disabled { opacity: 0.4; cursor: not-allowed; background: var(--paper); color: var(--muted); border-color: var(--border); }
 
+    /* ---- Showcase: banner & video modes ---- */
+    .hc-banner { width: 100%; height: 320px; border-radius: var(--radius); overflow: hidden; position: relative; box-shadow: 0 4px 14px -4px rgba(26,26,26,0.18); }
+    .hc-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hc-banner-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 18px 16px; color: var(--paper); font-weight: 600; font-size: 15px; line-height: 1.35; background: linear-gradient(transparent, rgba(0,0,0,0.72)); }
+    .hc-banner-link { flex: 0 0 100%; width: 100%; display: block; }
+    .hc-track > .hc-banner { flex: 0 0 100%; }
+    .hc-slide { flex: 0 0 100%; }
+    .hc-video { height: 320px; border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: 0 4px 14px -4px rgba(26,26,26,0.18); }
+    .hc-video iframe, .hc-video video { width: 100%; height: 100%; border: 0; display: block; object-fit: cover; }
+    @media (max-width: 700px){ .hc-banner, .hc-video { height: 240px; } }
+
     /* ============= TRUST STRIP ============= */
     .promo-strip {
       background: var(--paper);
@@ -4191,6 +4202,7 @@
         products.length = 0;
         d.products.forEach(function(p){ products.push(p); });
         if(typeof applyFiltersAndSort === 'function') applyFiltersAndSort();
+        if(typeof renderShowcase === 'function') renderShowcase(); // re-render hero with live products
       }
     }).catch(function(){ /* keep the fallback catalogue */ });
   })();
@@ -4631,50 +4643,110 @@
     setTimeout(() => t.remove(), 2800);
   }
 
-  // Hero 3-Card Carousel
-  (function() {
-    const track    = document.getElementById('hc-track');
-    const dotsWrap = document.getElementById('hc-dots');
-    const cards    = track ? track.querySelectorAll('.hc-card') : [];
-    const VISIBLE  = 3;
-    const CARD_W   = 176;
-    const GAP      = 12;
-    const STEP     = CARD_W + GAP;
-    const total    = cards.length;
-    const maxIdx   = total - VISIBLE;
-    let cur = 0, autoTimer;
+  // ===== Hero showcase — admin-managed (products / banner / videos) =====
+  window._hcAuto = true;
+  let _hcTimer = null;
 
-    // Build dots (one per position)
+  function hcCardHTML(p){
+    const imgs = (Array.isArray(p.images) && p.images.length) ? p.images : [p.img || ''];
+    const img = imgs[0] || '';
+    const bcls = p.badge === 'hot' ? 'hc-b-hot' : (p.badge === 'exclusive' ? 'hc-b-exc' : 'hc-b-new');
+    const badge = p.badge ? `<span class="hc-badge ${bcls}">${escHtml(p.badge)}</span>` : '';
+    const price = p.price ? `<span class="hc-price">₹${Number(p.price).toLocaleString('en-IN')}</span>` : '';
+    return `<div class="hc-card" onclick="openModal(${p.id})"><img src="${img}" alt="${escHtml(p.name)}">${badge}<div class="hc-overlay"><span class="hc-name">${escHtml(p.name)}</span>${price}</div></div>`;
+  }
+
+  function hcVideoHTML(url){
+    url = String(url || '').trim();
+    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+    const inner = yt
+      ? `<iframe src="https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+      : `<video src="${escHtml(url)}" controls playsinline preload="metadata"></video>`;
+    return `<div class="hc-slide hc-video">${inner}</div>`;
+  }
+
+  // Build dots/arrows/autoplay around whatever slides are currently in the track.
+  function initHeroCarousel(visible){
+    const track = document.getElementById('hc-track');
+    const dotsWrap = document.getElementById('hc-dots');
+    const bottom = document.querySelector('.hc-bottom');
+    if (!track || !dotsWrap) return;
+    if (_hcTimer) { clearInterval(_hcTimer); _hcTimer = null; }
+    const slides = track.children;
+    const total = slides.length;
+    const VIS = Math.min(visible || 3, total || 1);
+    const maxIdx = Math.max(0, total - VIS);
+    const gap = parseInt(getComputedStyle(track).gap) || 12;
+    let w = total ? slides[0].getBoundingClientRect().width : 0;
+    if (w < 40) w = (VIS === 1 && document.querySelector('.hc-track-outer')) ? document.querySelector('.hc-track-outer').clientWidth : 176; // layout not ready
+    const step = w + gap;
+    let cur = 0;
+    dotsWrap.innerHTML = '';
+    track.style.transform = 'translateX(0)';
+    if (maxIdx <= 0) { if (bottom) bottom.style.display = 'none'; return; }
+    if (bottom) bottom.style.display = 'flex';
     for (let i = 0; i <= maxIdx; i++) {
       const d = document.createElement('button');
       d.className = 'hc-dot' + (i === 0 ? ' active' : '');
-      d.onclick = () => hcGoTo(i);
+      d.onclick = () => go(i);
       dotsWrap.appendChild(d);
     }
-
-    function updateButtons() {
-      const prev = document.getElementById('hc-prev');
-      const next = document.getElementById('hc-next');
-      if (prev) prev.disabled = cur === 0;
-      if (next) next.disabled = cur >= maxIdx;
+    function buttons(){ const p=document.getElementById('hc-prev'), n=document.getElementById('hc-next'); if(p)p.disabled=cur===0; if(n)n.disabled=cur>=maxIdx; }
+    function go(x){
+      if (dotsWrap.children[cur]) dotsWrap.children[cur].classList.remove('active');
+      cur = Math.max(0, Math.min(x, maxIdx));
+      track.style.transform = 'translateX(-' + (cur * step) + 'px)';
+      if (dotsWrap.children[cur]) dotsWrap.children[cur].classList.add('active');
+      buttons();
+      if (_hcTimer) clearInterval(_hcTimer);
+      if (window._hcAuto) _hcTimer = setInterval(() => go(cur >= maxIdx ? 0 : cur + 1), 3500);
     }
+    window.hcNext = () => go(cur + 1);
+    window.hcPrev = () => go(cur - 1);
+    window.hcGoTo = go;
+    buttons();
+    if (window._hcAuto) _hcTimer = setInterval(() => go(cur >= maxIdx ? 0 : cur + 1), 3500);
+  }
 
-    window.hcGoTo = function(n) {
-      dotsWrap.children[cur] && dotsWrap.children[cur].classList.remove('active');
-      cur = Math.max(0, Math.min(n, maxIdx));
-      track.style.transform = `translateX(-${cur * STEP}px)`;
-      dotsWrap.children[cur] && dotsWrap.children[cur].classList.add('active');
-      updateButtons();
-      clearInterval(autoTimer);
-      autoTimer = setInterval(() => hcGoTo(cur >= maxIdx ? 0 : cur + 1), 3500);
-    };
+  // Fetch the admin config and render the hero showcase accordingly.
+  async function renderShowcase(){
+    const track = document.getElementById('hc-track');
+    const bottom = document.querySelector('.hc-bottom');
+    if (!track) return;
+    let cfg = null;
+    try { const r = await fetch('/api/showcase'); const d = await r.json(); if (d && d.ok) cfg = d.showcase; } catch(e){}
+    if (!cfg) cfg = { mode:'products', productIds:[], autoplay:true };
+    window._hcAuto = cfg.autoplay !== false;
 
-    window.hcNext = () => hcGoTo(cur + 1);
-    window.hcPrev = () => hcGoTo(cur - 1);
-
-    updateButtons();
-    autoTimer = setInterval(() => hcGoTo(cur >= maxIdx ? 0 : cur + 1), 3500);
-  })();
+    if (cfg.mode === 'banner' && cfg.banner && cfg.banner.image){
+      const b = cfg.banner;
+      const cap = b.caption ? `<div class="hc-banner-cap">${escHtml(b.caption)}</div>` : '';
+      const media = `<div class="hc-banner"><img src="${escHtml(b.image)}" alt="${escHtml(b.caption||'Featured')}">${cap}</div>`;
+      track.innerHTML = b.link ? `<a class="hc-banner-link" href="${escHtml(b.link)}">${media}</a>` : media;
+      track.style.transform = 'translateX(0)';
+      if (bottom) bottom.style.display = 'none';
+      return;
+    }
+    if (cfg.mode === 'videos' && Array.isArray(cfg.videos) && cfg.videos.length){
+      track.innerHTML = cfg.videos.slice(0,3).map(hcVideoHTML).join('');
+      initHeroCarousel(1);
+      return;
+    }
+    // products mode (default)
+    let list = [];
+    const ids = Array.isArray(cfg.productIds) ? cfg.productIds : [];
+    if (ids.length && typeof products !== 'undefined' && products.length){
+      ids.forEach(id => { const p = products.find(x => x.id === id); if (p) list.push(p); });
+    }
+    if (!list.length && typeof products !== 'undefined' && products.length){
+      list = products.slice(0, 9);
+    }
+    if (list.length){ track.innerHTML = list.map(hcCardHTML).join(''); }
+    initHeroCarousel(3);
+  }
+  window.renderShowcase = renderShowcase;
+  // initial render once layout is ready (re-runs after products load)
+  window.addEventListener('load', function(){ renderShowcase(); });
 
   function navProfileClick() {
     if (!currentUser) {

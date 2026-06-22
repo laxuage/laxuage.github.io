@@ -11,8 +11,11 @@ export async function onRequestPost(context) {
   if (!file || typeof file === 'string') return json({ ok: false, error: 'No file received' }, 400);
 
   const type = file.type || 'image/jpeg';
-  if (!/^image\//.test(type)) return json({ ok: false, error: 'Only image files are allowed.' }, 400);
-  if (file.size > 5 * 1024 * 1024) return json({ ok: false, error: 'Image too large (max 5 MB).' }, 400);
+  const isImage = /^image\//.test(type);
+  const isVideo = /^video\//.test(type);
+  if (!isImage && !isVideo) return json({ ok: false, error: 'Only image or video files are allowed.' }, 400);
+  const maxBytes = isVideo ? 40 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (file.size > maxBytes) return json({ ok: false, error: isVideo ? 'Video too large (max 40 MB) — use a YouTube link instead.' : 'Image too large (max 5 MB).' }, 400);
 
   let ext = (type.split('/')[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg').replace(/[^a-z0-9]/g, '').slice(0, 5);
   const key = 'p/' + Date.now().toString(36) + genToken().slice(0, 8) + '.' + ext;

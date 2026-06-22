@@ -3374,19 +3374,50 @@
             <label>State *</label>
             <select id="ck-state">
               <option value="">Select state</option>
-              <option>Kerala</option><option>Karnataka</option><option>Tamil Nadu</option>
-              <option>Maharashtra</option><option>Delhi</option><option>Telangana</option>
-              <option>Andhra Pradesh</option><option>Goa</option><option>Gujarat</option>
-              <option>Rajasthan</option><option>Uttar Pradesh</option><option>West Bengal</option>
-              <option>Punjab</option><option>Haryana</option><option>Madhya Pradesh</option>
-              <option>Other</option>
+              <option>Andaman and Nicobar Islands</option>
+              <option>Andhra Pradesh</option>
+              <option>Arunachal Pradesh</option>
+              <option>Assam</option>
+              <option>Bihar</option>
+              <option>Chandigarh</option>
+              <option>Chhattisgarh</option>
+              <option>Dadra and Nagar Haveli and Daman and Diu</option>
+              <option>Delhi</option>
+              <option>Goa</option>
+              <option>Gujarat</option>
+              <option>Haryana</option>
+              <option>Himachal Pradesh</option>
+              <option>Jammu and Kashmir</option>
+              <option>Jharkhand</option>
+              <option>Karnataka</option>
+              <option>Kerala</option>
+              <option>Ladakh</option>
+              <option>Lakshadweep</option>
+              <option>Madhya Pradesh</option>
+              <option>Maharashtra</option>
+              <option>Manipur</option>
+              <option>Meghalaya</option>
+              <option>Mizoram</option>
+              <option>Nagaland</option>
+              <option>Odisha</option>
+              <option>Puducherry</option>
+              <option>Punjab</option>
+              <option>Rajasthan</option>
+              <option>Sikkim</option>
+              <option>Tamil Nadu</option>
+              <option>Telangana</option>
+              <option>Tripura</option>
+              <option>Uttar Pradesh</option>
+              <option>Uttarakhand</option>
+              <option>West Bengal</option>
             </select>
             <span class="ck-err">Select state</span>
           </div>
           <div class="ck-input-group">
             <label>Pincode *</label>
-            <input type="text" id="ck-pin" placeholder="6-digit pincode" maxlength="6" inputmode="numeric">
+            <input type="text" id="ck-pin" placeholder="6-digit pincode" maxlength="6" inputmode="numeric" oninput="ckPinCheck()">
             <span class="ck-err">Enter 6-digit pincode</span>
+            <div class="ck-pin-result" id="ck-pin-result"></div>
           </div>
           <div class="ck-input-group">
             <label>Save as</label>
@@ -4762,6 +4793,53 @@
     '80':['Bihar',5], '81':['Bihar',5], '82':['Bihar',5],
     '83':['Jharkhand',5], '84':['Bihar',5], '85':['Bihar',6]
   };
+  // Checkout pincode check — reuses the site's robust lookupPincode(pin)
+  // (instant district + exact post office via India Post w/ CORS fallbacks),
+  // shows the place + "Delivery within 7 days", and auto-fills city/state.
+  let _ckPinReq = 0;
+  function ckPinCheck(){
+    const inp = document.getElementById('ck-pin');
+    const out = document.getElementById('ck-pin-result');
+    if (!inp || !out) return;
+    const pin = (inp.value || '').replace(/\D/g, '').slice(0, 6);
+    if (!/^[1-9]\d{5}$/.test(pin)) { out.textContent = ''; out.className = 'ck-pin-result'; return; }
+    const reqId = ++_ckPinReq;
+    const render = function(loc){
+      if (reqId !== _ckPinReq) return;
+      out.className = 'ck-pin-result ok';
+      out.innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + escHtml(loc) + ' &nbsp;·&nbsp; <strong>Delivery within 7 days</strong>';
+    };
+    out.className = 'ck-pin-result checking';
+    out.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Checking pincode…';
+    // 1) instant district from the embedded data
+    const base = (typeof placeFromPin === 'function') ? placeFromPin(pin) : null;
+    if (base) render(base.label);
+    // 2) exact post office from the API
+    lookupPincode(pin).then(function(info){
+      if (reqId !== _ckPinReq) return;
+      if (info && info.found && info.place) {
+        const exact = info.place
+          + (info.district && info.district !== info.place ? ', ' + info.district : '')
+          + (info.state ? ', ' + info.state : '');
+        render(exact);
+        const cityEl = document.getElementById('ck-city');
+        if (cityEl && !cityEl.value.trim()) cityEl.value = info.district || info.place || '';
+        if (info.state) setStateOption(info.state);
+      } else if (info && info.found === false && !base) {
+        out.className = 'ck-pin-result no';
+        out.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Pincode not found — please check it.';
+      }
+    }).catch(function(){});
+  }
+  function setStateOption(state){
+    const sel = document.getElementById('ck-state');
+    if (!sel || !state) return;
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === state || sel.options[i].text === state) { sel.selectedIndex = i; return; }
+    }
+    const o = document.createElement('option'); o.value = state; o.text = state; sel.add(o); sel.value = state;
+  }
+
   // Region label fallback + delivery days: Kerala = 5 days, rest of India = 6.
   function pinInfo(pin){
     pin = String(pin || '').trim();
@@ -6353,6 +6431,14 @@
   .pcard-prev{ left:8px; } .pcard-next{ right:8px; }
   .product-card:hover .pcard-arr{ opacity:1; }
   @media (hover:none){ .pcard-arr{ display:none; } }
+
+  /* ---- Pincode lookup result (checkout) ---- */
+  .ck-pin-result{ font-size:12.5px; margin-top:6px; line-height:1.45; }
+  .ck-pin-result:empty{ display:none; }
+  .ck-pin-result.checking{ color:var(--muted); }
+  .ck-pin-result.ok{ color:var(--success); }
+  .ck-pin-result.no{ color:var(--danger); }
+  .ck-pin-result i{ margin-right:5px; }
 </style>
 <script>
 (function(){

@@ -3530,10 +3530,30 @@
       <h3><i class="fa-solid fa-location-dot"></i> Saved Addresses</h3>
       <button class="modal-close" onclick="closeAddressBook()">×</button>
     </div>
+    <div id="addr-add-btn" style="padding:14px 16px 0">
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="addAddress()"><i class="fa-solid fa-plus"></i> Add New Address</button>
+    </div>
     <div class="addr-saved-list" id="addr-list">
       <div class="orders-empty">
         <i class="fa-solid fa-location-dot"></i>
-        <p>No saved addresses yet. Place an order to save one.</p>
+        <p>No saved addresses yet. Click "Add New Address".</p>
+      </div>
+    </div>
+    <div class="addr-form" id="addr-form" style="display:none">
+      <div class="addr-form-title" id="addr-form-title">Add New Address</div>
+      <div class="af-grid">
+        <input id="af-name" placeholder="Full name *">
+        <input id="af-phone" placeholder="Phone *" inputmode="numeric" maxlength="13">
+        <input id="af-house" class="af-full" placeholder="House / Flat / Building *">
+        <input id="af-area" class="af-full" placeholder="Area / Street / Locality">
+        <input id="af-city" placeholder="City *">
+        <select id="af-state"><option value="">Select state</option></select>
+        <input id="af-pin" placeholder="Pincode *" inputmode="numeric" maxlength="6">
+        <select id="af-type"><option>Home</option><option>Office</option><option>Other</option></select>
+      </div>
+      <div class="addr-form-actions">
+        <button class="btn-primary" style="flex:1;justify-content:center" onclick="saveAddrForm()"><i class="fa-solid fa-check"></i> Save Address</button>
+        <button class="btn-outline" onclick="cancelAddrForm()">Cancel</button>
       </div>
     </div>
   </div>
@@ -5453,8 +5473,51 @@
       showToast('Address removed');
     } catch(e) {}
   }
+  let _addrEditIdx = -1;
+  function addAddress(){ _addrEditIdx = -1; openAddrForm(null); }
+  function editAddress(idx){ const all = loadAddresses(); if (!all[idx]) return; _addrEditIdx = idx; openAddrForm(all[idx]); }
+  function openAddrForm(a){
+    // fill the state dropdown from the checkout's full all-India list
+    const st = document.getElementById('af-state');
+    if (st && st.options.length <= 1) st.innerHTML = document.getElementById('ck-state').innerHTML;
+    document.getElementById('addr-form-title').textContent = a ? 'Edit Address' : 'Add New Address';
+    document.getElementById('af-name').value  = a ? (a.name || '')  : '';
+    document.getElementById('af-phone').value = a ? (a.phone || '') : '';
+    document.getElementById('af-house').value = a ? (a.house || '') : '';
+    document.getElementById('af-area').value  = a ? (a.area || '')  : '';
+    document.getElementById('af-city').value  = a ? (a.city || '')  : '';
+    document.getElementById('af-state').value = a ? (a.state || '') : '';
+    document.getElementById('af-pin').value   = a ? (a.pin || '')   : '';
+    document.getElementById('af-type').value  = a ? (a.type || 'Home') : 'Home';
+    document.getElementById('addr-list').style.display = 'none';
+    document.getElementById('addr-add-btn').style.display = 'none';
+    document.getElementById('addr-form').style.display = 'block';
+  }
+  function cancelAddrForm(){
+    var f = document.getElementById('addr-form'); if (f) f.style.display = 'none';
+    var l = document.getElementById('addr-list'); if (l) l.style.display = '';
+    var b = document.getElementById('addr-add-btn'); if (b) b.style.display = '';
+  }
+  function saveAddrForm(){
+    const g = id => document.getElementById(id).value.trim();
+    const addr = { name:g('af-name'), phone:g('af-phone'), house:g('af-house'), area:g('af-area'), city:g('af-city'), state:g('af-state'), pin:g('af-pin'), type:g('af-type') || 'Home' };
+    if (!addr.name || !addr.phone || !addr.house || !addr.city || !addr.state) { showToast('⚠️ Please fill all required fields'); return; }
+    if (!/^[1-9]\d{5}$/.test(addr.pin)) { showToast('⚠️ Enter a valid 6-digit pincode'); return; }
+    if (!currentUser) { showToast('Please log in'); return; }
+    try {
+      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
+      const all = loadAddresses();
+      if (_addrEditIdx >= 0 && all[_addrEditIdx]) all[_addrEditIdx] = addr;
+      else all.unshift(addr);
+      localStorage.setItem(key, JSON.stringify(all.slice(0, 10)));
+    } catch(e) {}
+    cancelAddrForm();
+    renderAddressBook();
+    showToast(_addrEditIdx >= 0 ? 'Address updated ✓' : 'Address added ✓');
+  }
   function openAddressBook() {
     requireLogin(() => {
+      cancelAddrForm();
       renderAddressBook();
       document.getElementById('addr-overlay').classList.add('open');
     });
@@ -5479,6 +5542,7 @@
         ${a.city}, ${a.state} – ${a.pin}<br>
         <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${a.phone}</span>
         <div class="saved-addr-actions">
+          <button onclick="editAddress(${i})"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
           <button class="danger" onclick="deleteAddress(${i})"><i class="fa-regular fa-trash-can"></i> Delete</button>
         </div>
       </div>`).join('');
@@ -6439,6 +6503,16 @@
   .ck-pin-result.ok{ color:var(--success); }
   .ck-pin-result.no{ color:var(--danger); }
   .ck-pin-result i{ margin-right:5px; }
+
+  /* ---- Address book add/edit form ---- */
+  .addr-form{ padding:16px; }
+  .addr-form-title{ font-weight:700; font-size:15px; margin-bottom:14px; color:var(--ink); }
+  .addr-form .af-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .addr-form .af-grid .af-full{ grid-column:1 / -1; }
+  .addr-form input, .addr-form select{ width:100%; padding:11px 13px; border:1px solid var(--border); border-radius:9px; font-family:inherit; font-size:14px; background:#fff; color:var(--ink); }
+  .addr-form input:focus, .addr-form select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
+  .addr-form-actions{ display:flex; gap:10px; margin-top:16px; }
+  @media (max-width:480px){ .addr-form .af-grid{ grid-template-columns:1fr; } }
 </style>
 <script>
 (function(){

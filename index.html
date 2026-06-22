@@ -647,6 +647,14 @@
     .hc-video iframe, .hc-video video { width: 100%; height: 100%; border: 0; display: block; object-fit: cover; }
     @media (max-width: 700px){ .hc-banner, .hc-video { height: 240px; } }
 
+    /* Fill mode: 1-4 featured products stretch to fill the whole showcase width */
+    .hc-track.hc-fill { gap: 14px; }
+    .hc-track.hc-fill .hc-card { flex: 1 1 0; min-width: 0; height: 330px; }
+    @media (max-width: 700px){
+      .hc-track.hc-fill { flex-wrap: wrap; }
+      .hc-track.hc-fill .hc-card { flex: 1 1 calc(50% - 7px); height: 220px; }
+    }
+
     /* ============= TRUST STRIP ============= */
     .promo-strip {
       background: var(--paper);
@@ -4713,6 +4721,7 @@
     const track = document.getElementById('hc-track');
     const bottom = document.querySelector('.hc-bottom');
     if (!track) return;
+    track.classList.remove('hc-fill');
     let cfg = null;
     try { const r = await fetch('/api/showcase'); const d = await r.json(); if (d && d.ok) cfg = d.showcase; } catch(e){}
     if (!cfg) cfg = { mode:'products', productIds:[], autoplay:true };
@@ -4742,7 +4751,18 @@
       list = products.slice(0, 9);
     }
     if (list.length){ track.innerHTML = list.map(hcCardHTML).join(''); }
-    initHeroCarousel(3);
+    const count = track.children.length;
+    if (count > 0 && count <= 4){
+      // Few products: stretch them to fill the whole showcase width (no scroll).
+      track.classList.add('hc-fill');
+      track.style.transform = 'translateX(0)';
+      const dots = document.getElementById('hc-dots'); if (dots) dots.innerHTML = '';
+      if (bottom) bottom.style.display = 'none';
+      if (_hcTimer){ clearInterval(_hcTimer); _hcTimer = null; }
+    } else {
+      // Many products: scrollable carousel.
+      initHeroCarousel(3);
+    }
   }
   window.renderShowcase = renderShowcase;
   // initial render once layout is ready (re-runs after products load)

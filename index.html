@@ -39,7 +39,7 @@
         "name": "Laxuage",
         "url": "https://laxuage.com/",
         "logo": "https://laxuage.com/share-cover.jpg",
-        "email": "laxuage@gmail.com",
+        "email": "support@laxuage.com",
         "sameAs": ["https://instagram.com/laxuage"]
       },
       {
@@ -3022,9 +3022,8 @@
     <div class="footer-col">
       <h4>Contact</h4>
       <ul>
-        <li><button class="footer-link"><i class="fa-solid fa-envelope" style="margin-right:8px"></i>laxuage@gmail.com</button></li>
+        <li><button class="footer-link"><i class="fa-solid fa-envelope" style="margin-right:8px"></i>support@laxuage.com</button></li>
         <li><button class="footer-link" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="margin-right:8px"></i>+91 98469 23350</button></li>
-        <li><button class="footer-link"><i class="fa-solid fa-location-dot" style="margin-right:8px"></i>Kerala, India</button></li>
       </ul>
     </div>
   </div>
@@ -4036,7 +4035,7 @@
   const SHOP = {
     whatsapp: '919846923350',         // country code + number, NO + or spaces
     upi:      'laxuage@okhdfcbank',    // ⚠️ CHANGE THIS to YOUR real UPI ID (where the money should arrive). Format: name@bank
-    email:    'laxuage@gmail.com',
+    email:    'support@laxuage.com',
     instagram:'laxuage',
     brand:    'Laxuage'
   };
@@ -4145,7 +4144,7 @@
         <li>Order and account information on this site is stored on your own device's browser.</li>
         <li>Payments are collected directly by you and the customer (UPI/COD); we don't store card details.</li>
       </ul>
-      <p>Questions? Email <strong>${'laxuage@gmail.com'}</strong>.</p>` },
+      <p>Questions? Email <strong>${'support@laxuage.com'}</strong>.</p>` },
     terms: { icon: 'fa-file-lines', title: 'Terms & Conditions', body: `
       <p>By placing an order with ${'Laxuage'}, you agree to the following:</p>
       <ul>
@@ -4173,7 +4172,7 @@
       <p>We'd love to hear from you.</p>
       <ul>
         <li><strong>WhatsApp:</strong> +91 98469 23350</li>
-        <li><strong>Email:</strong> laxuage@gmail.com</li>
+        <li><strong>Email:</strong> support@laxuage.com</li>
         <li><strong>Instagram:</strong> @laxuage</li>
         <li><strong>Based in:</strong> Kerala, India</li>
       </ul>
@@ -5932,7 +5931,7 @@
   "description":"Premium luxury handbags, crossbody bags, totes and clutches for the modern woman. Designed in India.",
   "image":"share-cover.jpg",
   "address":{"@type":"PostalAddress","addressRegion":"Kerala","addressCountry":"IN"},
-  "email":"laxuage@gmail.com",
+  "email":"support@laxuage.com",
   "telephone":"+919846923350",
   "sameAs":["https://instagram.com/laxuage"],
   "priceRange":"₹₹"
@@ -6297,30 +6296,7 @@
     };
   }
 
-  /* ================= TESTIMONIALS ================= */
-  var tdata=[
-    {n:'Aarya Menon',l:'Kochi, Kerala',r:5,t:'Absolutely in love with my Ivory Chain Shoulder bag. The finish is so premium and it arrived beautifully packed. Laxuage feels like a real luxury label.'},
-    {n:'Priya Sharma',l:'Bengaluru',r:5,t:'Ordered the black tote for work and it has become my everyday companion. Sturdy, spacious and elegant. The WhatsApp support was super quick too.'},
-    {n:'Fathima Rashid',l:'Calicut',r:4,t:'Lovely clutch set for my sister\'s wedding — got so many compliments. Delivery was on time and COD made it stress-free.'}
-  ];
-  function stars(n){var s='';for(var i=0;i<5;i++)s+='<i class="fa'+(i<n?'-solid':'-regular')+' fa-star"></i>';return s;}
-  var tst=el('section','tst reveal');
-  tst.innerHTML='<div class="tst-head"><div class="tst-eyebrow">Loved by 5,000+ women</div><div class="tst-title">What Our <em>Clients</em> Say</div></div>'
-    +'<div class="tst-grid">'+tdata.map(d=>'<div class="tst-card"><div class="tst-quote">&#8220;</div><div class="tst-stars">'+stars(d.r)+'</div><div class="tst-text">'+d.t+'</div><div class="tst-who"><div class="tst-av">'+d.n[0]+'</div><div><div class="tst-name">'+d.n+'</div><div class="tst-loc">'+d.l+'</div></div></div></div>').join('')+'</div>';
-  var newsletter=document.querySelector('.newsletter');
-  if(newsletter) newsletter.parentNode.insertBefore(tst,newsletter);
-
-  /* ================= PAYMENT BADGES IN FOOTER ================= */
-  var fbottom=document.querySelector('.footer-bottom');
-  if(fbottom){
-    var pb=el('div','pay-badges','<span class="pb-label">We accept</span>'
-      +'<span class="pb"><i class="fa-solid fa-mobile-screen"></i> UPI</span>'
-      +'<span class="pb"><i class="fa-brands fa-google-pay"></i> GPay</span>'
-      +'<span class="pb"><i class="fa-solid fa-wallet"></i> PhonePe</span>'
-      +'<span class="pb"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery</span>'
-      +'<span class="pb"><i class="fa-solid fa-shield-halved"></i> Secure</span>');
-    fbottom.insertBefore(pb,fbottom.firstChild);
-  }
+  /* (Testimonials and the "We accept" payment-badge strip were removed at the owner's request.) */
 
   /* ================= BACK TO TOP ================= */
   var bt=el('button','','<i class="fa-solid fa-arrow-up"></i>'); bt.id='back-top'; bt.setAttribute('aria-label','Back to top');
@@ -6359,7 +6335,7 @@
       <p>We'd love to hear from you — usually reply within a few hours.</p>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px">
         <a class="pb" style="text-decoration:none;cursor:pointer" onclick="window.open('https://wa.me/919846923350','_blank')"><i class="fa-brands fa-whatsapp" style="color:#25D366"></i> +91 98469 23350</a>
-        <span class="pb"><i class="fa-solid fa-envelope" style="color:var(--primary)"></i> laxuage@gmail.com</span>
+        <span class="pb"><i class="fa-solid fa-envelope" style="color:var(--primary)"></i> support@laxuage.com</span>
         <a class="pb" style="text-decoration:none;cursor:pointer" onclick="window.open('https://instagram.com/laxuage','_blank')"><i class="fa-brands fa-instagram" style="color:var(--primary)"></i> @laxuage</a>
       </div>
       <div class="xfield"><label>Your Name</label><input id="cf-name" placeholder="Your name"></div>
@@ -6440,7 +6416,7 @@
     var rows=o.items.map((i,n)=>'<tr><td>'+(n+1)+'</td><td>'+i.name+'</td><td style="text-align:center">'+i.qty+'</td><td style="text-align:right">'+money(i.price)+'</td><td style="text-align:right">'+money(i.price*i.qty)+'</td></tr>').join('');
     var html='<!doctype html><html><head><meta charset="utf-8"><title>Invoice '+o.id+'</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#222;max-width:720px;margin:24px auto;padding:0 20px}h1{font-style:italic;color:#7E2D49;margin:0}.sub{letter-spacing:4px;font-size:11px;color:#a07a4a;text-transform:uppercase}.row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;margin:18px 0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #e0d8c8;padding:9px 10px;font-size:13px}th{background:#f5ede0;text-align:left}.tot{text-align:right;font-weight:bold;font-size:15px;margin-top:14px}.muted{color:#777;font-size:12px}.box{border:1px solid #e0d8c8;border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.6}@media print{button{display:none}}</style></head><body>'
       +'<div class="row"><div><h1>Laxuage</h1><div class="sub">Made of Her</div></div><div style="text-align:right"><strong>TAX INVOICE</strong><br><span class="muted">'+o.id+'<br>'+d+'</span></div></div>'
-      +'<div class="row"><div class="box"><strong>Billed &amp; Shipped to</strong><br>'+a.name+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'<br>Phone: '+a.phone+'</div><div class="box"><strong>Seller</strong><br>Laxuage<br>Kerala, India<br>laxuage@gmail.com<br>+91 98469 23350</div></div>'
+      +'<div class="row"><div class="box"><strong>Billed &amp; Shipped to</strong><br>'+a.name+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'<br>Phone: '+a.phone+'</div><div class="box"><strong>Seller</strong><br>Laxuage<br>Kerala, India<br>support@laxuage.com<br>+91 98469 23350</div></div>'
       +'<table><thead><tr><th>#</th><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="tot">Subtotal: '+money(o.subtotal)+'</div>'
       +(o.discount>0?'<div class="tot">Discount'+(o.coupon?' ('+o.coupon+')':'')+': −'+money(o.discount)+'</div>':'')

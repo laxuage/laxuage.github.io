@@ -88,6 +88,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <!-- QR code generator (for instant UPI payment). If it fails to load, the Pay button + UPI ID still work. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Razorpay Checkout (real card / UPI / netbanking payments) -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     /* ===== DESIGN TOKENS — Modern, Unique, Simple ===== */
     :root {
@@ -3402,10 +3404,10 @@
         <div class="ck-section-title"><i class="fa-solid fa-credit-card"></i> Payment Method</div>
         <div class="ck-pay-options" id="ck-pay-options">
           <div class="ck-pay-opt selected" data-pay="upi" onclick="selectPay(this)">
-            <div class="ck-pay-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+            <div class="ck-pay-icon"><i class="fa-solid fa-credit-card"></i></div>
             <div class="ck-pay-info">
-              <div class="ck-pay-title">UPI / Online Payment</div>
-              <div class="ck-pay-desc">Pay instantly after placing your order — scan the UPI QR or tap to pay (GPay / PhonePe / Paytm)</div>
+              <div class="ck-pay-title">Pay Online — Card / UPI / Netbanking</div>
+              <div class="ck-pay-desc">Secure payment via Razorpay. Cards, UPI (GPay / PhonePe / Paytm), wallets &amp; netbanking.</div>
             </div>
             <div class="ck-pay-radio"></div>
           </div>
@@ -5162,35 +5164,27 @@
     `;
   }
 
-  function placeOrder() {
+  async function placeOrder() {
     const addr = getAddressFromForm();
     const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     const discount = computeDiscount(subtotal);
     const final = Math.max(0, subtotal - discount);
     const orderId = 'LXG-' + Date.now().toString().slice(-7);
-    // Determine ETA from pincode (all-India, same logic as the delivery checker)
     const pi = pinInfo(addr.pin);
     const days = pi.valid ? pi.days : 6;
     const eta = new Date(Date.now() + days * 86400000);
     const etaStr = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    const isOnline = (ckPayMethod !== 'cod');
     const order = {
-      id: orderId,
-      date: new Date().toISOString(),
+      id: orderId, date: new Date().toISOString(),
       items: cart.map(i => ({ id: i.id, name: i.name, img: i.img, price: i.price, qty: i.qty })),
-      subtotal: subtotal,
-      discount: discount,
-      coupon: appliedCoupon || null,
-      total: final,
-      address: addr,
-      payment: ckPayMethod,
-      status: 'placed',
-      eta: etaStr,
-      etaDays: days
+      subtotal: subtotal, discount: discount, coupon: appliedCoupon || null, total: final,
+      address: addr, payment: ckPayMethod, status: 'placed', eta: etaStr, etaDays: days
     };
-    saveOrder(order);
-    /* Save the order to the shop's database so it appears in the admin Orders panel. */
+
+    // Save the order to the shop's database (pending for online, cod for COD).
     try {
-      fetch('/api/order/create', {
+      await fetch('/api/order/create', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           id: orderId,
@@ -5200,24 +5194,63 @@
           customer_phone: addr.phone || (currentUser && currentUser.phone) || '',
           customer_email: (currentUser && currentUser.email) || '',
           address: [addr.house, addr.area, addr.city, addr.state].filter(Boolean).join(', ') + (addr.pin ? ' - ' + addr.pin : ''),
-          payment_method: (ckPayMethod === 'cod' ? 'cod' : (ckPayMethod || 'cod')),
-          payment_status: (ckPayMethod === 'cod' ? 'cod' : 'pending')
+          payment_method: isOnline ? 'razorpay' : 'cod',
+          payment_status: isOnline ? 'pending' : 'cod'
         })
-      }).catch(function(){});
+      });
     } catch(e) {}
-    sendOrderToWhatsApp(order);   // <-- order is delivered to the shop's WhatsApp
-    // Update success screen
+
+    // For online orders, collect & verify the payment before showing success.
+    if (isOnline) {
+      const paid = await payWithRazorpay(orderId, final, addr);
+      if (!paid) {
+        showToast('Payment not completed — your order is saved as pending. You can retry payment any time.');
+        return; // keep the cart and stay on the payment step
+      }
+    }
+
+    // Success (COD, or online payment verified)
+    saveOrder(order);
+    sendOrderToWhatsApp(order);
     document.getElementById('ck-success-id').textContent = orderId;
     document.getElementById('ck-success-eta').textContent = `Within ${days} days (by ${etaStr})`;
-    renderUpiPay(order);          // <-- show instant UPI pay box for UPI orders
-    // Clear cart
-    cart = [];
-    appliedCoupon = null;
+    const upiBox = document.getElementById('ck-upi-pay'); if (upiBox) upiBox.style.display = 'none';
+    cart = []; appliedCoupon = null;
     document.getElementById('coupon-input').value = '';
     document.getElementById('coupon-result').textContent = '';
     saveData();
     updateCartUI();
     showCheckoutStep(4);
+  }
+
+  // Opens Razorpay Checkout for an order; resolves true only when verified.
+  function payWithRazorpay(orderId, amountRupees, addr) {
+    return new Promise(function(resolve){
+      if (typeof Razorpay === 'undefined') { showToast('⚠️ Payment library not loaded — please refresh and retry.'); return resolve(false); }
+      fetch('/api/payment/create-order', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ amount: amountRupees, receipt: orderId })
+      }).then(function(r){ return r.json(); }).then(function(co){
+        if (!co || !co.ok) { showToast('⚠️ ' + ((co && co.error) || 'Could not start payment')); return resolve(false); }
+        var rzp = new Razorpay({
+          key: co.key_id, order_id: co.order_id, amount: co.amount, currency: co.currency || 'INR',
+          name: 'Laxuage', description: 'Order ' + orderId,
+          prefill: { name: addr.name || '', email: (currentUser && currentUser.email) || '', contact: addr.phone || '' },
+          theme: { color: '#7E2D49' },
+          handler: function(resp){
+            fetch('/api/payment/verify', {
+              method: 'POST', headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ razorpay_order_id: resp.razorpay_order_id, razorpay_payment_id: resp.razorpay_payment_id, razorpay_signature: resp.razorpay_signature, order_id: orderId })
+            }).then(function(r){ return r.json(); }).then(function(vd){
+              if (vd && vd.ok) { showToast('✅ Payment successful!'); resolve(true); }
+              else { showToast('⚠️ Payment received but not verified yet — we will confirm shortly.'); resolve(false); }
+            }).catch(function(){ resolve(false); });
+          },
+          modal: { ondismiss: function(){ resolve(false); } }
+        });
+        rzp.open();
+      }).catch(function(){ showToast('⚠️ Could not start payment. Please retry.'); resolve(false); });
+    });
   }
 
   // ===================================================================

@@ -82,6 +82,12 @@ export async function ensureSchema(db) {
       created_at INTEGER,
       last_login INTEGER
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS user_data (
+      user_id INTEGER PRIMARY KEY,
+      cart TEXT,
+      wishlist TEXT,
+      updated_at INTEGER
+    )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT, price INTEGER, mrp INTEGER,

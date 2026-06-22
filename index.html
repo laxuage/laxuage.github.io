@@ -3640,6 +3640,7 @@
       updateNavProfile();
       closeLogin();
       showToast('Welcome' + (d.user && d.user.name ? ', ' + d.user.name.split(' ')[0] : '') + '! 👋');
+      loadServerData();   // merge this account's saved cart + wishlist
       if (pendingAction) { pendingAction(); pendingAction = null; }
     } catch(e) {
       btn.disabled = false; btn.innerHTML = orig;
@@ -3651,7 +3652,7 @@
     try {
       const r = await fetch('/api/auth/me');
       const d = await r.json();
-      if (d && d.ok && d.user) { saveUser(d.user); }
+      if (d && d.ok && d.user) { saveUser(d.user); loadServerData(); }
       else { currentUser = null; try { localStorage.removeItem('laxuage_user'); } catch(e){} }
     } catch(e) {}
     updateNavProfile();
@@ -4225,6 +4226,49 @@
       localStorage.setItem('laxuage_cart', JSON.stringify(cart));
       localStorage.setItem('laxuage_wishlist', JSON.stringify([...wishlist]));
     } catch(e) {}
+    if (currentUser) scheduleServerSync();
+  }
+
+  // ===== Cross-device sync of cart + wishlist for logged-in users =====
+  let _syncTimer = null;
+  function scheduleServerSync(){
+    if (!currentUser) return;
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(pushServerData, 700);
+  }
+  function pushServerData(){
+    if (!currentUser) return;
+    try {
+      fetch('/api/me/data', {
+        method:'POST', headers:{'content-type':'application/json'},
+        body: JSON.stringify({ cart: cart.map(function(i){ return { id:i.id, qty:i.qty }; }), wishlist: [...wishlist] })
+      }).catch(function(){});
+    } catch(e){}
+  }
+  // On login, merge the account's saved cart/wishlist with whatever is local.
+  async function loadServerData(){
+    if (!currentUser) return;
+    try {
+      const r = await fetch('/api/me/data');
+      if (!r.ok) return;
+      const d = await r.json();
+      if (!d || !d.ok) return;
+      const map = {};
+      cart.forEach(function(i){ map[i.id] = i; });
+      (d.cart || []).forEach(function(si){
+        if (map[si.id]) { map[si.id].qty = Math.max(map[si.id].qty, si.qty); }
+        else { const p = products.find(function(x){ return x.id === si.id; }); if (p) map[si.id] = Object.assign({}, p, { qty: si.qty }); }
+      });
+      cart = Object.values(map);
+      (d.wishlist || []).forEach(function(id){ wishlist.add(id); });
+      try {
+        localStorage.setItem('laxuage_cart', JSON.stringify(cart));
+        localStorage.setItem('laxuage_wishlist', JSON.stringify([...wishlist]));
+      } catch(e){}
+      updateCartUI();
+      if (typeof applyFiltersAndSort === 'function') applyFiltersAndSort();
+      pushServerData();   // converge every device to the merged state
+    } catch(e){}
   }
   function loadData() {
     try {
@@ -5198,10 +5242,11 @@
     } catch(e) {}
   }
 
+  let _myOrders = [];
   function openOrders() {
     requireLogin(() => {
-      renderOrders();
       document.getElementById('orders-overlay').classList.add('open');
+      renderOrders();
     });
   }
   function closeOrders() {
@@ -5210,36 +5255,43 @@
   function ordersOverlayClick(e) {
     if (e.target === document.getElementById('orders-overlay')) closeOrders();
   }
-  function renderOrders() {
-    const orders = loadOrders();
+  async function renderOrders() {
     const content = document.getElementById('orders-content');
-    if (!orders.length) {
+    content.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading your orders…</p></div>';
+    _myOrders = [];
+    try {
+      const r = await fetch('/api/orders/mine');
+      if (r.ok) { const d = await r.json(); if (d.ok) _myOrders = d.orders || []; }
+    } catch(e) {}
+    if (!_myOrders.length) {
       content.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-box-open"></i><p>You haven\'t placed any orders yet</p><p style="font-size:12px;margin-top:6px;color:var(--muted-soft)">Start shopping to see your orders here</p></div>';
       return;
     }
-    const html = orders.map(o => {
-      const date = new Date(o.date);
-      const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-      // Determine status from age (demo)
-      const ageDays = (Date.now() - date.getTime()) / 86400000;
-      let status = 'placed';
-      if (ageDays > (o.etaDays || 5) + 1) status = 'delivered';
-      else if (ageDays > 1) status = 'shipped';
-      const itemsImgs = o.items.slice(0, 4).map(i => `<img src="${i.img}" alt="${i.name}">`).join('');
-      const moreCount = o.items.length > 4 ? `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:60px;background:var(--cream-warm);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0">+${o.items.length-4}</div>` : '';
+    const stLabel = { new:'⏳ Order Placed', confirmed:'✅ Confirmed', shipped:'🚚 Shipped', delivered:'✓ Delivered', cancelled:'✗ Cancelled' };
+    const stClass = { new:'placed', confirmed:'placed', shipped:'shipped', delivered:'delivered', cancelled:'delivered' };
+    const html = _myOrders.map(o => {
+      let items = []; try { items = JSON.parse(o.items || '[]'); } catch(e){}
+      const dateStr = new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      const st = o.status || 'new';
+      const itemsImgs = items.slice(0, 4).map(i => {
+        const p = products.find(x => x.id === i.id); const img = (p && p.img) || '';
+        return `<img src="${img}" alt="">`;
+      }).join('');
+      const moreCount = items.length > 4 ? `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:60px;background:var(--cream-warm);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0">+${items.length-4}</div>` : '';
+      const pay = (o.payment_status === 'paid') ? 'PAID' : String(o.payment_method || '').toUpperCase();
       return `<div class="order-row">
         <div class="order-top">
           <div>
             <div class="order-id-text">${o.id}</div>
             <div class="order-date">Placed on ${dateStr}</div>
           </div>
-          <div class="order-status ${status}">${status === 'placed' ? '⏳ Order Placed' : status === 'shipped' ? '🚚 Shipped' : '✓ Delivered'}</div>
+          <div class="order-status ${stClass[st] || 'placed'}">${stLabel[st] || '⏳ Order Placed'}</div>
         </div>
         <div class="order-items-mini">${itemsImgs}${moreCount}</div>
         <div class="order-bottom">
           <div>
-            <div class="order-total-text">₹${o.total.toLocaleString()}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">${o.items.length} item${o.items.length > 1 ? 's' : ''} · ${o.payment.toUpperCase()}</div>
+            <div class="order-total-text">₹${Number(o.total||0).toLocaleString('en-IN')}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${items.length} item${items.length > 1 ? 's' : ''} · ${pay}</div>
           </div>
           <button class="order-detail-btn" onclick="viewOrderDetail('${o.id}')"><i class="fa-solid fa-eye" style="margin-right:4px"></i> View Details</button>
         </div>
@@ -5249,11 +5301,13 @@
   }
 
   function viewOrderDetail(orderId) {
-    const o = loadOrders().find(x => x.id === orderId);
+    const o = _myOrders.find(x => x.id === orderId);
     if (!o) return;
-    const a = o.address;
-    const itemsList = o.items.map(i => `• ${i.name} (×${i.qty}) — ₹${(i.price * i.qty).toLocaleString()}`).join('\n');
-    const msg = `Order ${o.id}\n\n${itemsList}\n\nShipping to:\n${a.name}\n${a.house}, ${a.area}\n${a.city}, ${a.state} – ${a.pin}\nPhone: ${a.phone}\n\nPayment: ${o.payment.toUpperCase()}\nTotal: ₹${o.total.toLocaleString()}\nETA: ${o.eta}\n\nQuestions? Contact us on WhatsApp.`;
+    let items = []; try { items = JSON.parse(o.items || '[]'); } catch(e){}
+    const itemsList = items.map(i => `• ${i.name} (×${i.qty}) — ₹${Number((i.price||0)*(i.qty||1)).toLocaleString('en-IN')}`).join('\n');
+    const stTxt = { new:'Order Placed', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' }[o.status || 'new'] || 'Order Placed';
+    const dateStr = new Date(o.created_at).toLocaleString('en-IN');
+    const msg = `Order ${o.id}\nDate: ${dateStr}\nStatus: ${stTxt}\n\n${itemsList}\n\nTotal: ₹${Number(o.total||0).toLocaleString('en-IN')}\nPayment: ${String(o.payment_method||'').toUpperCase()}${o.payment_status==='paid'?' (PAID)':''}\n\nQuestions? Contact us on WhatsApp.`;
     alert(msg);
   }
 

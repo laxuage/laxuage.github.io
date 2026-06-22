@@ -79,6 +79,7 @@ export async function ensureSchema(db) {
       email TEXT UNIQUE,
       name TEXT,
       phone TEXT,
+      password_hash TEXT,
       created_at INTEGER,
       last_login INTEGER
     )`),
@@ -107,8 +108,66 @@ export async function ensureSchema(db) {
       updated_at INTEGER
     )`),
   ]);
-  // Column migration for older product tables (ignored if the column exists).
+  // Column migrations for older tables (ignored if the column already exists).
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
+  try { await db.prepare('ALTER TABLE users ADD COLUMN password_hash TEXT').run(); } catch (e) {}
+}
+
+// ---- Password hashing (PBKDF2-SHA256, salted) ----
+function buf2hex(buf) { return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+function hex2buf(hex) { const a = new Uint8Array(hex.length / 2); for (let i = 0; i < a.length; i++) a[i] = parseInt(hex.substr(i * 2, 2), 16); return a; }
+
+export async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256);
+  return 'pbkdf2$100000$' + buf2hex(salt.buffer) + '$' + buf2hex(bits);
+}
+
+export async function verifyPassword(password, stored) {
+  if (!stored || typeof stored !== 'string') return false;
+  const parts = stored.split('$');
+  if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false;
+  const iterations = parseInt(parts[1], 10) || 100000;
+  const salt = hex2buf(parts[2]);
+  const expected = parts[3];
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, key, 256);
+  const got = buf2hex(bits);
+  if (got.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
+  return diff === 0;
+}
+
+// ---- OTP email (Brevo) — used by signup email verification ----
+export function genOTP() {
+  const a = new Uint32Array(1); crypto.getRandomValues(a);
+  return String(100000 + (a[0] % 900000));
+}
+
+export async function sendOtpEmail(apiKey, to, code) {
+  const html = `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;background:#fbf7f1;padding:32px 24px;border-radius:8px">
+    <div style="text-align:center;margin-bottom:24px">
+      <span style="font-family:Georgia,serif;font-size:26px;font-style:italic;color:#7E2D49;letter-spacing:1px">Laxuage</span>
+      <div style="font-size:11px;letter-spacing:3px;color:#b08d57;text-transform:uppercase;margin-top:2px">Made of Her</div>
+    </div>
+    <p style="color:#1a1a1a;font-size:15px;margin:0 0 12px">Your email verification code is:</p>
+    <div style="text-align:center;background:#fff;border:1px solid #e6dfd0;border-radius:8px;padding:18px;margin:0 0 16px">
+      <span style="font-size:34px;font-weight:bold;letter-spacing:10px;color:#7E2D49">${code}</span>
+    </div>
+    <p style="color:#707070;font-size:13px;margin:0 0 6px">This code is valid for 10 minutes. Do not share it with anyone.</p>
+    <p style="color:#a8a8a8;font-size:12px;margin:16px 0 0">If you didn't request this, you can safely ignore this email.</p>
+  </div>`;
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'content-type': 'application/json', 'accept': 'application/json' },
+      body: JSON.stringify({ sender: { name: 'Laxuage', email: 'support@laxuage.com' }, to: [{ email: to }], subject: 'Your Laxuage verification code', htmlContent: html }),
+    });
+    return res.ok;
+  } catch (e) { return false; }
 }
 
 // Read a JSON setting by key (returns parsed object or null).

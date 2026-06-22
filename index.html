@@ -3054,133 +3054,67 @@
       <div class="login-title" id="login-header-title">Sign in or create an account to continue</div>
     </div>
     <div class="login-body">
-      <!-- Email OTP login (passwordless, real server account) -->
-      <div class="login-form active" id="auth-step-email">
+      <!-- Auth tabs -->
+      <div class="login-tabs">
+        <button class="login-tab active" id="auth-tab-signin" type="button" onclick="authTab('signin')">Sign In</button>
+        <button class="login-tab" id="auth-tab-signup" type="button" onclick="authTab('signup')">Create Account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <div class="login-form active" id="auth-signin">
         <div class="form-group">
           <label>Email</label>
-          <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+          <input type="email" id="si-email" placeholder="you@example.com" autocomplete="email">
         </div>
-        <div class="login-err" id="auth-err1"></div>
-        <button class="login-submit" id="auth-send-btn" onclick="authSendCode()"><i class="fa-solid fa-paper-plane"></i> Send Login Code</button>
-        <div class="login-note">We'll email you a one-time code — no password needed. New here? Your account is created automatically.</div>
-      </div>
-      <div class="login-form" id="auth-step-code">
         <div class="form-group">
-          <label>Enter the code sent to <span id="auth-email-label" style="color:var(--primary);font-weight:700"></span></label>
-          <input type="text" id="auth-code" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="si-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn()">
+            <button class="pw-eye" type="button" onclick="togglePw('si-pass', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
         </div>
+        <div class="login-err" id="si-err"></div>
+        <button class="login-submit" id="si-btn" onclick="authSignIn()"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+        <div class="login-note">New to Laxuage? <a onclick="authTab('signup')" style="color:var(--primary);cursor:pointer;font-weight:700">Create an account</a>.</div>
+      </div>
+
+      <!-- SIGN UP -->
+      <div class="login-form" id="auth-signup">
         <div class="form-group">
           <label>Your Name</label>
-          <input type="text" id="auth-name" placeholder="Your full name">
+          <input type="text" id="su-name" placeholder="Your full name" autocomplete="name">
         </div>
-        <div class="login-err" id="auth-err2"></div>
-        <button class="login-submit" id="auth-verify-btn" onclick="authVerify()"><i class="fa-solid fa-right-to-bracket"></i> Verify &amp; Continue</button>
-        <button class="forgot-link" type="button" onclick="authSendCode(true)">Resend code</button>
-        <button class="back-link" type="button" onclick="authBackToEmail()"><i class="fa-solid fa-arrow-left"></i> Use a different email</button>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="su-pass" placeholder="Create a password (min 6 chars)" autocomplete="new-password">
+            <button class="pw-eye" type="button" onclick="togglePw('su-pass', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="login-err" id="su-err"></div>
+        <button class="login-submit" id="su-btn" onclick="authSignUp()"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+        <div class="login-note">We'll email you a 6-digit code to verify your email — just once. Already have an account? <a onclick="authTab('signin')" style="color:var(--primary);cursor:pointer;font-weight:700">Sign in</a>.</div>
+      </div>
+
+      <!-- SIGN UP — email verification -->
+      <div class="login-form" id="auth-verify">
+        <div class="form-group">
+          <label>Enter the code sent to <span id="su-email-label" style="color:var(--primary);font-weight:700"></span></label>
+          <input type="text" id="su-code" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')authVerifySignup()">
+        </div>
+        <div class="login-err" id="sv-err"></div>
+        <button class="login-submit" id="sv-btn" onclick="authVerifySignup()"><i class="fa-solid fa-circle-check"></i> Verify &amp; Create Account</button>
+        <button class="forgot-link" type="button" onclick="authSignUp(true)">Resend code</button>
+        <button class="back-link" type="button" onclick="authTab('signup')"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <div class="login-note">By continuing, you agree to Laxuage's Terms of Use and Privacy Policy.</div>
       </div>
 
-      <!-- Sign Up Form -->
-      <div class="login-form" id="form-signup">
-        <div class="form-group">
-          <label>Full Name *</label>
-          <input type="text" id="signup-name" placeholder="Your full name">
-        </div>
-
-        <div class="form-group">
-          <label>Phone Number *</label>
-          <div class="otp-row">
-            <input type="tel" id="signup-phone" placeholder="+91 XXXXX XXXXX">
-            <button class="send-otp-btn" type="button" id="send-phone-otp-btn" onclick="sendPhoneOTP()">Send OTP</button>
-          </div>
-        </div>
-        <div class="form-group" id="phone-otp-group" style="display:none">
-          <label>Enter Phone OTP *</label>
-          <div class="otp-row">
-            <input type="text" id="signup-phone-otp" placeholder="6-digit OTP" maxlength="6" inputmode="numeric">
-            <button class="send-otp-btn" type="button" onclick="verifyPhoneOTP()">Verify</button>
-          </div>
-          <span class="verify-hint" id="phone-otp-hint"></span>
-        </div>
-
-        <div class="form-group">
-          <label>Email <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(optional)</span></label>
-          <div class="otp-row">
-            <input type="email" id="signup-email" placeholder="your@email.com">
-            <button class="send-otp-btn" type="button" id="send-email-code-btn" onclick="sendEmailCode()">Verify</button>
-          </div>
-        </div>
-        <div class="form-group" id="email-verify-group" style="display:none">
-          <label>Email Verification Code</label>
-          <div class="otp-row">
-            <input type="text" id="signup-email-code" placeholder="6-digit code" maxlength="6" inputmode="numeric">
-            <button class="send-otp-btn" type="button" onclick="verifyEmailCode()">Confirm</button>
-          </div>
-          <span class="verify-hint" id="email-code-hint"></span>
-        </div>
-
-        <div class="form-group">
-          <label>Password *</label>
-          <div class="pw-wrap">
-            <input type="password" id="signup-pass" placeholder="Create a password (min 6 chars)">
-            <button class="pw-eye" type="button" onclick="togglePw('signup-pass', this)"><i class="fa-regular fa-eye"></i></button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Confirm Password *</label>
-          <div class="pw-wrap">
-            <input type="password" id="signup-pass-confirm" placeholder="Re-enter your password">
-            <button class="pw-eye" type="button" onclick="togglePw('signup-pass-confirm', this)"><i class="fa-regular fa-eye"></i></button>
-          </div>
-        </div>
-
-        <div class="login-err" id="signup-err">Please fill all fields correctly.</div>
-        <button class="login-submit" onclick="doSignup()"><i class="fa-solid fa-user-plus"></i> Create Account</button>
-        <div class="login-or">or</div>
-        <button class="wa-login-btn" onclick="whatsappLogin()"><i class="fa-brands fa-whatsapp"></i> Continue via WhatsApp</button>
-        <div class="login-note">By continuing, you agree to Laxuage's Terms of Use and Privacy Policy.</div>
-      </div>
-
-      <!-- Forgot Password View -->
-      <div id="form-forgot" style="display:none; flex-direction:column; gap:14px;">
-        <div id="forgot-step1">
-          <div class="forgot-step-title">Reset your password</div>
-          <div class="forgot-step-sub" style="margin-bottom:18px">Enter your registered phone or email. We'll send a reset code.</div>
-          <div class="form-group" style="margin-bottom:14px">
-            <label>Phone / Email</label>
-            <input type="text" id="forgot-identifier" placeholder="Enter phone or email">
-          </div>
-          <div class="login-err" id="forgot-err"></div>
-          <button class="login-submit" onclick="sendForgotCode()"><i class="fa-solid fa-paper-plane"></i> Send Reset Code</button>
-        </div>
-        <div id="forgot-step2" style="display:none; flex-direction:column; gap:14px;">
-          <div class="forgot-step-title">Enter reset code</div>
-          <div class="forgot-step-sub" id="forgot-sent-to">A 6-digit code has been sent.</div>
-          <div class="form-group">
-            <label>Reset Code</label>
-            <input type="text" id="forgot-code" placeholder="6-digit code" maxlength="6" inputmode="numeric">
-          </div>
-          <div class="form-group">
-            <label>New Password</label>
-            <div class="pw-wrap">
-              <input type="password" id="forgot-new-pass" placeholder="New password">
-              <button class="pw-eye" type="button" onclick="togglePw('forgot-new-pass', this)"><i class="fa-regular fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Confirm New Password</label>
-            <div class="pw-wrap">
-              <input type="password" id="forgot-confirm-pass" placeholder="Re-enter new password">
-              <button class="pw-eye" type="button" onclick="togglePw('forgot-confirm-pass', this)"><i class="fa-regular fa-eye"></i></button>
-            </div>
-          </div>
-          <div class="login-err" id="forgot-err2"></div>
-          <div class="success-box" id="forgot-success">✓ Password reset successful. You can now sign in.</div>
-          <button class="login-submit" id="reset-pw-btn" onclick="doResetPassword()"><i class="fa-solid fa-key"></i> Reset Password</button>
-        </div>
-        <button class="back-link" type="button" onclick="showLoginView()"><i class="fa-solid fa-arrow-left"></i> Back to Login</button>
-      </div>
+      <!-- (Legacy phone-OTP signup and forgot-password views removed — auth is now
+           email + password with a one-time email verification at sign-up.) -->
 
     </div>
   </div>
@@ -3652,7 +3586,7 @@
 
   function openLogin() {
     document.getElementById('login-overlay').classList.add('open');
-    authBackToEmail();
+    authTab('signin');
   }
 
   function closeLogin() {
@@ -3660,62 +3594,83 @@
     pendingAction = null;
   }
 
-  // ===== Email-OTP login (real server-side accounts) =====
-  function authBackToEmail() {
-    document.getElementById('auth-step-email').classList.add('active');
-    document.getElementById('auth-step-code').classList.remove('active');
-    var e1 = document.getElementById('auth-err1'); if (e1) e1.classList.remove('show');
-    var e2 = document.getElementById('auth-err2'); if (e2) e2.classList.remove('show');
+  // ===== Email + password accounts (server-side, cross-device) =====
+  // Switch between Sign In / Create Account / verify views.
+  function authTab(which) {
+    const tabSin = document.getElementById('auth-tab-signin');
+    const tabSup = document.getElementById('auth-tab-signup');
+    const onSignup = (which === 'signup' || which === 'verify');
+    if (tabSin) tabSin.classList.toggle('active', !onSignup);
+    if (tabSup) tabSup.classList.toggle('active', onSignup);
+    ['auth-signin','auth-signup','auth-verify'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.classList.toggle('active', id === 'auth-' + which);
+    });
+    ['si-err','su-err','sv-err'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('show'); });
   }
-  async function authSendCode(isResend) {
-    const email = document.getElementById('auth-email').value.trim();
-    const err = document.getElementById('auth-err1');
-    if (!email || !email.includes('@') || !email.includes('.')) {
-      err.textContent = 'Please enter a valid email address.'; err.classList.add('show'); return;
-    }
-    const btn = document.getElementById('auth-send-btn');
-    const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Sending…';
+
+  function authErr(id, msg) { const e = document.getElementById(id); if (e) { e.textContent = msg; e.classList.add('show'); } }
+  function validEmail(x) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); }
+
+  // Sign In — email + password.
+  async function authSignIn() {
+    const email = document.getElementById('si-email').value.trim().toLowerCase();
+    const password = document.getElementById('si-pass').value;
+    if (!validEmail(email)) return authErr('si-err', 'Please enter a valid email address.');
+    if (!password) return authErr('si-err', 'Please enter your password.');
+    const btn = document.getElementById('si-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Signing in…';
     try {
-      const r = await fetch('/api/auth/send-otp', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email }) });
+      const r = await fetch('/api/auth/login', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, password }) });
       const d = await r.json();
       btn.disabled = false; btn.innerHTML = orig;
-      if (!d.ok) { err.textContent = d.error || 'Could not send the code.'; err.classList.add('show'); return; }
-      err.classList.remove('show');
-      document.getElementById('auth-email-label').textContent = email;
-      document.getElementById('auth-step-email').classList.remove('active');
-      document.getElementById('auth-step-code').classList.add('active');
-      document.getElementById('auth-code').value = '';
-      try { document.getElementById('auth-code').focus(); } catch(e){}
-      if (isResend) showToast('📧 A new code has been sent.');
-    } catch(e) {
-      btn.disabled = false; btn.innerHTML = orig;
-      err.textContent = 'Network error. Please try again.'; err.classList.add('show');
-    }
+      if (!d.ok) return authErr('si-err', d.error || 'Sign in failed.');
+      authSuccess(d.user, 'Welcome back');
+    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('si-err', 'Network error. Please try again.'); }
   }
-  async function authVerify() {
-    const email = document.getElementById('auth-email').value.trim();
-    const code  = document.getElementById('auth-code').value.trim();
-    const name  = document.getElementById('auth-name').value.trim();
-    const err = document.getElementById('auth-err2');
-    if (!/^\d{6}$/.test(code)) { err.textContent = 'Enter the 6-digit code from your email.'; err.classList.add('show'); return; }
-    const btn = document.getElementById('auth-verify-btn');
-    const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Verifying…';
+
+  // Create Account — email + password -> emails a verification code.
+  async function authSignUp(isResend) {
+    const name = document.getElementById('su-name').value.trim();
+    const email = document.getElementById('su-email').value.trim().toLowerCase();
+    const password = document.getElementById('su-pass').value;
+    if (!validEmail(email)) return authErr('su-err', 'Please enter a valid email address.');
+    if (password.length < 6) return authErr('su-err', 'Password must be at least 6 characters.');
+    const btn = document.getElementById(isResend === true ? 'sv-btn' : 'su-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Sending…';
     try {
-      const r = await fetch('/api/auth/login', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, code, name }) });
+      const r = await fetch('/api/auth/signup', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, password, name }) });
       const d = await r.json();
       btn.disabled = false; btn.innerHTML = orig;
-      if (!d.ok) { err.textContent = d.error || 'Login failed.'; err.classList.add('show'); return; }
-      err.classList.remove('show');
-      saveUser(d.user);
-      updateNavProfile();
-      closeLogin();
-      showToast('Welcome' + (d.user && d.user.name ? ', ' + d.user.name.split(' ')[0] : '') + '! 👋');
-      loadServerData();   // merge this account's saved cart + wishlist
-      if (pendingAction) { pendingAction(); pendingAction = null; }
-    } catch(e) {
+      if (!d.ok) return authErr(isResend === true ? 'sv-err' : 'su-err', d.error || 'Could not create the account.');
+      document.getElementById('su-email-label').textContent = email;
+      authTab('verify');
+      document.getElementById('su-code').value = '';
+      try { document.getElementById('su-code').focus(); } catch(e){}
+      if (isResend === true) showToast('📧 A new code has been sent.');
+    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr(isResend === true ? 'sv-err' : 'su-err', 'Network error. Please try again.'); }
+  }
+
+  // Confirm the emailed code -> account created + signed in.
+  async function authVerifySignup() {
+    const email = document.getElementById('su-email').value.trim().toLowerCase();
+    const code = document.getElementById('su-code').value.trim();
+    if (!/^\d{6}$/.test(code)) return authErr('sv-err', 'Enter the 6-digit code from your email.');
+    const btn = document.getElementById('sv-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Verifying…';
+    try {
+      const r = await fetch('/api/auth/verify-signup', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, code }) });
+      const d = await r.json();
       btn.disabled = false; btn.innerHTML = orig;
-      err.textContent = 'Network error. Please try again.'; err.classList.add('show');
-    }
+      if (!d.ok) return authErr('sv-err', d.error || 'Verification failed.');
+      authSuccess(d.user, 'Welcome');
+    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('sv-err', 'Network error. Please try again.'); }
+  }
+
+  // Shared success path for sign-in and sign-up.
+  function authSuccess(user, greeting) {
+    saveUser(user);
+    updateNavProfile();
+    closeLogin();
+    showToast(greeting + (user && user.name ? ', ' + user.name.split(' ')[0] : '') + '! 👋');
+    loadServerData();   // merge this account's saved cart + wishlist (cross-device)
+    if (pendingAction) { pendingAction(); pendingAction = null; }
   }
   // Confirm/refresh the logged-in session from the server (works on any device).
   async function restoreSession() {

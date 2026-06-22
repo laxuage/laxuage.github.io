@@ -38,7 +38,6 @@ export async function onRequestPost(context) {
   const description = String(b.description || '').slice(0, 2000);
   const category = String(b.category || 'handbag').slice(0, 40);
   const material = String(b.material || '').slice(0, 60);
-  const color = String(b.color || '').slice(0, 40);
   const weight_g = parseInt(b.weight_g, 10) || null;
   const size = String(b.size || '').slice(0, 80);
   const badge = String(b.badge || '').slice(0, 20);
@@ -47,18 +46,27 @@ export async function onRequestPost(context) {
   const stock = (b.stock === '' || b.stock == null) ? null : Math.max(0, parseInt(b.stock, 10) || 0);
   const active = (b.active === 0 || b.active === false) ? 0 : 1;
   const images = JSON.stringify(Array.isArray(b.images) ? b.images.slice(0, 8) : []);
+  // Colour variants: up to 8, each { name, image }.
+  const colorsArr = Array.isArray(b.colors)
+    ? b.colors
+        .filter(c => c && typeof c === 'object' && (c.name || c.image))
+        .slice(0, 8)
+        .map(c => ({ name: String(c.name || '').slice(0, 40), image: String(c.image || '').slice(0, 400) }))
+    : [];
+  const colors = JSON.stringify(colorsArr);
+  const color = String(b.color || (colorsArr[0] && colorsArr[0].name) || '').slice(0, 40);
   const id = parseInt(b.id, 10);
 
   if (id) {
     await env.DB.prepare(
-      `UPDATE products SET name=?, price=?, mrp=?, description=?, category=?, material=?, color=?, weight_g=?, size=?, badge=?, rating=?, reviews=?, stock=?, images=?, active=? WHERE id=?`
-    ).bind(name, price, mrp, description, category, material, color, weight_g, size, badge, rating, reviews, stock, images, active, id).run();
+      `UPDATE products SET name=?, price=?, mrp=?, description=?, category=?, material=?, color=?, weight_g=?, size=?, badge=?, rating=?, reviews=?, stock=?, images=?, colors=?, active=? WHERE id=?`
+    ).bind(name, price, mrp, description, category, material, color, weight_g, size, badge, rating, reviews, stock, images, colors, active, id).run();
     return json({ ok: true, id });
   } else {
     const res = await env.DB.prepare(
-      `INSERT INTO products (name,price,mrp,description,category,material,color,weight_g,size,badge,rating,reviews,stock,images,active,sort_order,created_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-    ).bind(name, price, mrp, description, category, material, color, weight_g, size, badge, rating, reviews, stock, images, active, 999, Date.now()).run();
+      `INSERT INTO products (name,price,mrp,description,category,material,color,weight_g,size,badge,rating,reviews,stock,images,colors,active,sort_order,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    ).bind(name, price, mrp, description, category, material, color, weight_g, size, badge, rating, reviews, stock, images, colors, active, 999, Date.now()).run();
     return json({ ok: true, id: res.meta && res.meta.last_row_id });
   }
 }

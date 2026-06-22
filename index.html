@@ -3247,6 +3247,7 @@
           <div class="modal-offer" id="modal-offer"></div>
         </div>
         <div id="modal-stock" class="stock-info in-stock"><i class="fa-solid fa-check-circle"></i> In Stock</div>
+        <div class="modal-colors" id="modal-colors" style="display:none"></div>
         <div class="modal-qty-share">
           <div class="modal-qty-wrap">
             <span class="modal-qty-label">Qty</span>
@@ -4284,6 +4285,9 @@
   // To add real photos to ANY product, give it an images array, e.g.:
   //   { id:2, name:"...", img:"bag2.jpg", images:["bag2.jpg","bag2-back.jpg","bag2-inside.jpg"], ... }
   function getImages(p){
+    // Colour variants each carry a photo — those become the product gallery.
+    const colorImgs = (Array.isArray(p.colors) ? p.colors : []).map(c => c && c.image).filter(Boolean);
+    if (colorImgs.length) return colorImgs;
     if (Array.isArray(p.images) && p.images.length) return p.images;
     // DEMO: show a 3-photo gallery on the first product so you can see how it works.
     if (p.id === 1) return [p.img, demoShot('Side view'), demoShot('Interior')];
@@ -4526,6 +4530,7 @@
     modalQty = 1;
     document.getElementById('modal-qty-val').textContent = modalQty;
     renderGallery(p);
+    renderModalColors(p);
     document.getElementById('modal-title').textContent = p.name;
     document.getElementById('modal-cat').textContent = p.category.toUpperCase();
     document.getElementById('modal-name').textContent = p.name;
@@ -5729,6 +5734,35 @@
   let galleryIndex = 0;
   let mgSwipeBound = false;
 
+  // Colour selector in the product modal — swatches that swap the main photo.
+  function renderModalColors(p){
+    const box = document.getElementById('modal-colors');
+    if (!box) return;
+    const cols = (Array.isArray(p.colors) ? p.colors : []).filter(c => c && c.name);
+    if (!cols.length){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = 'block';
+    box.innerHTML = '<div class="mc-label">Colour: <span id="mc-current">' + escHtml(cols[0].name) + '</span></div>'
+      + '<div class="mc-swatches">'
+      + cols.map((c, i) => '<button class="mc-sw' + (i === 0 ? ' active' : '') + '" onclick="selectColor(' + i + ')" title="' + escHtml(c.name) + '">'
+          + (c.image ? '<img src="' + c.image + '" alt="' + escHtml(c.name) + '" loading="lazy">' : '<span class="mc-noimg">' + escHtml(c.name[0]) + '</span>')
+          + '</button>').join('')
+      + '</div>';
+  }
+  function selectColor(i){
+    const p = products.find(x => x.id === currentModalProductId);
+    if (!p) return;
+    const cols = (Array.isArray(p.colors) ? p.colors : []).filter(c => c && c.name);
+    const c = cols[i];
+    if (!c) return;
+    if (c.image){
+      const gi = galleryImgs.indexOf(c.image);
+      if (gi >= 0) gallerySet(gi);
+      else { const m = document.getElementById('modal-img'); if (m){ m.dataset.ph = ''; m.src = c.image; } }
+    }
+    document.querySelectorAll('#modal-colors .mc-sw').forEach((b, idx) => b.classList.toggle('active', idx === i));
+    const cur = document.getElementById('mc-current'); if (cur) cur.textContent = c.name;
+  }
+
   function renderGallery(p){
     galleryImgs = getImages(p);
     galleryIndex = 0;
@@ -6581,6 +6615,17 @@
   .addr-form input:focus, .addr-form select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
   .addr-form-actions{ display:flex; gap:10px; margin-top:16px; }
   @media (max-width:480px){ .addr-form .af-grid{ grid-template-columns:1fr; } }
+
+  /* ---- Product modal: colour selector ---- */
+  .modal-colors{ margin: 2px 0 4px; }
+  .mc-label{ font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px; }
+  .mc-label span{ color:var(--primary); }
+  .mc-swatches{ display:flex; flex-wrap:wrap; gap:8px; }
+  .mc-sw{ width:48px; height:48px; border-radius:10px; padding:0; overflow:hidden; cursor:pointer; background:var(--cream-warm,#f3ece2); border:2px solid var(--border); transition:border-color .15s, transform .15s, box-shadow .15s; }
+  .mc-sw img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mc-noimg{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:700; color:var(--primary); text-transform:uppercase; font-size:15px; }
+  .mc-sw:hover{ transform:translateY(-2px); }
+  .mc-sw.active{ border-color:var(--primary); box-shadow:0 0 0 2px var(--primary-soft); }
 </style>
 <script>
 (function(){

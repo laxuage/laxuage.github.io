@@ -146,6 +146,18 @@
   .sc-vid input{flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff}
   .mini-up{display:inline-block;border:1px dashed var(--primary);color:var(--primary);border-radius:8px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap}
   .mini-up:hover{background:var(--bg)}
+
+  /* ---- Colour variants (product editor) ---- */
+  .cvars{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .cvar{display:flex;align-items:center;gap:10px}
+  .cvar-img{width:48px;height:48px;border-radius:8px;object-fit:cover;flex:0 0 auto;border:1px solid var(--border)}
+  .cvar-up{display:flex;align-items:center;justify-content:center;gap:5px;border:1px dashed var(--primary);color:var(--primary);border-radius:8px;padding:14px 10px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;flex:0 0 auto;min-width:78px}
+  .cvar-up:hover,.cvar-re:hover{background:var(--bg)}
+  .cvar-re{font-size:11px;font-weight:600;color:var(--primary);cursor:pointer;text-decoration:underline;flex:0 0 auto;padding:2px 4px;border-radius:6px}
+  .cvar-name{flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff;min-width:0}
+  .cvar-name:focus{outline:none;border-color:var(--primary)}
+  .cvar-del{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--border);background:#fff;border-radius:8px;color:var(--danger);font-size:18px;line-height:1;cursor:pointer}
+  .cvar-del:hover{background:#fdecea;border-color:var(--danger)}
 </style>
 </head>
 <body>
@@ -281,10 +293,7 @@
         </div>
         <div class="field"><label>Stock (blank = unlimited)</label><input type="number" id="p-stock" min="0" placeholder="∞"></div>
       </div>
-      <div class="grid2">
-        <div class="field"><label>Colour</label><input type="text" id="p-color" placeholder="Ivory"></div>
-        <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
-      </div>
+      <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
       <div class="grid2">
         <div class="field"><label>Weight (grams)</label><input type="number" id="p-weight" min="0" placeholder="650"></div>
         <div class="field"><label>Size / Dimensions</label><input type="text" id="p-size" placeholder="28 × 18 × 10 cm"></div>
@@ -311,6 +320,12 @@
           <span id="upload-text">📷 Upload photo(s)</span>
         </label>
       </div>
+      <div class="field">
+        <label>Colours (up to 8 — each with its own photo)</label>
+        <p class="muted" style="margin:-2px 0 8px;font-size:12px">Add each colour with a photo. On the product page the customer can switch colours and the photo changes.</p>
+        <div class="cvars" id="p-colors"></div>
+        <button type="button" class="upload-btn" id="add-color-btn" onclick="addColorRow()">+ Add colour</button>
+      </div>
       <div class="err" id="p-err"></div>
     </div>
     <div class="pmodal-foot">
@@ -325,6 +340,7 @@
 <script>
 let PRODUCTS = [];          // loaded from /api/admin/products
 let curPhotos = [];         // image urls currently in the editor
+let curColors = [];         // colour variants [{name,image}] in the editor
 const STATUSES = ['new','confirmed','shipped','delivered','cancelled'];
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -449,12 +465,14 @@ function openProduct(id){
   document.getElementById('prod-title').textContent = p?'Edit Product':'Add Product';
   val('p-id', p?p.id:''); val('p-name', p?p.name:''); val('p-price', p?p.price:'');
   val('p-mrp', p?p.mrp:''); val('p-category', p?(p.category||'handbag'):'handbag');
-  val('p-stock', (p&&p.stock!=null)?p.stock:''); val('p-color', p?p.color:'');
+  val('p-stock', (p&&p.stock!=null)?p.stock:'');
   val('p-material', p?p.material:''); val('p-weight', (p&&p.weight_g)?p.weight_g:'');
   val('p-size', p?p.size:''); val('p-badge', p?(p.badge||''):'');
   val('p-active', (p&&p.active===0)?'0':'1'); val('p-desc', p?p.description:'');
   curPhotos = (p&&Array.isArray(p.images))?p.images.slice():[];
   renderPhotos();
+  curColors = (p&&Array.isArray(p.colors))?p.colors.map(c=>({name:c.name||'',image:c.image||''})):[];
+  renderColorRows();
   document.getElementById('p-err').textContent='';
   document.getElementById('prod-modal').classList.add('open');
 }
@@ -479,6 +497,31 @@ async function uploadPhotos(input){
   }
   txt.textContent=old; input.value='';
 }
+/* ---- Colour variants (name + photo, up to 8) ---- */
+function renderColorRows(){
+  const box=document.getElementById('p-colors'); if(!box) return;
+  box.innerHTML = curColors.map(function(c,i){
+    const media = c.image
+      ? '<img class="cvar-img" src="'+esc(c.image)+'" alt=""><label class="cvar-re">Change<input type="file" accept="image/*" hidden onchange="uploadColorPhoto(this,'+i+')"></label>'
+      : '<label class="cvar-up">📷 Photo<input type="file" accept="image/*" hidden onchange="uploadColorPhoto(this,'+i+')"></label>';
+    return '<div class="cvar">'+media
+      +'<input class="cvar-name" placeholder="Colour name (e.g. Ivory)" value="'+esc(c.name||'')+'" oninput="setColorName('+i+',this.value)">'
+      +'<button type="button" class="cvar-del" title="Remove" onclick="removeColorRow('+i+')">×</button></div>';
+  }).join('');
+  const addBtn=document.getElementById('add-color-btn');
+  if(addBtn) addBtn.style.display = curColors.length>=8 ? 'none' : '';
+}
+function addColorRow(){ if(curColors.length>=8){ toast('Max 8 colours'); return; } curColors.push({name:'',image:''}); renderColorRows(); }
+function removeColorRow(i){ curColors.splice(i,1); renderColorRows(); }
+function setColorName(i,v){ if(curColors[i]) curColors[i].name=v; }
+async function uploadColorPhoto(input,i){
+  const f=(input.files||[])[0]; if(!f||!curColors[i]) return;
+  const fd=new FormData(); fd.append('file',f); toast('Uploading…');
+  let d={}; try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
+  if(d.ok&&d.url){ curColors[i].image=d.url; renderColorRows(); toast('Photo added ✓'); }
+  else toast('⚠️ '+((d&&d.error)||'Upload failed'));
+  input.value='';
+}
 async function saveProduct(){
   const err=document.getElementById('p-err'); err.textContent='';
   const name=document.getElementById('p-name').value.trim();
@@ -486,7 +529,7 @@ async function saveProduct(){
   const gv=id=>document.getElementById(id).value;
   const body={
     id: gv('p-id') || undefined, name:name, price: gv('p-price'), mrp: gv('p-mrp'),
-    category: gv('p-category'), stock: gv('p-stock'), color: gv('p-color'),
+    category: gv('p-category'), stock: gv('p-stock'), colors: curColors.filter(c=>c.name||c.image),
     material: gv('p-material'), weight_g: gv('p-weight'), size: gv('p-size'),
     badge: gv('p-badge'), active: parseInt(gv('p-active'),10),
     description: gv('p-desc'), images: curPhotos

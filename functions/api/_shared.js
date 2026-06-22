@@ -96,6 +96,7 @@ export async function ensureSchema(db) {
       badge TEXT, rating REAL, reviews INTEGER,
       stock INTEGER,
       images TEXT,
+      colors TEXT,
       active INTEGER DEFAULT 1,
       sort_order INTEGER DEFAULT 0,
       created_at INTEGER
@@ -106,6 +107,8 @@ export async function ensureSchema(db) {
       updated_at INTEGER
     )`),
   ]);
+  // Column migration for older product tables (ignored if the column exists).
+  try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
 }
 
 // Read a JSON setting by key (returns parsed object or null).
@@ -155,11 +158,17 @@ export async function seedProductsIfEmpty(db) {
 export function rowToProduct(r) {
   let images = [];
   try { images = JSON.parse(r.images || '[]'); } catch (e) {}
+  let colors = [];
+  try { colors = JSON.parse(r.colors || '[]'); } catch (e) {}
+  colors = Array.isArray(colors) ? colors.filter(c => c && c.name) : [];
+  const colorImg = colors.find(c => c.image) ? colors.find(c => c.image).image : '';
   return {
     id: r.id, name: r.name, price: r.price, mrp: r.mrp,
-    description: r.description, category: r.category, material: r.material, color: r.color,
+    description: r.description, category: r.category, material: r.material,
+    color: r.color || (colors[0] && colors[0].name) || '',
+    colors,
     weight_g: r.weight_g, size: r.size, badge: r.badge || '',
     rating: r.rating, reviews: r.reviews, stock: r.stock,
-    images, img: images[0] || '',
+    images, img: images[0] || colorImg || '',
   };
 }

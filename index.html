@@ -2813,6 +2813,23 @@
     .ck-upi-after { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 8px; }
 
   </style>
+
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1460163436124169');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1460163436124169&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -4395,6 +4412,15 @@
       saveData();
       updateCartUI();
       showToast(`${p.name} added to cart`);
+      if (typeof fbq === 'function') {
+        fbq('track', 'AddToCart', {
+          content_ids: [String(p.id)],
+          content_name: p.name,
+          content_type: 'product',
+          value: Number(p.price) || 0,
+          currency: 'INR'
+        });
+      }
     });
   }
 
@@ -4483,6 +4509,15 @@
     const p = products.find(x => x.id === id);
     currentModalProductId = id;
     modalQty = 1;
+    if (typeof fbq === 'function' && p) {
+      fbq('track', 'ViewContent', {
+        content_ids: [String(p.id)],
+        content_name: p.name,
+        content_type: 'product',
+        value: Number(p.price) || 0,
+        currency: 'INR'
+      });
+    }
     document.getElementById('modal-qty-val').textContent = modalQty;
     renderGallery(p);
     renderModalColors(p);
@@ -4596,6 +4631,16 @@
   function checkout() {
     if (!cart.length) return;
     requireLogin(() => {
+      if (typeof fbq === 'function') {
+        const ckSub = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+        fbq('track', 'InitiateCheckout', {
+          content_ids: cart.map(i => String(i.id)),
+          content_type: 'product',
+          num_items: cart.reduce((a, b) => a + b.qty, 0),
+          value: ckSub,
+          currency: 'INR'
+        });
+      }
       closeCart();
       openCheckout();
     });
@@ -5360,6 +5405,16 @@
 
     // Success (COD, or online payment verified)
     saveOrder(order);
+    if (typeof fbq === 'function') {
+      fbq('track', 'Purchase', {
+        content_ids: order.items.map(i => String(i.id)),
+        content_type: 'product',
+        num_items: order.items.reduce((a, b) => a + b.qty, 0),
+        value: order.total,
+        currency: 'INR',
+        order_id: order.id
+      });
+    }
     sendOrderToWhatsApp(order);
     document.getElementById('ck-success-id').textContent = orderId;
     document.getElementById('ck-success-eta').textContent = `Within ${days} days (by ${etaStr})`;
@@ -5889,6 +5944,17 @@
       if (ex) ex.qty += qty; else cart.push({ ...p, qty });
       saveData();
       updateCartUI();
+      if (typeof fbq === 'function' && p) {
+        fbq('track', 'AddToCart', {
+          content_ids: [String(p.id)], content_name: p.name,
+          content_type: 'product', value: Number(p.price) || 0, currency: 'INR'
+        });
+        const ckSub = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+        fbq('track', 'InitiateCheckout', {
+          content_ids: cart.map(i => String(i.id)), content_type: 'product',
+          num_items: cart.reduce((a, b) => a + b.qty, 0), value: ckSub, currency: 'INR'
+        });
+      }
       closeModalDirect();
       openCheckout();
     });

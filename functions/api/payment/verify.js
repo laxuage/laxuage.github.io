@@ -22,11 +22,21 @@ export async function onRequestPost(context) {
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ rsig.charCodeAt(i);
   if (diff !== 0) return json({ ok: false, error: 'Payment verification failed' }, 400);
 
-  // Mark our order paid (best-effort).
+  // Mark our order paid — but only if the Razorpay order that was just paid is
+  // the one we bound to this order at create time. This stops a buyer from
+  // paying a cheap Razorpay order and replaying its signature against an
+  // expensive internal order.
   if (b.order_id) {
     try {
-      await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?")
-        .bind(rpid, String(b.order_id)).run();
+      const ord = await env.DB.prepare('SELECT id, rp_order_id FROM orders WHERE id=?')
+        .bind(String(b.order_id)).first();
+      if (ord) {
+        if (ord.rp_order_id && ord.rp_order_id !== roid) {
+          return json({ ok: false, error: 'Payment does not match this order' }, 400);
+        }
+        await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?")
+          .bind(rpid, String(b.order_id)).run();
+      }
     } catch (e) {}
   }
   return json({ ok: true });

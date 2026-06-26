@@ -5391,6 +5391,7 @@
           customer_phone: addr.phone || (currentUser && currentUser.phone) || '',
           customer_email: (currentUser && currentUser.email) || '',
           address: [addr.house, addr.area, addr.city, addr.state].filter(Boolean).join(', ') + (addr.pin ? ' - ' + addr.pin : ''),
+          coupon: appliedCoupon || '',
           payment_method: isOnline ? 'razorpay' : 'cod',
           payment_status: isOnline ? 'pending' : 'cod'
         })
@@ -5436,7 +5437,7 @@
       if (typeof Razorpay === 'undefined') { showToast('⚠️ Payment library not loaded — please refresh and retry.'); return resolve(false); }
       fetch('/api/payment/create-order', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ amount: amountRupees, receipt: orderId })
+        body: JSON.stringify({ order_id: orderId })
       }).then(function(r){ return r.json(); }).then(function(co){
         if (!co || !co.ok) { showToast('⚠️ ' + ((co && co.error) || 'Could not start payment')); return resolve(false); }
         var rzp = new Razorpay({

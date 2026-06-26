@@ -111,6 +111,7 @@ export async function ensureSchema(db) {
   // Column migrations for older tables (ignored if the column already exists).
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE users ADD COLUMN password_hash TEXT').run(); } catch (e) {}
+  try { await db.prepare('ALTER TABLE orders ADD COLUMN rp_order_id TEXT').run(); } catch (e) {}
 }
 
 // ---- Password hashing (PBKDF2-SHA256, salted) ----

@@ -17,7 +17,10 @@ export async function onRequestPost(context) {
   const shipping = parseInt(b.shipping, 10) || 0;
   const total = parseInt(b.total, 10) || (subtotal + shipping);
   const pm = String(b.payment_method || 'cod').slice(0, 20);
-  const ps = String(b.payment_status || (pm === 'cod' ? 'cod' : 'pending')).slice(0, 20);
+  // SECURITY: never let the client mark an order 'paid'. Only /api/payment/verify
+  // (after a verified Razorpay signature) may set payment_status='paid'.
+  let ps = String(b.payment_status || (pm === 'cod' ? 'cod' : 'pending')).slice(0, 20);
+  if (ps === 'paid') ps = (pm === 'cod' ? 'cod' : 'pending');
 
   await env.DB.prepare(
     `INSERT INTO orders

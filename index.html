@@ -3579,7 +3579,7 @@
     const profileBtn = document.getElementById('nav-profile-btn');
     if (nameEl) {
       if (currentUser) {
-        nameEl.innerHTML = currentUser.name.split(' ')[0] + ' &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i>';
+        nameEl.innerHTML = escHtml((currentUser.name || 'Account').split(' ')[0]) + ' &nbsp;<i class="fa-solid fa-chevron-down" style="font-size:9px"></i>';
         if (profileBtn) profileBtn.classList.add('user-logged');
       } else {
         nameEl.textContent = 'Login';
@@ -4344,7 +4344,7 @@
       const priceHtml = p.price ? `<span class="price-main">₹${p.price.toLocaleString()}</span>` : `<span class="price-request">Price on Request</span>`;
       const isWishlisted = wishlist.has(p.id);
       const imgs = (Array.isArray(p.images) && p.images.length) ? p.images : [p.img];
-      const slidesHtml = imgs.map(u => `<img class="pcard-slide" src="${u}" alt="${p.name}" loading="lazy">`).join('');
+      const slidesHtml = imgs.map(u => `<img class="pcard-slide" src="${escHtml(u)}" alt="${escHtml(p.name)}" loading="lazy">`).join('');
       const dotsHtml = imgs.length > 1 ? `<div class="pcard-dots">${imgs.map((_, i) => `<span class="pcard-dot${i === 0 ? ' on' : ''}"></span>`).join('')}</div>` : '';
       const arrowsHtml = imgs.length > 1 ? `<button class="pcard-arr pcard-prev" type="button" aria-label="Previous photo">‹</button><button class="pcard-arr pcard-next" type="button" aria-label="Next photo">›</button>` : '';
       const card = document.createElement('div');
@@ -4360,8 +4360,8 @@
           </button>
         </div>
         <div class="product-info">
-          <div class="product-category">${p.category}</div>
-          <div class="product-name">${p.name}</div>
+          <div class="product-category">${escHtml(p.category)}</div>
+          <div class="product-name">${escHtml(p.name)}</div>
           <div class="product-price">${priceHtml}</div>
           <button class="add-cart-btn" onclick="addToCart(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
         </div>`;
@@ -4471,9 +4471,9 @@
       const sub = item.price * item.qty;
       total += sub;
       return `<div class="cart-item">
-        <img src="${item.img}" alt="${item.name}">
+        <img src="${escHtml(item.img)}" alt="${escHtml(item.name)}">
         <div class="ci-info">
-          <div class="ci-name">${item.name}</div>
+          <div class="ci-name">${escHtml(item.name)}</div>
           <div class="ci-price">${item.price ? '₹'+item.price.toLocaleString() : 'Price on Request'}</div>
           <div class="ci-qty">
             <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
@@ -5333,10 +5333,10 @@
   function renderReview() {
     const addr = getAddressFromForm();
     document.getElementById('ck-review-addr').innerHTML = `
-      <strong>${addr.name} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${addr.type.toUpperCase()}</span></strong>
-      ${addr.house}, ${addr.area}<br>
-      ${addr.city}, ${addr.state} – ${addr.pin}<br>
-      <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${addr.phone}</span>
+      <strong>${escHtml(addr.name)} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${escHtml(addr.type.toUpperCase())}</span></strong>
+      ${escHtml(addr.house)}, ${escHtml(addr.area)}<br>
+      ${escHtml(addr.city)}, ${escHtml(addr.state)} – ${escHtml(addr.pin)}<br>
+      <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${escHtml(addr.phone)}</span>
       <button class="ck-change" onclick="showCheckoutStep(1)">Change Address</button>
     `;
     let subtotal = 0;
@@ -5520,7 +5520,7 @@
       return `<div class="order-row">
         <div class="order-top">
           <div>
-            <div class="order-id-text">${o.id}</div>
+            <div class="order-id-text">${escHtml(o.id)}</div>
             <div class="order-date">Placed on ${dateStr}</div>
           </div>
           <div class="order-status ${stClass[st] || 'placed'}">${stLabel[st] || '⏳ Order Placed'}</div>
@@ -5646,10 +5646,10 @@
     }
     el.innerHTML = list.map((a, i) => `
       <div class="saved-addr-card">
-        <strong>${a.name} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${(a.type||'HOME').toUpperCase()}</span></strong>
-        ${a.house}, ${a.area}<br>
-        ${a.city}, ${a.state} – ${a.pin}<br>
-        <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${a.phone}</span>
+        <strong>${escHtml(a.name)} <span style="background:var(--primary-soft);color:var(--primary);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;letter-spacing:0.04em">${escHtml((a.type||'HOME').toUpperCase())}</span></strong>
+        ${escHtml(a.house)}, ${escHtml(a.area)}<br>
+        ${escHtml(a.city)}, ${escHtml(a.state)} – ${escHtml(a.pin)}<br>
+        <span style="color:var(--muted);font-size:12px"><i class="fa-solid fa-phone" style="font-size:10px;margin-right:4px"></i>${escHtml(a.phone)}</span>
         <div class="saved-addr-actions">
           <button onclick="editAddress(${i})"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
           <button class="danger" onclick="deleteAddress(${i})"><i class="fa-regular fa-trash-can"></i> Delete</button>
@@ -6447,7 +6447,24 @@
     return 0;                          // placed
   }
   window.viewOrderDetail=function(orderId){
-    var o=loadOrders().find(x=>x.id===orderId); if(!o) return;
+    var o=loadOrders().find(x=>x.id===orderId);
+    if(!o){
+      // Order isn't in local storage — it came from the server list (/api/orders/mine).
+      // Render a basic detail panel so "View Details" works instead of silently doing nothing.
+      var so=(typeof _myOrders!=='undefined'?_myOrders:[]).find(x=>x.id===orderId);
+      if(so){
+        var its=[]; try{its=JSON.parse(so.items||'[]')}catch(e){}
+        var lines=its.map(i=>'• '+escHtml(i.name)+' <span style="color:var(--muted)">×'+i.qty+'</span> — '+money((i.price||0)*(i.qty||1))).join('<br>');
+        var paid=(so.payment_status==='paid')?' <span style="color:var(--accent-success,#2e7d32);font-weight:700">(PAID)</span>':'';
+        var body='<div style="font-size:13px;line-height:1.7;color:var(--text-2)">'
+          +'<div style="margin-bottom:10px"><strong style="color:var(--ink)">Status:</strong> '+escHtml(so.status||'new')+'</div>'
+          +'<div style="margin-bottom:10px">'+lines+'</div>'
+          +'<div style="display:flex;justify-content:space-between;font-weight:800;font-size:16px;color:var(--ink);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><span>Total ('+escHtml(String(so.payment_method||'').toUpperCase())+paid+')</span><span>'+money(so.total||0)+'</span></div>'
+          +'<button class="trk-wa" style="margin-top:14px" onclick="window.open(\'https://wa.me/919846923350\',\'_blank\')"><i class="fa-brands fa-whatsapp"></i> Need Help?</button></div>';
+        openX('<i class="fa-solid fa-receipt"></i> Order '+escHtml(so.id), body);
+      } else { showToast('Order details not available.'); }
+      return;
+    }
     var a=o.address; var idx=orderStatusIndex(o);
     var placed=new Date(o.date);
     var steps=[
@@ -6462,8 +6479,8 @@
       var icon=i<idx?'<i class="fa-solid fa-check"></i>':(i===idx?'<i class="fa-solid '+s.ic+'"></i>':(i+1));
       return '<div class="trk-step '+cls+'">'+(i<steps.length-1?'<div class="trk-line"></div>':'')+'<div class="trk-dot">'+icon+'</div><div class="trk-info"><div class="t1">'+s.t+'</div><div class="t2">'+s.d+'</div></div></div>';
     }).join('')+'</div>';
-    var items='<div class="trk-items">'+o.items.map(i=>'<div class="trk-irow"><img src="'+i.img+'" alt="'+i.name+'"><div class="n">'+i.name+' <span style="color:var(--muted)">×'+i.qty+'</span></div><div class="p">'+money(i.price*i.qty)+'</div></div>').join('')+'</div>';
-    var addr='<div style="background:var(--cream-warm);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;font-size:13px;color:var(--text-2);line-height:1.6;margin-top:6px"><strong style="color:var(--ink)"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:6px"></i>Delivering to</strong><br>'+a.name+', '+a.phone+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'</div>';
+    var items='<div class="trk-items">'+o.items.map(i=>'<div class="trk-irow"><img src="'+escHtml(i.img)+'" alt="'+escHtml(i.name)+'"><div class="n">'+escHtml(i.name)+' <span style="color:var(--muted)">×'+i.qty+'</span></div><div class="p">'+money(i.price*i.qty)+'</div></div>').join('')+'</div>';
+    var addr='<div style="background:var(--cream-warm);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;font-size:13px;color:var(--text-2);line-height:1.6;margin-top:6px"><strong style="color:var(--ink)"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:6px"></i>Delivering to</strong><br>'+escHtml(a.name)+', '+escHtml(a.phone)+'<br>'+escHtml(a.house)+', '+escHtml(a.area)+'<br>'+escHtml(a.city)+', '+escHtml(a.state)+' – '+escHtml(a.pin)+'</div>';
     var totals='<div style="display:flex;justify-content:space-between;font-weight:800;font-size:16px;color:var(--ink);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><span>Total ('+o.payment.toUpperCase()+')</span><span>'+money(o.total)+'</span></div>';
     var actions='<div class="trk-actions"><button class="trk-inv" onclick="downloadInvoice(\''+o.id+'\')"><i class="fa-solid fa-file-invoice"></i> Download Invoice</button><button class="trk-wa" onclick="window.open(\'https://wa.me/919846923350\',\'_blank\')"><i class="fa-brands fa-whatsapp"></i> Need Help?</button></div>';
     openX('<i class="fa-solid fa-truck-fast"></i> Track Order '+o.id, timeline+addr+items+totals+actions);
@@ -6471,10 +6488,10 @@
   window.downloadInvoice=function(orderId){
     var o=loadOrders().find(x=>x.id===orderId); if(!o) return;
     var a=o.address; var d=new Date(o.date).toLocaleString('en-IN');
-    var rows=o.items.map((i,n)=>'<tr><td>'+(n+1)+'</td><td>'+i.name+'</td><td style="text-align:center">'+i.qty+'</td><td style="text-align:right">'+money(i.price)+'</td><td style="text-align:right">'+money(i.price*i.qty)+'</td></tr>').join('');
+    var rows=o.items.map((i,n)=>'<tr><td>'+(n+1)+'</td><td>'+escHtml(i.name)+'</td><td style="text-align:center">'+i.qty+'</td><td style="text-align:right">'+money(i.price)+'</td><td style="text-align:right">'+money(i.price*i.qty)+'</td></tr>').join('');
     var html='<!doctype html><html><head><meta charset="utf-8"><title>Invoice '+o.id+'</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#222;max-width:720px;margin:24px auto;padding:0 20px}h1{font-style:italic;color:#7E2D49;margin:0}.sub{letter-spacing:4px;font-size:11px;color:#a07a4a;text-transform:uppercase}.row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;margin:18px 0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #e0d8c8;padding:9px 10px;font-size:13px}th{background:#f5ede0;text-align:left}.tot{text-align:right;font-weight:bold;font-size:15px;margin-top:14px}.muted{color:#777;font-size:12px}.box{border:1px solid #e0d8c8;border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.6}@media print{button{display:none}}</style></head><body>'
       +'<div class="row"><div><h1>Laxuage</h1><div class="sub">Made of Her</div></div><div style="text-align:right"><strong>TAX INVOICE</strong><br><span class="muted">'+o.id+'<br>'+d+'</span></div></div>'
-      +'<div class="row"><div class="box"><strong>Billed &amp; Shipped to</strong><br>'+a.name+'<br>'+a.house+', '+a.area+'<br>'+a.city+', '+a.state+' – '+a.pin+'<br>Phone: '+a.phone+'</div><div class="box"><strong>Seller</strong><br>Laxuage<br>Kerala, India<br>support@laxuage.com<br>+91 98469 23350</div></div>'
+      +'<div class="row"><div class="box"><strong>Billed &amp; Shipped to</strong><br>'+escHtml(a.name)+'<br>'+escHtml(a.house)+', '+escHtml(a.area)+'<br>'+escHtml(a.city)+', '+escHtml(a.state)+' – '+escHtml(a.pin)+'<br>Phone: '+escHtml(a.phone)+'</div><div class="box"><strong>Seller</strong><br>Laxuage<br>Kerala, India<br>support@laxuage.com<br>+91 98469 23350</div></div>'
       +'<table><thead><tr><th>#</th><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="tot">Subtotal: '+money(o.subtotal)+'</div>'
       +(o.discount>0?'<div class="tot">Discount'+(o.coupon?' ('+o.coupon+')':'')+': −'+money(o.discount)+'</div>':'')

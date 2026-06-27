@@ -296,7 +296,10 @@
         </div>
         <div class="field"><label>Stock (blank = unlimited)</label><input type="number" id="p-stock" min="0" placeholder="∞"></div>
       </div>
-      <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
+      <div class="grid2">
+        <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
+        <div class="field"><label>Colour</label><input type="text" id="p-color" placeholder="Beige, Orange, Black…"></div>
+      </div>
       <div class="grid2">
         <div class="field"><label>Weight (grams)</label><input type="number" id="p-weight" min="0" placeholder="650"></div>
         <div class="field"><label>Size / Dimensions</label><input type="text" id="p-size" placeholder="28 × 18 × 10 cm"></div>
@@ -490,7 +493,7 @@ function openProduct(id){
   val('p-id', p?p.id:''); val('p-name', p?p.name:''); val('p-price', p?p.price:'');
   val('p-mrp', p?p.mrp:''); val('p-category', p?(p.category||'handbag'):'handbag');
   val('p-stock', (p&&p.stock!=null)?p.stock:'');
-  val('p-material', p?p.material:''); val('p-weight', (p&&p.weight_g)?p.weight_g:'');
+  val('p-material', p?p.material:''); val('p-color', p?(p.color||''):''); val('p-weight', (p&&p.weight_g)?p.weight_g:'');
   val('p-size', p?p.size:''); val('p-badge', p?(p.badge||''):'');
   val('p-active', (p&&p.active===0)?'0':'1'); val('p-desc', p?p.description:'');
   curPhotos = (p&&Array.isArray(p.images))?p.images.slice():[];
@@ -554,7 +557,7 @@ async function saveProduct(){
   const body={
     id: gv('p-id') || undefined, name:name, price: gv('p-price'), mrp: gv('p-mrp'),
     category: gv('p-category'), stock: gv('p-stock'), colors: curColors.filter(c=>c.name||c.image),
-    material: gv('p-material'), weight_g: gv('p-weight'), size: gv('p-size'),
+    material: gv('p-material'), color: gv('p-color'), weight_g: gv('p-weight'), size: gv('p-size'),
     badge: gv('p-badge'), active: parseInt(gv('p-active'),10),
     description: gv('p-desc'), images: curPhotos
   };

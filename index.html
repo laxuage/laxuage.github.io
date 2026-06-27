@@ -936,6 +936,9 @@
     .pcard-btns .add-cart-btn:hover { background: var(--primary-soft); }
 
     /* ============= PRODUCT MODAL ============= */
+    /* When a modal/sidebar is open, lock the page so touch-scrolling stays
+       inside the panel (fixes "sometimes can't scroll" / scroll-chaining). */
+    body.scroll-locked { overflow: hidden; }
     .modal-overlay {
       display: none;
       position: fixed;
@@ -6526,6 +6529,46 @@
   if(grid){ try { new MutationObserver(scan).observe(grid, { childList: true }); } catch(e){} }
   // SAFETY NET: never leave content hidden — force-reveal everything after 2.6s.
   setTimeout(function(){ root.classList.add('rv-done'); }, 2600);
+})();
+
+// Lock page scroll while any modal/sidebar is open, so touch-scrolling stays
+// inside the panel instead of leaking to the page behind ("can't scroll" fix).
+// Self-healing: driven by the actual .open state, so no close path can leave it stuck.
+(function(){
+  var SEL = '.modal-overlay.open, .cart-overlay.open, .cart-sidebar.open, .ws-overlay.open, .ws-sidebar.open, .checkout-overlay.open, #login-overlay.open, #auth-overlay.open, .xmodal-overlay';
+  var locked = false;
+  function isVisible(el){
+    if (!el) return false;
+    var cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return false;
+    var r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return false;
+    // Must actually intersect the viewport — a sidebar slid off-screen via
+    // transform still has size, but it isn't really "open".
+    return r.right > 1 && r.bottom > 1 && r.left < window.innerWidth - 1 && r.top < window.innerHeight - 1;
+  }
+  function anyOpen(){
+    // Only count panels that are actually visible — a stray .open class on a
+    // hidden element (e.g. #login-overlay) must not keep the page locked.
+    var els = document.querySelectorAll(SEL);
+    for (var i = 0; i < els.length; i++){ if (isVisible(els[i])) return true; }
+    return false;
+  }
+  function sync(){
+    var open = anyOpen();
+    if (open === locked) return;
+    locked = open;
+    if (open){
+      var sw = window.innerWidth - document.documentElement.clientWidth;
+      if (sw > 0) document.body.style.paddingRight = sw + 'px'; // avoid desktop layout shift
+      document.body.classList.add('scroll-locked');
+    } else {
+      document.body.classList.remove('scroll-locked');
+      document.body.style.paddingRight = '';
+    }
+  }
+  try { new MutationObserver(sync).observe(document.documentElement, { subtree:true, attributes:true, attributeFilter:['class','style'] }); } catch(e){}
+  sync();
 })();
 </script>
 

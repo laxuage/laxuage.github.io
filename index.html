@@ -2506,6 +2506,8 @@
       position: absolute; left: 0; width: 100%; margin: 0; height: 26px;
       background: none; pointer-events: none; -webkit-appearance: none; appearance: none;
     }
+    .price-dual #price-min { z-index: 4; }
+    .price-dual #price-max { z-index: 5; }
     .price-dual input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none; pointer-events: auto;
       width: 16px; height: 16px; border-radius: 50%; background: var(--primary);
@@ -3024,7 +3026,7 @@
       <span class="price-filter-label"><i class="fa-solid fa-tag"></i> Price</span>
       <div class="price-dual" id="price-dual">
         <div class="pd-track"></div>
-        <div class="pd-fill" id="pd-fill"></div>
+        <div class="pd-fill" id="pd-fill" style="left:0;right:0"></div>
         <input type="range" min="500" max="3000" step="100" value="500" id="price-min" oninput="updatePriceRange(this)" aria-label="Minimum price">
         <input type="range" min="500" max="3000" step="100" value="3000" id="price-max" oninput="updatePriceRange(this)" aria-label="Maximum price">
       </div>
@@ -5645,12 +5647,17 @@
     const lo = document.getElementById('price-min');
     const hi = document.getElementById('price-max');
     if (!lo || !hi) return;
+    const moved = (el && el.id === 'price-max') ? 'max' : (el && el.id === 'price-min') ? 'min' : null;
     let a = parseInt(lo.value, 10), b = parseInt(hi.value, 10);
-    // keep a gap so the two handles never cross
-    if (a > b - PRICE_GAP) {
-      if (el && el.id === 'price-min') { a = b - PRICE_GAP; lo.value = a; }
-      else { b = a + PRICE_GAP; hi.value = b; }
+    // 1) hard-bound BOTH handles inside [floor, ceil] — they can never exceed it
+    a = Math.min(Math.max(a, PRICE_FLOOR), PRICE_CEIL);
+    b = Math.min(Math.max(b, PRICE_FLOOR), PRICE_CEIL);
+    // 2) keep a gap; the handle the user dragged stops against the other one
+    if (b - a < PRICE_GAP) {
+      if (moved === 'max') b = Math.min(PRICE_CEIL, a + PRICE_GAP);
+      else                 a = Math.max(PRICE_FLOOR, b - PRICE_GAP);
     }
+    lo.value = a; hi.value = b;
     minPrice = a; maxPrice = b;
     document.getElementById('price-range-val').textContent = '₹' + a.toLocaleString() + ' – ₹' + b.toLocaleString();
     const fill = document.getElementById('pd-fill');
@@ -5659,6 +5666,9 @@
       fill.style.left = ((a - PRICE_FLOOR) / span * 100) + '%';
       fill.style.right = ((PRICE_CEIL - b) / span * 100) + '%';
     }
+    // keep the min handle grabbable when it sits on the right half (so the
+    // two thumbs don't cover each other and get stuck)
+    lo.style.zIndex = (a > (PRICE_FLOOR + PRICE_CEIL) / 2) ? 6 : 4;
     applyFiltersAndSort();
   }
 

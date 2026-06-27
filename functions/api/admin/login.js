@@ -1,7 +1,7 @@
 // POST /api/admin/login  { password }  -> sets HttpOnly admin session cookie
 import { json, genToken, getCookie, ensureSchema } from '../_shared.js';
 
-const SESSION_TTL = 7 * 24 * 60 * 60; // 7 days
+const SESSION_TTL = 24 * 60 * 60; // 1 day (shorter window if a token ever leaks)
 
 export async function onRequestPost(context) {
   const { request, env } = context;

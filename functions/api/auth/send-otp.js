@@ -62,9 +62,11 @@ async function otpCap(env, key, max) {
 }
 
 function genOTP() {
+  // Rejection sampling removes the small modulo bias of a raw % 900000.
   const a = new Uint32Array(1);
-  crypto.getRandomValues(a);
-  return String(100000 + (a[0] % 900000));
+  let v;
+  do { crypto.getRandomValues(a); v = a[0]; } while (v >= 4294800000);
+  return String(100000 + (v % 900000));
 }
 
 function isValidEmail(e) {

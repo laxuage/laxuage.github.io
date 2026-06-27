@@ -5516,10 +5516,17 @@
       if (!subs.includes(email)) subs.push(email);
       localStorage.setItem('laxuage_newsletter', JSON.stringify(subs));
     } catch(e) {}
+    // Actually save the lead server-side (D1 + Brevo) so the shop keeps it.
+    try {
+      fetch('/api/subscribe', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).catch(function(){});
+    } catch(e) {}
     document.getElementById('newsletter-email').value = '';
     msg.className = 'newsletter-msg show';
     msg.style.color = 'var(--gold)';
-    msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> Welcome aboard! Check your email for a welcome offer.';
+    msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> You\'re on the list! We\'ll be in touch with offers soon.';
     setTimeout(() => msg.classList.remove('show'), 5000);
   }
 

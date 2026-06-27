@@ -33,6 +33,20 @@ export function clientIp(request) {
   return request.headers.get('CF-Connecting-IP') || 'unknown';
 }
 
+// CSRF defence-in-depth: returns false only when the request clearly comes from
+// a DIFFERENT origin (Origin/Referer host mismatch). Same-origin requests and
+// clients that send neither header pass, so it never breaks legitimate use.
+export function sameOrigin(request) {
+  try {
+    const host = request.headers.get('Host');
+    const origin = request.headers.get('Origin');
+    if (origin) return new URL(origin).host === host;
+    const ref = request.headers.get('Referer');
+    if (ref) return new URL(ref).host === host;
+    return true; // neither header present — don't hard-block
+  } catch (e) { return false; }
+}
+
 // Neutralise stored text so it can never become HTML/script in any render path,
 // and strip control characters. Used for user-submitted review/name fields.
 export function sanitizeText(s, max) {
@@ -136,6 +150,11 @@ export async function ensureSchema(db) {
       value TEXT,
       updated_at INTEGER
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS subscribers (
+      email TEXT PRIMARY KEY,
+      created_at INTEGER,
+      source TEXT
+    )`),
   ]);
   // Column migrations for older tables (ignored if the column already exists).
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
@@ -172,8 +191,11 @@ export async function verifyPassword(password, stored) {
 
 // ---- OTP email (Brevo) — used by signup email verification ----
 export function genOTP() {
-  const a = new Uint32Array(1); crypto.getRandomValues(a);
-  return String(100000 + (a[0] % 900000));
+  // Rejection sampling removes the small modulo bias of a raw % 900000.
+  const a = new Uint32Array(1);
+  let v;
+  do { crypto.getRandomValues(a); v = a[0]; } while (v >= 4294800000); // floor(2^32/900000)*900000
+  return String(100000 + (v % 900000));
 }
 
 export async function sendOtpEmail(apiKey, to, code) {

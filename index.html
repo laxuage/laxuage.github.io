@@ -779,8 +779,9 @@
     }
     .product-img-wrap img {
       width: 100%;
-      height: 260px;
-      object-fit: contain;   /* show the WHOLE bag — never crop edges/handles */
+      aspect-ratio: 1 / 1;   /* square box — photos are squared, so they fill it uniformly with no crop */
+      height: auto;
+      object-fit: cover;
       transition: transform 0.5s ease;
       display: block;
     }
@@ -6508,9 +6509,9 @@
   body.dark .hero-tag { background: #241620; }   /* darker pill so the pink label clears AA contrast */
 
   /* ===== Product-card image slider (Gucci-style) ===== */
-  .pcard-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; height:260px; }
+  .pcard-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; aspect-ratio:1/1; }
   .pcard-track::-webkit-scrollbar{ display:none; }
-  .pcard-slide{ flex:0 0 100%; width:100%; height:260px; object-fit:contain; scroll-snap-align:center; display:block; }
+  .pcard-slide{ flex:0 0 100%; width:100%; aspect-ratio:1/1; height:100%; object-fit:cover; scroll-snap-align:center; display:block; }
   /* keep the original subtle hover-zoom ONLY for single-image cards */
   .product-card:hover .product-img-wrap.single .pcard-slide{ transform:scale(1.05); }
   .product-card:hover .product-img-wrap:not(.single) .pcard-slide{ transform:none; }

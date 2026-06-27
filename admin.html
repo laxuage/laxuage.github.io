@@ -510,12 +510,33 @@ function renderPhotos(){
   }).join('');
 }
 function removePhoto(i){ curPhotos.splice(i,1); renderPhotos(); }
+// Pad any product photo onto a SQUARE canvas (in its own corner colour) so every
+// product image is uniform on the site — full bag shown, never cropped.
+function squareImage(file){
+  return new Promise(function(resolve){
+    if(!file || !/^image\//.test(file.type) || /svg/i.test(file.type)){ resolve(file); return; }
+    const img=new Image();
+    img.onload=function(){
+      const size=Math.max(img.width,img.height);
+      const cv=document.createElement('canvas'); cv.width=size; cv.height=size;
+      const ctx=cv.getContext('2d');
+      let bg='#ffffff';
+      try{ const t=document.createElement('canvas'); t.width=img.width; t.height=img.height; const tc=t.getContext('2d'); tc.drawImage(img,0,0); const p=tc.getImageData(3,3,1,1).data; bg='rgb('+p[0]+','+p[1]+','+p[2]+')'; }catch(e){}
+      ctx.fillStyle=bg; ctx.fillRect(0,0,size,size);
+      ctx.drawImage(img,(size-img.width)/2,(size-img.height)/2);
+      cv.toBlob(function(b){ resolve(b ? new File([b],(file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'}) : file); },'image/jpeg',0.85);
+    };
+    img.onerror=function(){ resolve(file); };
+    img.src=URL.createObjectURL(file);
+  });
+}
 async function uploadPhotos(input){
   const files = Array.from(input.files||[]);
   if(!files.length) return;
   const txt=document.getElementById('upload-text'); const old=txt.textContent;
-  for(const f of files){
+  for(let f of files){
     txt.textContent='Uploading…';
+    f = await squareImage(f);
     const fd=new FormData(); fd.append('file',f);
     let d={};
     try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
@@ -542,7 +563,8 @@ function addColorRow(){ if(curColors.length>=8){ toast('Max 8 colours'); return;
 function removeColorRow(i){ curColors.splice(i,1); renderColorRows(); }
 function setColorName(i,v){ if(curColors[i]) curColors[i].name=v; }
 async function uploadColorPhoto(input,i){
-  const f=(input.files||[])[0]; if(!f||!curColors[i]) return;
+  let f=(input.files||[])[0]; if(!f||!curColors[i]) return;
+  f = await squareImage(f);
   const fd=new FormData(); fd.append('file',f); toast('Uploading…');
   let d={}; try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
   if(d.ok&&d.url){ curColors[i].image=d.url; renderColorRows(); toast('Photo added ✓'); }

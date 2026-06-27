@@ -2031,6 +2031,17 @@
     }
     .ck-grid .full { grid-column: 1 / -1; }
     @media (max-width: 540px) { .ck-grid { grid-template-columns: 1fr; } }
+    /* Saved-address picker shown at the top of checkout (tap a card to use it) */
+    .ck-saved-addrs { margin-bottom: 16px; }
+    .ck-saved-label { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .ck-saved-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .ck-saved-row::-webkit-scrollbar { display: none; }
+    .ck-saved-card { flex: 0 0 auto; min-width: 190px; max-width: 250px; text-align: left; background: var(--paper); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 10px 13px; cursor: pointer; transition: border-color .15s, box-shadow .15s; font-family: var(--sans); }
+    .ck-saved-card:hover { border-color: var(--primary); }
+    .ck-saved-card.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+    .ck-saved-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); margin-bottom: 4px; }
+    .ck-saved-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .ck-saved-line { font-size: 11.5px; color: var(--text-2); line-height: 1.45; }
 
     .ck-input-group { display: flex; flex-direction: column; gap: 6px; }
     .ck-input-group label {
@@ -3357,6 +3368,7 @@
       <!-- Step 1: Address -->
       <div class="ck-page active" id="ck-page-1">
         <div class="ck-section-title"><i class="fa-solid fa-location-dot"></i> Shipping Address</div>
+        <div class="ck-saved-addrs" id="ck-saved-addrs" style="display:none"></div>
         <div class="ck-grid">
           <div class="ck-input-group">
             <label>Full Name *</label>
@@ -5050,7 +5062,40 @@
       document.getElementById('ck-pin').value = pre.pin || '';
       document.getElementById('ck-addr-type').value = pre.type || 'Home';
     }
+    renderSavedAddresses();
     document.getElementById('checkout-overlay').classList.add('open');
+  }
+
+  // Show ALL saved addresses as tappable cards at the top of checkout.
+  function renderSavedAddresses() {
+    const box = document.getElementById('ck-saved-addrs');
+    if (!box) return;
+    let list = loadAddresses();
+    if (!list.length) { try { const g = JSON.parse(localStorage.getItem('laxuage_last_addr') || 'null'); if (g) list = [g]; } catch(e) {} }
+    window._ckAddrList = list;
+    const curHouse = (document.getElementById('ck-house').value || '').trim();
+    if (list.length <= 1) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = 'block';
+    box.innerHTML = '<div class="ck-saved-label"><i class="fa-solid fa-bookmark"></i> Saved addresses — tap to use</div><div class="ck-saved-row">' +
+      list.map((a, i) => '<button type="button" class="ck-saved-card' + ((a.house || '').trim() === curHouse ? ' active' : '') + '" onclick="selectSavedAddress(' + i + ')">'
+        + '<div class="ck-saved-type">' + escHtml(a.type || 'Home') + '</div>'
+        + '<div class="ck-saved-name">' + escHtml(a.name || '') + '</div>'
+        + '<div class="ck-saved-line">' + escHtml([a.house, a.area, a.city].filter(Boolean).join(', ')) + '</div>'
+        + '<div class="ck-saved-line">' + escHtml((a.state || '') + ' ' + (a.pin || '')) + ' · ' + escHtml(a.phone || '') + '</div>'
+        + '</button>').join('') + '</div>';
+  }
+  function selectSavedAddress(i) {
+    const a = (window._ckAddrList || [])[i]; if (!a) return;
+    document.getElementById('ck-name').value = a.name || '';
+    document.getElementById('ck-phone').value = a.phone || '';
+    document.getElementById('ck-house').value = a.house || '';
+    document.getElementById('ck-area').value = a.area || '';
+    document.getElementById('ck-city').value = a.city || '';
+    document.getElementById('ck-state').value = a.state || '';
+    document.getElementById('ck-pin').value = a.pin || '';
+    document.getElementById('ck-addr-type').value = a.type || 'Home';
+    document.querySelectorAll('#ck-saved-addrs .ck-saved-card').forEach((c, idx) => c.classList.toggle('active', idx === i));
+    document.querySelectorAll('#ck-page-1 .ck-input-group.has-err').forEach(g => g.classList.remove('has-err'));
   }
 
   function closeCheckout() {

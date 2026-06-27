@@ -25,13 +25,28 @@ export async function onRequestPost(context) {
     ).bind(email, Date.now(), 'newsletter').run();
   } catch (e) {}
 
-  // Best-effort: add to Brevo contacts so it's usable in email campaigns.
+  // Best-effort: add to Brevo contacts AND a Brevo list so the lead is usable in
+  // email campaigns (a list-less contact can't be selected as a campaign recipient).
   if (env.BREVO_API_KEY) {
     try {
+      const headers = { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', 'accept': 'application/json' };
+      // Which list to drop subscribers into: BREVO_LIST_ID if configured,
+      // otherwise auto-pick the account's first contact list.
+      let listIds = [];
+      if (env.BREVO_LIST_ID) {
+        listIds = [Number(env.BREVO_LIST_ID)];
+      } else {
+        try {
+          const lr = await fetch('https://api.brevo.com/v3/contacts/lists?limit=1&offset=0&sort=asc', { headers });
+          const lj = await lr.json();
+          if (lj && Array.isArray(lj.lists) && lj.lists[0]) listIds = [lj.lists[0].id];
+        } catch (e) {}
+      }
       await fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
-        headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', 'accept': 'application/json' },
-        body: JSON.stringify({ email, updateEnabled: true }),
+        headers,
+        // updateEnabled:true so existing list-less contacts get added to the list too.
+        body: JSON.stringify(listIds.length ? { email, updateEnabled: true, listIds } : { email, updateEnabled: true }),
       });
     } catch (e) {}
   }

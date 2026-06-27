@@ -909,6 +909,31 @@
     }
     .add-cart-btn:hover { background: var(--primary-dark); }
     .add-cart-btn i { font-size: 13px; }
+    /* Product-card action buttons: Buy Now (primary) + Add to Cart (secondary) */
+    .pcard-btns { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+    .card-buynow-btn {
+      width: 100%;
+      background: var(--primary);
+      color: var(--paper);
+      border: none;
+      padding: 11px 0;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-family: var(--sans);
+    }
+    .card-buynow-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .card-buynow-btn i { font-size: 13px; }
+    /* When paired with Buy Now, Add to Cart becomes the secondary (outline) action */
+    .pcard-btns .add-cart-btn { background: var(--paper); color: var(--primary); border: 1.5px solid var(--primary); }
+    .pcard-btns .add-cart-btn:hover { background: var(--primary-soft); }
 
     /* ============= PRODUCT MODAL ============= */
     .modal-overlay {
@@ -4127,7 +4152,10 @@
           <div class="product-category">${escHtml(p.category)}</div>
           <div class="product-name">${escHtml(p.name)}</div>
           <div class="product-price">${priceHtml}</div>
-          <button class="add-cart-btn" onclick="addToCart(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+          <div class="pcard-btns">
+            ${p.price ? `<button class="card-buynow-btn" onclick="event.stopPropagation(); buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Buy Now</button>` : ''}
+            <button class="add-cart-btn" onclick="event.stopPropagation(); addToCart(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+          </div>
         </div>`;
       grid.appendChild(card);
     });

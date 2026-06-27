@@ -517,13 +517,27 @@ function squareImage(file){
     if(!file || !/^image\//.test(file.type) || /svg/i.test(file.type)){ resolve(file); return; }
     const img=new Image();
     img.onload=function(){
-      const size=Math.max(img.width,img.height);
-      const cv=document.createElement('canvas'); cv.width=size; cv.height=size;
-      const ctx=cv.getContext('2d');
-      let bg='#ffffff';
-      try{ const t=document.createElement('canvas'); t.width=img.width; t.height=img.height; const tc=t.getContext('2d'); tc.drawImage(img,0,0); const p=tc.getImageData(3,3,1,1).data; bg='rgb('+p[0]+','+p[1]+','+p[2]+')'; }catch(e){}
-      ctx.fillStyle=bg; ctx.fillRect(0,0,size,size);
-      ctx.drawImage(img,(size-img.width)/2,(size-img.height)/2);
+      const W=img.width, H=img.height;
+      const t=document.createElement('canvas'); t.width=W; t.height=H;
+      const tc=t.getContext('2d'); tc.drawImage(img,0,0);
+      let bg=[255,255,255], data=null;
+      try{ bg=Array.from(tc.getImageData(2,2,1,1).data).slice(0,3); data=tc.getImageData(0,0,W,H).data; }catch(e){}
+      var x0=0,y0=0,x1=W-1,y1=H-1;
+      if(data){
+        var th=30, f=false;
+        var diff=function(i){ return Math.abs(data[i]-bg[0])+Math.abs(data[i+1]-bg[1])+Math.abs(data[i+2]-bg[2])>th; };
+        for(y0=0;y0<H;y0++){ for(var x=0;x<W;x++){ if(diff((y0*W+x)*4)){f=true;break;} } if(f)break; }
+        f=false; for(y1=H-1;y1>y0;y1--){ for(var x=0;x<W;x++){ if(diff((y1*W+x)*4)){f=true;break;} } if(f)break; }
+        f=false; for(x0=0;x0<W;x0++){ for(var y=y0;y<=y1;y++){ if(diff((y*W+x0)*4)){f=true;break;} } if(f)break; }
+        f=false; for(x1=W-1;x1>x0;x1--){ for(var y=y0;y<=y1;y++){ if(diff((y*W+x1)*4)){f=true;break;} } if(f)break; }
+      }
+      var cw=x1-x0+1, ch=y1-y0+1;
+      if(cw<20||ch<20){ x0=0;y0=0;cw=W;ch=H; }
+      var margin=Math.round(Math.max(cw,ch)*0.06), size=Math.max(cw,ch)+margin*2;
+      var cv=document.createElement('canvas'); cv.width=size; cv.height=size;
+      var ctx=cv.getContext('2d');
+      ctx.fillStyle='rgb('+bg[0]+','+bg[1]+','+bg[2]+')'; ctx.fillRect(0,0,size,size);
+      ctx.drawImage(img, x0,y0,cw,ch, (size-cw)/2,(size-ch)/2, cw,ch);
       cv.toBlob(function(b){ resolve(b ? new File([b],(file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'}) : file); },'image/jpeg',0.85);
     };
     img.onerror=function(){ resolve(file); };

@@ -3,12 +3,16 @@
 // in D1 (authoritative) — never from the client — and the Razorpay order id is
 // bound to our order so /api/payment/verify can confirm the amount paid.
 // Needs env secrets: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET.
-import { json, ensureSchema } from '../_shared.js';
+import { json, ensureSchema, rateLimit, clientIp } from '../_shared.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
     return json({ ok: false, error: 'Online payments are not configured yet.' }, 500);
+  }
+  // Abuse guard: cap payment-order creation per IP (protects the Razorpay key).
+  if (!(await rateLimit(env, 'pay:' + clientIp(request), 20, 600))) {
+    return json({ ok: false, error: 'Too many requests. Please wait a moment and try again.' }, 429);
   }
   await ensureSchema(env.DB);
   let b;

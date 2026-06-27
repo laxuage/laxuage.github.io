@@ -21,6 +21,13 @@ export async function onRequestPost(context) {
   }
   if (!isValidEmail(email)) return json({ ok: false, error: 'Enter a valid email address.' }, 400);
 
+  // Cap: max 5 codes per email, and 10 per IP, in any 20-minute window
+  // (stops attackers from email-bombing a victim or burning the email quota).
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!(await otpCap(env, 'otpc:' + email, 5)) || !(await otpCap(env, 'otpip:' + ip, 10))) {
+    return json({ ok: false, error: 'Too many codes requested. Please try again in about 20 minutes.' }, 429);
+  }
+
   const key = 'otp:' + email;
 
   // Resend cooldown
@@ -42,6 +49,16 @@ export async function onRequestPost(context) {
   if (!sent) return json({ ok: false, error: 'Could not send the email right now. Please try again.' }, 502);
 
   return json({ ok: true });
+}
+
+// Rolling per-key counter capped at `max` over a 20-minute window. Fails open.
+async function otpCap(env, key, max) {
+  try {
+    const n = parseInt((await env.OTP_KV.get(key)) || '0', 10);
+    if (n >= max) return false;
+    await env.OTP_KV.put(key, String(n + 1), { expirationTtl: 1200 });
+    return true;
+  } catch (e) { return true; }
 }
 
 function genOTP() {

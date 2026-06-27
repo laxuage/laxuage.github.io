@@ -1,7 +1,7 @@
 // POST /api/auth/signup  { email, password, name }
 // Validates, hashes the password, stores a pending signup, emails a verify code.
 // The account is only created after /api/auth/verify-signup confirms the code.
-import { json, ensureSchema, genOTP, sendOtpEmail, hashPassword } from '../_shared.js';
+import { json, ensureSchema, genOTP, sendOtpEmail, hashPassword, rateLimit, clientIp } from '../_shared.js';
 
 const TTL = 600;                  // pending signup valid 10 min
 const RESEND_COOLDOWN_MS = 45000; // 45s between sends
@@ -19,6 +19,11 @@ export async function onRequestPost(context) {
   const name = String(b.name || '').trim().slice(0, 60);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ ok: false, error: 'Enter a valid email address.' }, 400);
   if (password.length < 6) return json({ ok: false, error: 'Password must be at least 6 characters.' }, 400);
+
+  // Cap: max 5 signup codes per email, 10 per IP, per 20-minute window.
+  if (!(await rateLimit(env, 'otpc:' + email, 5, 1200)) || !(await rateLimit(env, 'otpip:' + clientIp(request), 10, 1200))) {
+    return json({ ok: false, error: 'Too many codes requested. Please try again in about 20 minutes.' }, 429);
+  }
 
   // Already registered (with a password)? -> tell them to sign in.
   const existing = await env.DB.prepare('SELECT id, password_hash FROM users WHERE email=?').bind(email).first();

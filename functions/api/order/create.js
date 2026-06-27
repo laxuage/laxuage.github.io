@@ -4,7 +4,7 @@
 // SECURITY: prices, subtotal, total and discount are ALWAYS recomputed
 // server-side from the products catalogue. The client cannot tamper with
 // what it pays, and can never mark an order 'paid' (only payment/verify can).
-import { json, ensureSchema } from '../_shared.js';
+import { json, ensureSchema, rateLimit, clientIp } from '../_shared.js';
 
 // Mirror of the storefront coupons (index.html). Kept in sync intentionally.
 const COUPONS = {
@@ -15,6 +15,10 @@ const COUPONS = {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  // Abuse guard: cap orders per IP (generous for real shoppers, blocks flooding).
+  if (!(await rateLimit(env, 'order:' + clientIp(request), 20, 600))) {
+    return json({ ok: false, error: 'Too many requests. Please wait a moment and try again.' }, 429);
+  }
   await ensureSchema(env.DB);
   let b;
   try { b = await request.json(); } catch (e) { return json({ ok: false, error: 'Bad request' }, 400); }

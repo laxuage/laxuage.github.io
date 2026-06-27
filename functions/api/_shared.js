@@ -14,6 +14,35 @@ export function genToken() {
   return Array.from(a).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Simple KV-backed rolling rate limiter. Returns true if the call is allowed,
+// false once `max` calls happen inside `windowSec`. Fails OPEN (returns true)
+// if KV is unavailable, so a KV hiccup never blocks real customers.
+export async function rateLimit(env, key, max, windowSec) {
+  if (!env || !env.OTP_KV) return true;
+  try {
+    const k = 'rl:' + key;
+    const n = parseInt((await env.OTP_KV.get(k)) || '0', 10);
+    if (n >= max) return false;
+    await env.OTP_KV.put(k, String(n + 1), { expirationTtl: windowSec });
+    return true;
+  } catch (e) { return true; }
+}
+
+// The caller's IP (Cloudflare-provided; not spoofable by the client).
+export function clientIp(request) {
+  return request.headers.get('CF-Connecting-IP') || 'unknown';
+}
+
+// Neutralise stored text so it can never become HTML/script in any render path,
+// and strip control characters. Used for user-submitted review/name fields.
+export function sanitizeText(s, max) {
+  return String(s || '')
+    .replace(/[\x00-\x1f\x7f]/g, ' ')
+    .replace(/[<>]/g, '')
+    .trim()
+    .slice(0, max || 800);
+}
+
 export function getCookie(request, name) {
   const c = request.headers.get('Cookie') || '';
   const m = c.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));

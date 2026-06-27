@@ -5031,18 +5031,22 @@
       if (currentUser.name && !document.getElementById('ck-name').value) document.getElementById('ck-name').value = currentUser.name;
       if (currentUser.phone && !document.getElementById('ck-phone').value) document.getElementById('ck-phone').value = currentUser.phone;
     }
-    // Prefill saved address if available
+    // Prefill saved address: per-user book first, else the last address ever used
+    // (kept in a global key so it always persists — even for guests, across logout,
+    // or if the login key changes). The address is never auto-deleted.
+    let pre = null;
     const savedAddrs = loadAddresses();
-    if (savedAddrs.length && !document.getElementById('ck-house').value) {
-      const a = savedAddrs[0];
-      document.getElementById('ck-name').value = a.name || (currentUser ? currentUser.name : '');
-      document.getElementById('ck-phone').value = a.phone || (currentUser ? currentUser.phone : '');
-      document.getElementById('ck-house').value = a.house || '';
-      document.getElementById('ck-area').value = a.area || '';
-      document.getElementById('ck-city').value = a.city || '';
-      document.getElementById('ck-state').value = a.state || '';
-      document.getElementById('ck-pin').value = a.pin || '';
-      document.getElementById('ck-addr-type').value = a.type || 'Home';
+    if (savedAddrs.length) pre = savedAddrs[0];
+    if (!pre) { try { pre = JSON.parse(localStorage.getItem('laxuage_last_addr') || 'null'); } catch(e) {} }
+    if (pre && !document.getElementById('ck-house').value) {
+      document.getElementById('ck-name').value = pre.name || (currentUser ? currentUser.name : '') || '';
+      document.getElementById('ck-phone').value = pre.phone || (currentUser ? currentUser.phone : '') || '';
+      document.getElementById('ck-house').value = pre.house || '';
+      document.getElementById('ck-area').value = pre.area || '';
+      document.getElementById('ck-city').value = pre.city || '';
+      document.getElementById('ck-state').value = pre.state || '';
+      document.getElementById('ck-pin').value = pre.pin || '';
+      document.getElementById('ck-addr-type').value = pre.type || 'Home';
     }
     document.getElementById('checkout-overlay').classList.add('open');
   }
@@ -5090,7 +5094,9 @@
   function checkoutNext() {
     if (ckStep === 1) {
       if (!validateAddress()) return;
-      saveAddress(getAddressFromForm());
+      const _addr = getAddressFromForm();
+      saveAddress(_addr);
+      try { localStorage.setItem('laxuage_last_addr', JSON.stringify(_addr)); } catch(e) {} // global, always persists
       showCheckoutStep(2);
     } else if (ckStep === 2) {
       renderReview();

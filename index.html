@@ -6661,7 +6661,11 @@
   body.dark .hero-tag { background: #241620; }   /* darker pill so the pink label clears AA contrast */
 
   /* ===== Product-card image slider (Gucci-style) ===== */
-  .pcard-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; aspect-ratio:1/1; }
+  /* touch-action:pan-x + overflow-y:hidden so a vertical swipe/wheel over the
+     photo scrolls the PAGE (only horizontal gestures move the image slider). */
+  .pcard-track{ display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; touch-action:pan-x; scrollbar-width:none; -ms-overflow-style:none; aspect-ratio:1/1; }
+  /* Single-image cards have no slider, so the photo never captures scroll at all. */
+  .product-img-wrap.single .pcard-track{ overflow:hidden; scroll-snap-type:none; touch-action:auto; }
   .pcard-track::-webkit-scrollbar{ display:none; }
   .pcard-slide{ flex:0 0 100%; width:100%; aspect-ratio:1/1; height:100%; object-fit:cover; scroll-snap-align:center; display:block; }
   /* keep the original subtle hover-zoom ONLY for single-image cards */

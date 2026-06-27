@@ -2687,7 +2687,9 @@
     =================================================================== */
 
     /* ----- PRODUCT IMAGE GALLERY ----- */
-    .modal-gallery { display: flex; flex-direction: column; }
+    /* Cream background fills any space so a single photo is framed, never a blank void. */
+    .modal-gallery { display: flex; flex-direction: column; background: #f4efe6; }
+    .modal-gallery.single { justify-content: center; }
     .mg-main { position: relative; }
     .mg-nav {
       position: absolute; top: 50%; transform: translateY(-50%);
@@ -2700,14 +2702,13 @@
     .mg-nav:hover { background: var(--primary); color: var(--paper); border-color: var(--primary); }
     .mg-prev { left: 12px; }
     .mg-next { right: 12px; }
-    .mg-thumbs { display: flex; gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+    /* Album: the rest of the photos shown full-size, stacked under the main one. */
+    .mg-thumbs { display: flex; flex-direction: column; gap: 8px; padding: 8px; }
     .mg-thumb {
-      width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden;
-      border: 2px solid transparent; background: var(--cream-warm); cursor: pointer; padding: 0;
-      transition: border-color 0.2s;
+      width: 100%; border-radius: var(--radius-sm); overflow: hidden;
+      border: none; background: #f4efe6; cursor: pointer; padding: 0; display: block;
     }
-    .mg-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .mg-thumb.active { border-color: var(--primary); }
+    .mg-thumb img { width: 100%; height: auto; display: block; }
 
     /* ----- BUY NOW ----- */
     .btn-buynow {
@@ -5606,15 +5607,18 @@
     const main = document.getElementById('modal-img');
     main.alt = p.name;
     gallerySet(0);
+    const gallery = document.querySelector('.modal-gallery');
     const thumbs = document.getElementById('modal-thumbs');
     const multi = galleryImgs.length > 1;
+    if (gallery) gallery.classList.toggle('single', !multi);
     document.getElementById('mg-prev').style.display = multi ? 'flex' : 'none';
     document.getElementById('mg-next').style.display = multi ? 'flex' : 'none';
     if (!multi){ thumbs.innerHTML = ''; thumbs.style.display = 'none'; }
     else {
       thumbs.style.display = 'flex';
-      thumbs.innerHTML = galleryImgs.map((src,i) =>
-        `<button class="mg-thumb ${i===0?'active':''}" onclick="gallerySet(${i})" aria-label="View ${i+1}"><img src="${src}" alt="${escHtml(p.name)} view ${i+1}" loading="lazy"></button>`
+      // Album: the remaining photos at full size, stacked under the main image.
+      thumbs.innerHTML = galleryImgs.slice(1).map((src,i) =>
+        `<button class="mg-thumb" onclick="gallerySet(${i+1})" aria-label="View photo ${i+2}"><img src="${escHtml(src)}" alt="${escHtml(p.name)} photo ${i+2}" loading="lazy"></button>`
       ).join('');
     }
     bindGallerySwipe();

@@ -1778,8 +1778,12 @@
       .cart-sidebar { width: 100%; }
       .whatsapp-fab { width: 48px; height: 48px; font-size: 22px; bottom: 16px; right: 16px; }
     }
-    @media (max-width: 420px) {
+    @media (max-width: 600px) {
+      /* One full product per row on phones — no cramped 2-column layout with
+         half-cut cards peeking on the sides. Each bag shows big and complete. */
       .product-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
       .hero h1 { font-size: 30px; }
       .modal-actions { flex-direction: column; }
     }

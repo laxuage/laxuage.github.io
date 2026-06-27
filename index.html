@@ -4210,7 +4210,11 @@
     }
     list.forEach(p => {
       const badgeHtml = p.badge ? `<span class="badge badge-${p.badge}">${p.badge.toUpperCase()}</span>` : '';
-      const priceHtml = p.price ? `<span class="price-main">₹${p.price.toLocaleString()}</span>` : `<span class="price-request">Price on Request</span>`;
+      const _mrp = Number(p.mrp) || 0, _pr = Number(p.price) || 0;
+      const _off = (_mrp > _pr && _pr) ? Math.round((1 - _pr / _mrp) * 100) : 0;
+      const priceHtml = _pr
+        ? `<span class="price-main">₹${_pr.toLocaleString()}</span>${_off ? `<span class="price-original">₹${_mrp.toLocaleString()}</span><span class="price-off">${_off}% OFF</span>` : ''}`
+        : `<span class="price-request">Price on Request</span>`;
       const isWishlisted = wishlist.has(p.id);
       const imgs = (Array.isArray(p.images) && p.images.length) ? p.images : [p.img];
       const slidesHtml = imgs.map(u => `<img class="pcard-slide" src="${escHtml(u)}" alt="${escHtml(p.name)}" loading="lazy">`).join('');

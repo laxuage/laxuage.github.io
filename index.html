@@ -2832,6 +2832,15 @@
   </script>
   <noscript><img height="1" width="1" style="display:none"
   src="https://www.facebook.com/tr?id=1460163436124169&ev=PageView&noscript=1"/></noscript>
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YT31HW4JLV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-YT31HW4JLV');
+  </script>
   <!-- End Meta Pixel Code -->
 </head>
 <body>
@@ -4179,6 +4188,12 @@
           currency: 'INR'
         });
       }
+      if (typeof gtag === 'function' && p) {
+        gtag('event', 'add_to_cart', {
+          currency: 'INR', value: (Number(p.price) || 0) * qty,
+          items: [{ item_id: String(p.id), item_name: p.name, price: Number(p.price) || 0, quantity: qty }]
+        });
+      }
     });
   }
 
@@ -4274,6 +4289,12 @@
         content_type: 'product',
         value: Number(p.price) || 0,
         currency: 'INR'
+      });
+    }
+    if (typeof gtag === 'function' && p) {
+      gtag('event', 'view_item', {
+        currency: 'INR', value: Number(p.price) || 0,
+        items: [{ item_id: String(p.id), item_name: p.name, price: Number(p.price) || 0, quantity: 1 }]
       });
     }
     document.getElementById('modal-qty-val').textContent = modalQty;
@@ -4397,6 +4418,12 @@
           num_items: cart.reduce((a, b) => a + b.qty, 0),
           value: ckSub,
           currency: 'INR'
+        });
+      }
+      if (typeof gtag === 'function') {
+        gtag('event', 'begin_checkout', {
+          currency: 'INR', value: cart.reduce((s, i) => s + (i.price * i.qty), 0),
+          items: cart.map(i => ({ item_id: String(i.id), item_name: i.name, price: Number(i.price) || 0, quantity: i.qty }))
         });
       }
       closeCart();
@@ -5174,6 +5201,12 @@
         order_id: order.id
       });
     }
+    if (typeof gtag === 'function') {
+      gtag('event', 'purchase', {
+        transaction_id: order.id, currency: 'INR', value: order.total,
+        items: order.items.map(i => ({ item_id: String(i.id), item_name: i.name, price: Number(i.price) || 0, quantity: i.qty }))
+      });
+    }
     sendOrderToWhatsApp(order);
     document.getElementById('ck-success-id').textContent = orderId;
     document.getElementById('ck-success-eta').textContent = `Within ${days} days (by ${etaStr})`;
@@ -5712,6 +5745,16 @@
         fbq('track', 'InitiateCheckout', {
           content_ids: cart.map(i => String(i.id)), content_type: 'product',
           num_items: cart.reduce((a, b) => a + b.qty, 0), value: ckSub, currency: 'INR'
+        });
+      }
+      if (typeof gtag === 'function' && p) {
+        gtag('event', 'add_to_cart', {
+          currency: 'INR', value: (Number(p.price) || 0) * qty,
+          items: [{ item_id: String(p.id), item_name: p.name, price: Number(p.price) || 0, quantity: qty }]
+        });
+        gtag('event', 'begin_checkout', {
+          currency: 'INR', value: cart.reduce((s, i) => s + (i.price * i.qty), 0),
+          items: cart.map(i => ({ item_id: String(i.id), item_name: i.name, price: Number(i.price) || 0, quantity: i.qty }))
         });
       }
       closeModalDirect();

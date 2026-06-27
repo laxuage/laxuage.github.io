@@ -28,7 +28,7 @@ export async function onRequestPost(context) {
   // expensive internal order.
   if (b.order_id) {
     try {
-      const ord = await env.DB.prepare('SELECT id, rp_order_id FROM orders WHERE id=?')
+      const ord = await env.DB.prepare('SELECT id, rp_order_id, total, customer_email FROM orders WHERE id=?')
         .bind(String(b.order_id)).first();
       if (ord) {
         if (ord.rp_order_id && ord.rp_order_id !== roid) {
@@ -36,10 +36,40 @@ export async function onRequestPost(context) {
         }
         await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?")
           .bind(rpid, String(b.order_id)).run();
+        // Best-effort server-side Purchase to Meta (Conversions API) for accurate
+        // ad attribution. Dormant unless META_CAPI_TOKEN is configured; never
+        // affects the response. event_id = order id so it dedupes with the
+        // browser pixel's Purchase (which sends the same eventID).
+        if (env.META_CAPI_TOKEN) { await sendMetaPurchase(env, request, ord).catch(() => {}); }
       }
     } catch (e) {}
   }
   return json({ ok: true });
+}
+
+async function sha256Hex(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+async function sendMetaPurchase(env, request, ord) {
+  const pixelId = env.META_PIXEL_ID || '1460163436124169';
+  const user_data = {};
+  if (ord.customer_email) user_data.em = [await sha256Hex(String(ord.customer_email).trim().toLowerCase())];
+  const ip = request.headers.get('CF-Connecting-IP'); if (ip) user_data.client_ip_address = ip;
+  const ua = request.headers.get('User-Agent'); if (ua) user_data.client_user_agent = ua;
+  await fetch('https://graph.facebook.com/v19.0/' + pixelId + '/events?access_token=' + encodeURIComponent(env.META_CAPI_TOKEN), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ data: [{
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      action_source: 'website',
+      event_id: String(ord.id),
+      user_data,
+      custom_data: { currency: 'INR', value: Number(ord.total) || 0, order_id: String(ord.id) },
+    }] }),
+  });
 }
 
 async function hmacHex(secret, data) {

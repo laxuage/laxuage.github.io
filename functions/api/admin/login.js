@@ -7,14 +7,15 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   if (!env.ADMIN_PASSWORD) return json({ ok: false, error: 'Admin not configured (set ADMIN_PASSWORD).' }, 500);
 
-  // Basic brute-force throttle per IP (10 / 10 min).
+  // Brute-force protection with exponential backoff (per IP). After 5 failed
+  // attempts the IP is locked, and each failure lengthens the lockout window.
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const rlKey = 'adminrl:' + ip;
-  try {
-    const n = parseInt((await env.OTP_KV.get(rlKey)) || '0', 10);
-    if (n >= 10) return json({ ok: false, error: 'Too many attempts. Try again later.' }, 429);
-    await env.OTP_KV.put(rlKey, String(n + 1), { expirationTtl: 600 });
-  } catch (e) {}
+  const failKey = 'adminfail:' + ip;
+  let fails = 0;
+  try { fails = parseInt((await env.OTP_KV.get(failKey)) || '0', 10); } catch (e) {}
+  if (fails >= 5) {
+    return json({ ok: false, error: 'Too many failed attempts. Please wait a few minutes and try again.' }, 429);
+  }
 
   let pw = '';
   try { pw = String((await request.json()).password || ''); }
@@ -28,7 +29,13 @@ export async function onRequestPost(context) {
     diff |= (pw.charCodeAt(i) || 0) ^ (expected.charCodeAt(i) || 0);
   }
   ok = ok && diff === 0;
-  if (!ok) return json({ ok: false, error: 'Wrong password' }, 401);
+  if (!ok) {
+    const next = fails + 1;
+    const ttl = Math.min(3600, 180 * next); // 3,6,9,12,15 min … capped at 1h
+    try { await env.OTP_KV.put(failKey, String(next), { expirationTtl: ttl }); } catch (e) {}
+    return json({ ok: false, error: 'Wrong password' }, 401);
+  }
+  try { await env.OTP_KV.delete(failKey); } catch (e) {} // reset on success
 
   const token = genToken();
   await env.OTP_KV.put('adminsess:' + token, '1', { expirationTtl: SESSION_TTL });

@@ -5199,7 +5199,7 @@
         value: order.total,
         currency: 'INR',
         order_id: order.id
-      });
+      }, { eventID: String(order.id) });
     }
     if (typeof gtag === 'function') {
       gtag('event', 'purchase', {

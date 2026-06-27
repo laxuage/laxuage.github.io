@@ -201,7 +201,7 @@
     </section>
     <!-- Orders -->
     <section class="tabpane" id="tab-orders">
-      <h2 class="section">Orders</h2>
+      <h2 class="section">Orders <button class="mini" onclick="exportOrdersCSV()" style="float:right">⬇ Export CSV</button></h2>
       <div class="panel" id="orders-panel"><div class="empty">Loading…</div></div>
     </section>
     <!-- Products -->
@@ -339,6 +339,7 @@
 
 <script>
 let PRODUCTS = [];          // loaded from /api/admin/products
+let ORDERS = [];            // loaded from /api/admin/orders (for CSV export)
 let curPhotos = [];         // image urls currently in the editor
 let curColors = [];         // colour variants [{name,image}] in the editor
 const STATUSES = ['new','confirmed','shipped','delivered','cancelled'];
@@ -407,6 +408,7 @@ async function loadOrders(){
   const panel=document.getElementById('orders-panel');
   if(!data.ok){panel.innerHTML='<div class="empty">Could not load orders.</div>';return;}
   const o=data.orders||[];
+  ORDERS=o;
   if(!o.length){panel.innerHTML='<div class="empty">No orders yet. They\'ll appear here when customers check out.</div>';return;}
   let h='<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Items</th><th>Payment</th><th>Status</th></tr></thead><tbody>';
   o.forEach(function(r){
@@ -433,6 +435,25 @@ async function setStatus(id,status){
   const {data}=await api('/api/admin/orders','POST',{id:id,status:status});
   toast(data.ok?'Order updated':'Update failed');
   loadDashboard();
+}
+function exportOrdersCSV(){
+  if(!ORDERS.length){toast('No orders to export');return;}
+  const head=['Order ID','Date','Customer','Phone','Email','Address','Items','Subtotal','Shipping','Total','Payment Method','Payment Status','Status'];
+  // Quote for CSV; also neutralise leading =,+,-,@ to block spreadsheet formula injection.
+  const cell=v=>{let s=(v==null?'':String(v));if(/^[=+\-@\t\r]/.test(s))s="'"+s;if(/[",\n\r]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;};
+  const rows=ORDERS.map(r=>{
+    let items='';try{items=JSON.parse(r.items||'[]').map(it=>(it.name||it.id)+' x'+(it.qty||1)).join('; ');}catch(e){items=r.items||'';}
+    const date=r.created_at?new Date(r.created_at).toLocaleString('en-IN'):'';
+    return [r.id,date,r.customer_name,r.customer_phone,r.customer_email,r.address,items,r.subtotal,r.shipping,r.total,r.payment_method,r.payment_status,r.status].map(cell).join(',');
+  });
+  const csv='﻿'+[head.map(cell).join(',')].concat(rows).join('\r\n'); // BOM => Excel opens UTF-8 cleanly
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date(),stamp=d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);
+  const a=document.createElement('a');a.href=url;a.download='laxuage-orders-'+stamp+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('Exported '+ORDERS.length+' orders');
 }
 
 /* ---- Products ---- */

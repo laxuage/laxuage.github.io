@@ -6017,10 +6017,16 @@
   .xbtn{background:var(--primary);color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:13px;font-weight:700;cursor:pointer;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px}
   .xbtn:hover{background:var(--primary-dark)}
   /* ---- DARK MODE ---- */
-  body.dark{--bg:#16110f;--paper:#1f1813;--cream-warm:#2a211b;--ink:#f4ece3;--ink-soft:#e9ded2;--text-2:#cdbdad;--muted:#a89a8c;--muted-soft:#7c7064;--border:#3a302a;--border-soft:#332a25;--primary-soft:#3c2330;--success:#3cb371;--shadow:0 4px 14px -4px rgba(0,0,0,.5);--shadow-lg:0 20px 50px -16px rgba(0,0,0,.7);--shadow-sm:0 1px 2px rgba(0,0,0,.3)}
-  body.dark .product-grid{background:var(--border)}
+  /* True black dark mode — neutral greys, no warm/purple tint. Page is pure
+     black; cards/nav sit on #121212 so they stay visible. */
+  body.dark{--bg:#000000;--paper:#121212;--cream-warm:#181818;--ink:#f4ece3;--ink-soft:#e9ded2;--text-2:#c9c9c9;--muted:#9a9a9a;--muted-soft:#6e6e6e;--border:#262626;--border-soft:#1c1c1c;--primary-soft:#241019;--success:#3cb371;--shadow:0 4px 14px -4px rgba(0,0,0,.6);--shadow-lg:0 20px 50px -16px rgba(0,0,0,.85);--shadow-sm:0 1px 2px rgba(0,0,0,.4)}
+  body.dark .product-grid{background:var(--bg)}
   body.dark .ann-bar{border-bottom-color:rgba(255,255,255,.08)}
-  body.dark .hero{background:linear-gradient(135deg,#241b22,#16110f)}
+  body.dark .hero{background:linear-gradient(135deg,#141414,#000)}
+  /* Footer text was built white-on-dark; dark mode used to flip it to a light
+     bg (text vanished). Keep the footer black so the white text shows. */
+  body.dark footer{ background:#0a0a0a; }
+  body.dark .footer-brand .logo-text, body.dark .footer-col h4, body.dark .social-btn{ color:var(--ink); }
   body.dark .promo-strip,body.dark .filter-bar,body.dark nav,body.dark .cat-bar,body.dark .sort-bar{background:var(--paper)}
   body.dark .ck-upi-qr,body.dark .ck-upi-qr canvas,body.dark .ck-upi-qr img{background:#fff}
   body.dark img{filter:brightness(.96)}

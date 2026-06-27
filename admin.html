@@ -298,8 +298,19 @@
       </div>
       <div class="grid2">
         <div class="field"><label>Material</label><input type="text" id="p-material" placeholder="Vegan Leather"></div>
-        <div class="field"><label>Colour</label><input type="text" id="p-color" placeholder="Beige, Orange, Black…"></div>
+        <div class="field"><label>Colour</label><input type="text" id="p-color" list="colourOptions" placeholder="Pick or type a colour…"></div>
       </div>
+      <datalist id="colourOptions">
+        <option value="Beige"></option><option value="Black"></option><option value="Brown"></option>
+        <option value="Tan"></option><option value="Camel"></option><option value="Cream"></option>
+        <option value="Ivory"></option><option value="White"></option><option value="Off-White"></option>
+        <option value="Grey"></option><option value="Charcoal"></option><option value="Navy"></option>
+        <option value="Blue"></option><option value="Green"></option><option value="Olive"></option>
+        <option value="Red"></option><option value="Maroon"></option><option value="Burgundy"></option>
+        <option value="Pink"></option><option value="Blush"></option><option value="Orange"></option>
+        <option value="Yellow"></option><option value="Gold"></option><option value="Silver"></option>
+        <option value="Nude"></option><option value="Rose Gold"></option><option value="Multicolour"></option>
+      </datalist>
       <div class="grid2">
         <div class="field"><label>Weight (grams)</label><input type="number" id="p-weight" min="0" placeholder="650"></div>
         <div class="field"><label>Size / Dimensions</label><input type="text" id="p-size" placeholder="28 × 18 × 10 cm"></div>
@@ -567,7 +578,7 @@ function renderColorRows(){
       ? '<img class="cvar-img" src="'+esc(c.image)+'" alt=""><label class="cvar-re">Change<input type="file" accept="image/*" hidden onchange="uploadColorPhoto(this,'+i+')"></label>'
       : '<label class="cvar-up">📷 Photo<input type="file" accept="image/*" hidden onchange="uploadColorPhoto(this,'+i+')"></label>';
     return '<div class="cvar">'+media
-      +'<input class="cvar-name" placeholder="Colour name (e.g. Ivory)" value="'+esc(c.name||'')+'" oninput="setColorName('+i+',this.value)">'
+      +'<input class="cvar-name" list="colourOptions" placeholder="Pick or type a colour…" value="'+esc(c.name||'')+'" oninput="setColorName('+i+',this.value)">'
       +'<button type="button" class="cvar-del" title="Remove" onclick="removeColorRow('+i+')">×</button></div>';
   }).join('');
   const addBtn=document.getElementById('add-color-btn');

@@ -2500,16 +2500,31 @@
       text-transform: uppercase;
       white-space: nowrap;
     }
-    .price-range-input {
-      width: 110px;
-      accent-color: var(--primary);
-      cursor: pointer;
+    /* Dual-handle min–max price slider */
+    .price-dual { position: relative; width: 150px; height: 26px; display: flex; align-items: center; }
+    .price-dual input[type=range] {
+      position: absolute; left: 0; width: 100%; margin: 0; height: 26px;
+      background: none; pointer-events: none; -webkit-appearance: none; appearance: none;
     }
+    .price-dual input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; pointer-events: auto;
+      width: 16px; height: 16px; border-radius: 50%; background: var(--primary);
+      border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: pointer;
+    }
+    .price-dual input[type=range]::-moz-range-thumb {
+      pointer-events: auto; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--primary); border: 2px solid #fff; cursor: pointer;
+    }
+    .price-dual input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 26px; }
+    .price-dual input[type=range]::-moz-range-track { background: transparent; height: 4px; }
+    .pd-track, .pd-fill { position: absolute; top: 50%; transform: translateY(-50%); height: 4px; border-radius: 4px; }
+    .pd-track { left: 0; right: 0; background: var(--border); }
+    .pd-fill { background: var(--primary); }
     .price-range-val {
       font-size: 12px;
       font-weight: 700;
       color: var(--primary);
-      min-width: 76px;
+      min-width: 120px;
       white-space: nowrap;
     }
     @media (max-width: 720px) {
@@ -3006,9 +3021,14 @@
     <button class="sort-btn" onclick="sortProducts('rating', this)"><i class="fa-solid fa-star"></i> Top Rated</button>
     <button class="sort-btn" onclick="sortProducts('newest', this)"><i class="fa-solid fa-tag"></i> Newest</button>
     <div class="price-filter-wrap">
-      <span class="price-filter-label"><i class="fa-solid fa-tag"></i> Max Price</span>
-      <input type="range" min="500" max="3000" step="100" value="3000" class="price-range-input" id="price-range" oninput="updatePriceRange(this.value)">
-      <span class="price-range-val" id="price-range-val">₹3,000</span>
+      <span class="price-filter-label"><i class="fa-solid fa-tag"></i> Price</span>
+      <div class="price-dual" id="price-dual">
+        <div class="pd-track"></div>
+        <div class="pd-fill" id="pd-fill"></div>
+        <input type="range" min="500" max="3000" step="100" value="500" id="price-min" oninput="updatePriceRange(this)" aria-label="Minimum price">
+        <input type="range" min="500" max="3000" step="100" value="3000" id="price-max" oninput="updatePriceRange(this)" aria-label="Maximum price">
+      </div>
+      <span class="price-range-val" id="price-range-val">₹500 – ₹3,000</span>
     </div>
   </div>
 </div>
@@ -3818,8 +3838,13 @@
     let list = currentCat === 'all' ? [...products] : products.filter(p => p.category === currentCat);
     const q = document.getElementById('search').value.toLowerCase();
     if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-    if (typeof maxPrice !== 'undefined' && maxPrice < 3000) {
-      list = list.filter(p => !p.price || p.price <= maxPrice);
+    if (typeof maxPrice !== 'undefined') {
+      list = list.filter(p => {
+        if (!p.price) return true;
+        if (maxPrice < PRICE_CEIL && p.price > maxPrice) return false;
+        if (minPrice > PRICE_FLOOR && p.price < minPrice) return false;
+        return true;
+      });
     }
     if (currentSort === 'low')    list.sort((a,b) => a.price - b.price);
     else if (currentSort === 'high')   list.sort((a,b) => b.price - a.price);
@@ -5614,10 +5639,26 @@
   // ===================================================================
   // ============= NEW: PRICE RANGE FILTER =============================
   // ===================================================================
-  let maxPrice = 3000;
-  function updatePriceRange(v) {
-    maxPrice = parseInt(v);
-    document.getElementById('price-range-val').textContent = '₹' + maxPrice.toLocaleString();
+  const PRICE_FLOOR = 500, PRICE_CEIL = 3000, PRICE_GAP = 100;
+  let minPrice = PRICE_FLOOR, maxPrice = PRICE_CEIL;
+  function updatePriceRange(el) {
+    const lo = document.getElementById('price-min');
+    const hi = document.getElementById('price-max');
+    if (!lo || !hi) return;
+    let a = parseInt(lo.value, 10), b = parseInt(hi.value, 10);
+    // keep a gap so the two handles never cross
+    if (a > b - PRICE_GAP) {
+      if (el && el.id === 'price-min') { a = b - PRICE_GAP; lo.value = a; }
+      else { b = a + PRICE_GAP; hi.value = b; }
+    }
+    minPrice = a; maxPrice = b;
+    document.getElementById('price-range-val').textContent = '₹' + a.toLocaleString() + ' – ₹' + b.toLocaleString();
+    const fill = document.getElementById('pd-fill');
+    if (fill) {
+      const span = PRICE_CEIL - PRICE_FLOOR;
+      fill.style.left = ((a - PRICE_FLOOR) / span * 100) + '%';
+      fill.style.right = ((PRICE_CEIL - b) / span * 100) + '%';
+    }
     applyFiltersAndSort();
   }
 
@@ -6217,7 +6258,7 @@
     var list = currentCat==='all' ? products.slice() : products.filter(p=>p.category===currentCat);
     var q=(document.getElementById('search').value||'').toLowerCase();
     if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)||(p.color||'').toLowerCase().includes(q)||(p.material||'').toLowerCase().includes(q));
-    if(typeof maxPrice!=='undefined'&&maxPrice<3000) list=list.filter(p=>!p.price||p.price<=maxPrice);
+    if(typeof maxPrice!=='undefined') list=list.filter(p=>{ if(!p.price) return true; if(maxPrice<PRICE_CEIL&&p.price>maxPrice) return false; if(minPrice>PRICE_FLOOR&&p.price<minPrice) return false; return true; });
     if(window.activeColor!=='all') list=list.filter(p=>p.color===window.activeColor);
     if(window.activeMaterial!=='all') list=list.filter(p=>p.material===window.activeMaterial);
     if(currentSort==='low') list.sort((a,b)=>a.price-b.price);
@@ -6243,7 +6284,10 @@
         var sc=s<=0?'out':(s<=4?'low':'ok');
         var stxt=s<=0?'<i class="fa-solid fa-circle-xmark"></i> Out of stock':(s<=4?'<i class="fa-solid fa-fire"></i> Only '+s+' left':'<i class="fa-solid fa-check-circle"></i> In stock');
         var stk=el('div','card-stock '+sc,stxt);
-        info.insertBefore(stk,addBtn);
+        // The add-to-cart button lives inside .pcard-btns, so it isn't a direct
+        // child of .product-info — insert the stock note before the buttons block.
+        var anchor=addBtn.closest('.pcard-btns')||addBtn;
+        (anchor.parentNode||info).insertBefore(stk,anchor);
         var checked=window.compareSet.has(p.id)?'checked':'';
         var cmp=el('label','card-compare','<input type="checkbox" '+checked+'> Compare');
         cmp.querySelector('input').onchange=function(ev){ev.stopPropagation();toggleCompare(p.id,ev.target.checked);};

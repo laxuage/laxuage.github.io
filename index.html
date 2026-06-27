@@ -778,7 +778,7 @@
     .product-img-wrap img {
       width: 100%;
       height: 260px;
-      object-fit: cover;
+      object-fit: contain;   /* show the WHOLE bag — never crop edges/handles */
       transition: transform 0.5s ease;
       display: block;
     }
@@ -1002,7 +1002,7 @@
       width: 100%;
       min-height: 340px;
       max-height: 480px;
-      object-fit: cover;
+      object-fit: contain;   /* full bag visible, never cropped */
       background: var(--cream-warm);
     }
     .modal-details { padding: 26px 28px; }
@@ -6469,7 +6469,7 @@
   /* ===== Product-card image slider (Gucci-style) ===== */
   .pcard-track{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -ms-overflow-style:none; height:260px; }
   .pcard-track::-webkit-scrollbar{ display:none; }
-  .pcard-slide{ flex:0 0 100%; width:100%; height:260px; object-fit:cover; scroll-snap-align:center; display:block; }
+  .pcard-slide{ flex:0 0 100%; width:100%; height:260px; object-fit:contain; scroll-snap-align:center; display:block; }
   /* keep the original subtle hover-zoom ONLY for single-image cards */
   .product-card:hover .product-img-wrap.single .pcard-slide{ transform:scale(1.05); }
   .product-card:hover .product-img-wrap:not(.single) .pcard-slide{ transform:none; }

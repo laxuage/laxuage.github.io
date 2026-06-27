@@ -3976,10 +3976,27 @@
      above is the instant-render fallback (used if the API is slow/unavailable),
      so the store always shows products even offline. */
   (function(){
+    // Product photos are served under stable filenames (bag2.jpg …). When we
+    // re-process an image, the filename stays the same, so browsers keep showing
+    // the cached old copy. Appending a version tag makes the URL change, forcing
+    // a fresh fetch. Bump IMG_VER whenever the product photos are updated.
+    var IMG_VER = 'sq3';
+    function bustImg(u){
+      if(typeof u!=='string' || !u) return u;
+      if(/^(data:|blob:)/.test(u)) return u;            // inline images: leave as-is
+      if(/^https?:/.test(u) && u.indexOf('laxuage')<0) return u; // external host: leave as-is
+      return u + (u.indexOf('?')<0 ? '?v=' : '&v=') + IMG_VER;
+    }
+    function bustImgs(p){
+      if(p.img) p.img = bustImg(p.img);
+      if(Array.isArray(p.images)) p.images = p.images.map(bustImg);
+      if(Array.isArray(p.colors)) p.colors.forEach(function(c){ if(c && c.image) c.image = bustImg(c.image); });
+      return p;
+    }
     fetch('/api/products').then(function(r){ return r.json(); }).then(function(d){
       if(d && d.ok && Array.isArray(d.products) && d.products.length){
         products.length = 0;
-        d.products.forEach(function(p){ products.push(p); });
+        d.products.forEach(function(p){ products.push(bustImgs(p)); });
         if(typeof applyFiltersAndSort === 'function') applyFiltersAndSort();
         if(typeof renderShowcase === 'function') renderShowcase(); // re-render hero with live products
       }

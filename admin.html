@@ -120,10 +120,13 @@
   .pmodal-body textarea:focus{outline:none;border-color:var(--primary)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .pmodal-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--paper);border-radius:0 0 14px 14px}
-  .photos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-  .photos .ph{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-  .photos .ph img{width:100%;height:100%;object-fit:cover}
-  .photos .ph button{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:12px;line-height:1;cursor:pointer}
+  .photos{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .photos .ph{position:relative;width:96px}
+  .photos .ph .ph-img{position:relative;width:96px;height:96px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .photos .ph .ph-img img{width:100%;height:100%;object-fit:cover}
+  .photos .ph .ph-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;width:20px;height:20px;border-radius:50%;font-size:12px;line-height:1;cursor:pointer}
+  .photos .ph .ph-color{width:96px;margin-top:6px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:#fff;box-sizing:border-box}
+  .photos .ph .ph-color:focus{outline:none;border-color:var(--primary)}
   .upload-btn{display:inline-block;border:1px dashed var(--primary);color:var(--primary);border-radius:8px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer}
   .upload-btn:hover{background:var(--bg)}
   @media(max-width:480px){ .grid2{grid-template-columns:1fr} }
@@ -330,18 +333,13 @@
       </div>
       <div class="field"><label>Description</label><textarea id="p-desc" rows="3" placeholder="Describe the product…"></textarea></div>
       <div class="field">
-        <label>Photos</label>
+        <label>Photos &amp; Colours (up to 8)</label>
+        <p class="muted" style="margin:-2px 0 8px;font-size:12px">Upload up to 8 photos. Under each photo, pick its colour. On the product page the customer can switch colours and the photo changes. Leave the colour blank for plain gallery photos.</p>
         <div class="photos" id="p-photos"></div>
         <label class="upload-btn" id="upload-label">
           <input type="file" accept="image/*" multiple onchange="uploadPhotos(this)" style="display:none">
           <span id="upload-text">📷 Upload photo(s)</span>
         </label>
-      </div>
-      <div class="field">
-        <label>Colours (up to 8 — each with its own photo)</label>
-        <p class="muted" style="margin:-2px 0 8px;font-size:12px">Add each colour with a photo. On the product page the customer can switch colours and the photo changes.</p>
-        <div class="cvars" id="p-colors"></div>
-        <button type="button" class="upload-btn" id="add-color-btn" onclick="addColorRow()">+ Add colour</button>
       </div>
       <div class="err" id="p-err"></div>
     </div>
@@ -507,20 +505,30 @@ function openProduct(id){
   val('p-material', p?p.material:''); val('p-color', p?(p.color||''):''); val('p-weight', (p&&p.weight_g)?p.weight_g:'');
   val('p-size', p?p.size:''); val('p-badge', p?(p.badge||''):'');
   val('p-active', (p&&p.active===0)?'0':'1'); val('p-desc', p?p.description:'');
-  curPhotos = (p&&Array.isArray(p.images))?p.images.slice():[];
+  // Each photo carries its own colour: load images, then attach colours from
+  // the saved colour-variants (matched by image url).
+  curPhotos = [];
+  if(p&&Array.isArray(p.images)) p.images.forEach(function(u){ curPhotos.push({url:u, color:''}); });
+  if(p&&Array.isArray(p.colors)) p.colors.forEach(function(c){
+    if(!c.image) return;
+    const ex=curPhotos.find(function(ph){ return ph.url===c.image; });
+    if(ex) ex.color=c.name||''; else curPhotos.push({url:c.image, color:c.name||''});
+  });
   renderPhotos();
-  curColors = (p&&Array.isArray(p.colors))?p.colors.map(c=>({name:c.name||'',image:c.image||''})):[];
-  renderColorRows();
   document.getElementById('p-err').textContent='';
   document.getElementById('prod-modal').classList.add('open');
 }
 function closeProduct(){ document.getElementById('prod-modal').classList.remove('open'); }
 function renderPhotos(){
-  document.getElementById('p-photos').innerHTML = curPhotos.map(function(u,i){
-    return '<div class="ph"><img src="'+esc(u)+'"><button onclick="removePhoto('+i+')">×</button></div>';
+  document.getElementById('p-photos').innerHTML = curPhotos.map(function(p,i){
+    return '<div class="ph">'
+      + '<div class="ph-img"><img src="'+esc(p.url)+'"><button class="ph-del" type="button" onclick="removePhoto('+i+')">×</button></div>'
+      + '<input class="ph-color" list="colourOptions" placeholder="Colour…" value="'+esc(p.color||'')+'" oninput="setPhotoColor('+i+',this.value)">'
+      + '</div>';
   }).join('');
 }
 function removePhoto(i){ curPhotos.splice(i,1); renderPhotos(); }
+function setPhotoColor(i,v){ if(curPhotos[i]) curPhotos[i].color=v; }
 // Pad any product photo onto a SQUARE canvas (in its own corner colour) so every
 // product image is uniform on the site — full bag shown, never cropped.
 function squareImage(file){
@@ -560,12 +568,13 @@ async function uploadPhotos(input){
   if(!files.length) return;
   const txt=document.getElementById('upload-text'); const old=txt.textContent;
   for(let f of files){
+    if(curPhotos.length>=8){ toast('Max 8 photos'); break; }
     txt.textContent='Uploading…';
     f = await squareImage(f);
     const fd=new FormData(); fd.append('file',f);
     let d={};
     try{ const r=await fetch('/api/admin/upload',{method:'POST',body:fd}); d=await r.json(); }catch(e){}
-    if(d.ok && d.url){ curPhotos.push(d.url); renderPhotos(); }
+    if(d.ok && d.url){ curPhotos.push({url:d.url, color:''}); renderPhotos(); }
     else { toast('⚠️ '+((d&&d.error)||'Upload failed')); }
   }
   txt.textContent=old; input.value='';
@@ -601,12 +610,17 @@ async function saveProduct(){
   const name=document.getElementById('p-name').value.trim();
   if(!name){ err.textContent='Product name is required.'; return; }
   const gv=id=>document.getElementById(id).value;
+  // Each photo with a colour becomes a switchable colour variant; all photos
+  // are the image gallery. Main colour falls back to the first photo's colour.
+  const photoColors = curPhotos.filter(p=>p.color && p.color.trim()).map(p=>({name:p.color.trim(), image:p.url}));
+  let mainColor = gv('p-color');
+  if(!mainColor && photoColors.length) mainColor = photoColors[0].name;
   const body={
     id: gv('p-id') || undefined, name:name, price: gv('p-price'), mrp: gv('p-mrp'),
-    category: gv('p-category'), stock: gv('p-stock'), colors: curColors.filter(c=>c.name||c.image),
-    material: gv('p-material'), color: gv('p-color'), weight_g: gv('p-weight'), size: gv('p-size'),
+    category: gv('p-category'), stock: gv('p-stock'), colors: photoColors,
+    material: gv('p-material'), color: mainColor, weight_g: gv('p-weight'), size: gv('p-size'),
     badge: gv('p-badge'), active: parseInt(gv('p-active'),10),
-    description: gv('p-desc'), images: curPhotos
+    description: gv('p-desc'), images: curPhotos.map(p=>p.url)
   };
   const btn=document.getElementById('p-save-btn'); btn.disabled=true; btn.textContent='Saving…';
   const {data}=await api('/api/admin/products','POST',body);

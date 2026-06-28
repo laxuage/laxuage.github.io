@@ -3522,14 +3522,9 @@
         <span class="ck-step-label">Address</span>
       </div>
       <div class="ck-step-bar"></div>
-      <div class="ck-step" data-step="2">
-        <div class="ck-step-num">2</div>
-        <span class="ck-step-label">Payment</span>
-      </div>
-      <div class="ck-step-bar"></div>
       <div class="ck-step" data-step="3">
-        <div class="ck-step-num">3</div>
-        <span class="ck-step-label">Review</span>
+        <div class="ck-step-num">2</div>
+        <span class="ck-step-label">Review &amp; Pay</span>
       </div>
     </div>
 
@@ -5359,6 +5354,9 @@
 
   function closeCheckout() {
     document.getElementById('checkout-overlay').classList.remove('open');
+    // Clear any leftover scroll lock (e.g. Razorpay's inline body overflow that
+    // a mobile browser can leave behind) so the page never gets stuck.
+    document.body.style.overflow = '';
   }
 
   function showCheckoutStep(step) {
@@ -5368,14 +5366,15 @@
     // Update stepper
     const steps = document.querySelectorAll('.ck-step');
     const bars = document.querySelectorAll('.ck-step-bar');
+    const pos = ({ 1: 1, 3: 2 })[step] || step; // Payment step removed; Review is visual step 2
     steps.forEach((s, i) => {
       const n = i + 1;
       s.classList.remove('active', 'done');
-      if (n < step) s.classList.add('done');
-      else if (n === step) s.classList.add('active');
+      if (n < pos) s.classList.add('done');
+      else if (n === pos) s.classList.add('active');
     });
     bars.forEach((b, i) => {
-      b.classList.toggle('done', i + 1 < step);
+      b.classList.toggle('done', i + 1 < pos);
     });
 
     const back = document.getElementById('ck-back-btn');
@@ -5387,14 +5386,15 @@
     } else {
       footer.style.display = 'flex';
       back.style.display = step > 1 ? 'inline-flex' : 'none';
-      if (step === 1) next.innerHTML = 'Continue to Payment <i class="fa-solid fa-arrow-right"></i>';
+      if (step === 1) next.innerHTML = 'Review Order <i class="fa-solid fa-arrow-right"></i>';
       else if (step === 2) next.innerHTML = 'Review Order <i class="fa-solid fa-arrow-right"></i>';
       else if (step === 3) next.innerHTML = '<i class="fa-solid fa-lock"></i> Place Order';
     }
   }
 
   function checkoutBack() {
-    if (ckStep > 1) showCheckoutStep(ckStep - 1);
+    if (ckStep === 3) showCheckoutStep(1);          // Review -> Address (Payment step skipped)
+    else if (ckStep > 1) showCheckoutStep(ckStep - 1);
   }
 
   function checkoutNext() {
@@ -5403,7 +5403,8 @@
       const _addr = getAddressFromForm();
       saveAddress(_addr);
       try { localStorage.setItem('laxuage_last_addr', JSON.stringify(_addr)); } catch(e) {} // global, always persists
-      showCheckoutStep(2);
+      renderReview();
+      showCheckoutStep(3);   // skip the single-option Payment step — straight to Review
     } else if (ckStep === 2) {
       renderReview();
       showCheckoutStep(3);
@@ -5553,6 +5554,7 @@
     // For online orders, collect & verify the payment before showing success.
     if (isOnline) {
       const paid = await payWithRazorpay(orderId, final, addr);
+      document.body.style.overflow = ''; // Razorpay normally restores this; be defensive on mobile so scroll never sticks
       if (!paid) {
         resetBtn();
         showToast('Payment not completed — your order is saved as pending. You can retry payment any time.');

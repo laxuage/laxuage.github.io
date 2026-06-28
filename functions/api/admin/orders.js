@@ -1,5 +1,5 @@
 // GET  /api/admin/orders            -> list recent orders
-// POST /api/admin/orders { id, status } -> update an order's status
+// POST /api/admin/orders { id, status?, courier?, tracking_no? } -> update an order
 import { json, ensureSchema } from '../_shared.js';
 
 const STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
@@ -19,8 +19,20 @@ export async function onRequestPost(context) {
   let b;
   try { b = await request.json(); } catch (e) { return json({ ok: false, error: 'Bad request' }, 400); }
   const id = String(b.id || '');
-  const status = String(b.status || '');
-  if (!id || STATUSES.indexOf(status) < 0) return json({ ok: false, error: 'Invalid' }, 400);
-  await env.DB.prepare('UPDATE orders SET status=? WHERE id=?').bind(status, id).run();
+  if (!id) return json({ ok: false, error: 'Missing order id' }, 400);
+
+  // Build the update from whichever fields were provided (status / courier / tracking).
+  const sets = [], vals = [];
+  if (b.status != null) {
+    const status = String(b.status);
+    if (STATUSES.indexOf(status) < 0) return json({ ok: false, error: 'Invalid status' }, 400);
+    sets.push('status=?'); vals.push(status);
+  }
+  if (b.courier != null) { sets.push('courier=?'); vals.push(String(b.courier).slice(0, 60)); }
+  if (b.tracking_no != null) { sets.push('tracking_no=?'); vals.push(String(b.tracking_no).trim().slice(0, 80)); }
+  if (!sets.length) return json({ ok: false, error: 'Nothing to update' }, 400);
+
+  vals.push(id);
+  await env.DB.prepare('UPDATE orders SET ' + sets.join(', ') + ' WHERE id=?').bind(...vals).run();
   return json({ ok: true });
 }

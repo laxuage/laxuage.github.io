@@ -96,7 +96,8 @@ export async function ensureSchema(db) {
       items TEXT,
       subtotal INTEGER, shipping INTEGER, total INTEGER,
       payment_method TEXT, payment_id TEXT, payment_status TEXT,
-      status TEXT DEFAULT 'new'
+      status TEXT DEFAULT 'new',
+      courier TEXT, tracking_no TEXT
     )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS stock (
       product_id INTEGER PRIMARY KEY,
@@ -160,6 +161,8 @@ export async function ensureSchema(db) {
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE users ADD COLUMN password_hash TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN rp_order_id TEXT').run(); } catch (e) {}
+  try { await db.prepare('ALTER TABLE orders ADD COLUMN courier TEXT').run(); } catch (e) {}
+  try { await db.prepare('ALTER TABLE orders ADD COLUMN tracking_no TEXT').run(); } catch (e) {}
 }
 
 // ---- Password hashing (PBKDF2-SHA256, salted) ----

@@ -2365,6 +2365,21 @@
       letter-spacing: 0.04em;
     }
     .order-detail-btn:hover { background: var(--primary); color: var(--paper); }
+    .order-track {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      margin: 4px 0 2px; padding: 10px 12px;
+      background: var(--cream-warm); border-radius: var(--radius-sm);
+    }
+    .order-track .ot-info { font-size: 12.5px; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+    .order-track .ot-info i { color: var(--primary); }
+    .order-track .ot-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary); color: var(--paper); text-decoration: none;
+      padding: 7px 14px; border-radius: var(--radius-sm); font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+    .order-track .ot-btn:hover { background: var(--primary-dark); }
+    .order-track .ot-btn i { font-size: 10px; }
 
     /* ============= PINCODE CHECK (Product Modal) ============= */
     .pincode-section {
@@ -5476,6 +5491,21 @@
   function ordersOverlayClick(e) {
     if (e.target === document.getElementById('orders-overlay')) closeOrders();
   }
+  // Build a tracking link for any courier. Known couriers deep-link to their
+  // own tracking page; anything else uses a universal Google tracking search,
+  // so EVERY courier is supported for free.
+  function courierTrackUrl(courier, awb) {
+    const a = encodeURIComponent(String(awb || '').trim());
+    const map = {
+      'Delhivery': 'https://www.delhivery.com/track/package/' + a,
+      'Blue Dart': 'https://www.bluedart.com/web/guest/trackdartresult?trackFor=0&trackNo=' + a,
+      'Xpressbees': 'https://www.xpressbees.com/shipment/tracking?awbNo=' + a,
+      'Ecom Express': 'https://ecomexpress.in/tracking/?awb_field=' + a,
+      'DTDC': 'https://www.dtdc.in/tracking/tracking_results.asp?strCnno=' + a + '&TrkType=Consignment'
+    };
+    return map[courier] || ('https://www.google.com/search?q=' + encodeURIComponent('track ' + (courier || '') + ' ' + (awb || '')));
+  }
+
   async function renderOrders() {
     const content = document.getElementById('orders-content');
     content.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading your orders…</p></div>';
@@ -5500,6 +5530,10 @@
       }).join('');
       const moreCount = items.length > 4 ? `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:60px;background:var(--cream-warm);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0">+${items.length-4}</div>` : '';
       const pay = (o.payment_status === 'paid') ? 'PAID' : String(o.payment_method || '').toUpperCase();
+      const trackHtml = o.tracking_no ? `<div class="order-track">
+          <span class="ot-info"><i class="fa-solid fa-truck-fast"></i> ${escHtml(o.courier || 'Courier')} · <strong>${escHtml(o.tracking_no)}</strong></span>
+          <a class="ot-btn" href="${courierTrackUrl(o.courier, o.tracking_no)}" target="_blank" rel="noopener">Track Shipment <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>` : '';
       return `<div class="order-row">
         <div class="order-top">
           <div>
@@ -5509,6 +5543,7 @@
           <div class="order-status ${stClass[st] || 'placed'}">${stLabel[st] || '⏳ Order Placed'}</div>
         </div>
         <div class="order-items-mini">${itemsImgs}${moreCount}</div>
+        ${trackHtml}
         <div class="order-bottom">
           <div>
             <div class="order-total-text">₹${Number(o.total||0).toLocaleString('en-IN')}</div>
@@ -5528,8 +5563,13 @@
     const itemsList = items.map(i => `• ${i.name} (×${i.qty}) — ₹${Number((i.price||0)*(i.qty||1)).toLocaleString('en-IN')}`).join('\n');
     const stTxt = { new:'Order Placed', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' }[o.status || 'new'] || 'Order Placed';
     const dateStr = new Date(o.created_at).toLocaleString('en-IN');
-    const msg = `Order ${o.id}\nDate: ${dateStr}\nStatus: ${stTxt}\n\n${itemsList}\n\nTotal: ₹${Number(o.total||0).toLocaleString('en-IN')}\nPayment: ${String(o.payment_method||'').toUpperCase()}${o.payment_status==='paid'?' (PAID)':''}\n\nQuestions? Contact us on WhatsApp.`;
-    alert(msg);
+    const trackLine = o.tracking_no ? `\nCourier: ${o.courier || '—'}\nTracking No: ${o.tracking_no}` : '';
+    const msg = `Order ${o.id}\nDate: ${dateStr}\nStatus: ${stTxt}${trackLine}\n\n${itemsList}\n\nTotal: ₹${Number(o.total||0).toLocaleString('en-IN')}\nPayment: ${String(o.payment_method||'').toUpperCase()}${o.payment_status==='paid'?' (PAID)':''}\n\nQuestions? Contact us on WhatsApp.`;
+    if (o.tracking_no && confirm(msg + '\n\nOpen tracking page now?')) {
+      window.open(courierTrackUrl(o.courier, o.tracking_no), '_blank', 'noopener');
+    } else if (!o.tracking_no) {
+      alert(msg);
+    }
   }
 
   // ===================================================================

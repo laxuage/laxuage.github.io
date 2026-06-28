@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   const user = await getSessionUser(env, request);
   if (!user) return json({ ok: false, error: 'Not logged in' }, 401);
   const { results } = await env.DB
-    .prepare('SELECT id, created_at, items, subtotal, shipping, total, payment_method, payment_status, status FROM orders WHERE customer_email=? ORDER BY created_at DESC LIMIT 100')
+    .prepare('SELECT id, created_at, items, subtotal, shipping, total, payment_method, payment_status, status, courier, tracking_no FROM orders WHERE customer_email=? ORDER BY created_at DESC LIMIT 100')
     .bind(user.email)
     .all();
   return json({ ok: true, orders: results || [] });

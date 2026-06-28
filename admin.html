@@ -78,6 +78,11 @@
   tr:last-child td{border-bottom:none}
   .mono{font-family:ui-monospace,monospace;font-size:12px}
   select.status{padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;font-weight:600;font-size:12px}
+  .trk-cell{white-space:nowrap}
+  .trk-cell .trk-courier{padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11.5px;max-width:120px}
+  .trk-cell .trk-awb{padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11.5px;width:108px;margin:0 4px}
+  .trk-cell .trk-save{padding:5px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;font-size:11.5px;font-weight:700;cursor:pointer}
+  .trk-cell .trk-save:hover{opacity:.9}
   .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
   .b-paid{background:#e7f6ee;color:var(--success)} .b-cod{background:#fef4e2;color:var(--warn)} .b-pending{background:#fdecea;color:var(--danger)}
   .b-new{background:#eef0ff;color:#3a52d6} .b-shipped{background:#e7f1fb;color:#2a7bd6} .b-delivered{background:#e7f6ee;color:var(--success)} .b-cancelled{background:#f1f1f1;color:#888}
@@ -425,7 +430,7 @@ async function loadOrders(){
   const o=data.orders||[];
   ORDERS=o;
   if(!o.length){panel.innerHTML='<div class="empty">No orders yet. They\'ll appear here when customers check out.</div>';return;}
-  let h='<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Items</th><th>Payment</th><th>Status</th></tr></thead><tbody>';
+  let h='<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Items</th><th>Payment</th><th>Status</th><th>Tracking</th></tr></thead><tbody>';
   o.forEach(function(r){
     let items=[]; try{items=JSON.parse(r.items||'[]');}catch(e){}
     const itemsTxt=items.map(it=>esc(it.name||it.id)+' ×'+(it.qty||1)).join('<br>');
@@ -436,6 +441,11 @@ async function loadOrders(){
       +'<td style="font-size:12px">'+(itemsTxt||'—')+'</td>'
       +'<td>'+payBadge(r)+'</td>'
       +'<td><select class="status" onchange="setStatus(\''+esc(r.id)+'\',this.value)">'+STATUSES.map(s=>'<option value="'+s+'"'+(r.status===s?' selected':'')+'>'+s+'</option>').join('')+'</select></td>'
+      +'<td class="trk-cell">'
+        +'<select class="trk-courier">'+courierOpts(r.courier)+'</select>'
+        +'<input class="trk-awb" placeholder="Tracking no." value="'+esc(r.tracking_no||'')+'">'
+        +'<button class="trk-save" type="button" onclick="setTracking(this,\''+esc(r.id)+'\')">Save</button>'
+      +'</td>'
       +'</tr>';
   });
   h+='</tbody></table>';
@@ -450,6 +460,19 @@ async function setStatus(id,status){
   const {data}=await api('/api/admin/orders','POST',{id:id,status:status});
   toast(data.ok?'Order updated':'Update failed');
   loadDashboard();
+}
+// Common Indian couriers (the customer's track link works for ANY of these,
+// and any other courier falls back to a universal Google tracking search).
+const COURIERS=['Delhivery','Blue Dart','DTDC','India Post','Xpressbees','Ecom Express','Ekart','Shadowfax','Amazon Shipping','Professional Couriers','Trackon','Other'];
+function courierOpts(sel){ return '<option value="">— Courier —</option>'+COURIERS.map(c=>'<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>').join(''); }
+async function setTracking(btn,id){
+  const cell=btn.parentElement;
+  const courier=cell.querySelector('.trk-courier').value;
+  const awb=cell.querySelector('.trk-awb').value.trim();
+  btn.disabled=true; const old=btn.textContent; btn.textContent='…';
+  const {data}=await api('/api/admin/orders','POST',{id:id,courier:courier,tracking_no:awb});
+  btn.disabled=false; btn.textContent=old;
+  toast(data.ok?'Tracking saved ✓':'Save failed');
 }
 function exportOrdersCSV(){
   if(!ORDERS.length){toast('No orders to export');return;}

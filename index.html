@@ -3279,6 +3279,13 @@
             <button class="pw-eye" type="button" onclick="togglePw('su-pass', this)"><i class="fa-regular fa-eye"></i></button>
           </div>
         </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="su-pass2" placeholder="Re-enter your password" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignUp()">
+            <button class="pw-eye" type="button" onclick="togglePw('su-pass2', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
         <div class="login-err" id="su-err"></div>
         <button class="login-submit" id="su-btn" onclick="authSignUp()"><i class="fa-solid fa-user-plus"></i> Create Account</button>
         <div class="login-note">We'll email you a 6-digit code to verify your email — just once. Already have an account? <a onclick="authTab('signin')" style="color:var(--primary);cursor:pointer;font-weight:700">Sign in</a>.</div>
@@ -3889,6 +3896,10 @@
     const password = document.getElementById('su-pass').value;
     if (!validEmail(email)) return authErr('su-err', 'Please enter a valid email address.');
     if (password.length < 6) return authErr('su-err', 'Password must be at least 6 characters.');
+    if (isResend !== true) {
+      const confirm = document.getElementById('su-pass2').value;
+      if (password !== confirm) return authErr('su-err', 'Passwords do not match.');
+    }
     const btn = document.getElementById(isResend === true ? 'sv-btn' : 'su-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Sending…';
     try {
       const r = await fetch('/api/auth/signup', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, password, name }) });
@@ -3914,25 +3925,25 @@
       const d = await r.json();
       btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr('sv-err', d.error || 'Verification failed.');
-      const hadPending = !!pendingAction;
       authSuccess(d.user, 'Welcome');
-      // A fresh signup from the main site lands on the app subdomain. If the
-      // user was mid-flow (e.g. checkout), don't yank them away — let them
-      // finish here. Skipped on app.laxuage.com itself and on preview/localhost.
-      if (!hadPending && /^(www\.)?laxuage\.com$/i.test(location.hostname)) {
-        setTimeout(function () { location.replace('https://app.laxuage.com/'); }, 800);
-      }
     } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('sv-err', 'Network error. Please try again.'); }
   }
 
   // Shared success path for sign-in and sign-up.
   function authSuccess(user, greeting) {
+    const hadPending = !!pendingAction;
     saveUser(user);
     updateNavProfile();
     closeLogin();
     showToast(greeting + (user && user.name ? ', ' + user.name.split(' ')[0] : '') + '! 👋');
     loadServerData();   // merge this account's saved cart + wishlist (cross-device)
     if (pendingAction) { pendingAction(); pendingAction = null; }
+    // After ANY successful auth (sign in / sign up / password reset), move the
+    // logged-in experience to the app subdomain. Skipped when the user was
+    // mid-flow (e.g. checkout), on app.laxuage.com itself, or preview/localhost.
+    if (!hadPending && /^(www\.)?laxuage\.com$/i.test(location.hostname)) {
+      setTimeout(function () { location.replace('https://app.laxuage.com/'); }, 800);
+    }
   }
   // Confirm/refresh the logged-in session from the server (works on any device).
   async function restoreSession() {

@@ -1327,6 +1327,23 @@
     }
 
     /* ============= LOGIN MODAL ============= */
+    .forgot-row { text-align: right; margin: 2px 0 6px; }
+    /* Centered branded confirmation popup (sign out) */
+    .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,26,.55); z-index: 320; align-items: center; justify-content: center; padding: 20px; }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box { background: var(--paper); border-radius: 18px; max-width: 360px; width: 100%; padding: 34px 28px 26px; text-align: center; box-shadow: var(--shadow-lg); animation: confirmPop .3s cubic-bezier(.2,.9,.3,1.25); }
+    @keyframes confirmPop { from { opacity: 0; transform: translateY(16px) scale(.93); } to { opacity: 1; transform: none; } }
+    .confirm-logo { font-family: var(--display); font-size: 32px; font-weight: 700; color: var(--ink); letter-spacing: .5px; line-height: 1; animation: logoFloat 2.6s ease-in-out infinite; }
+    .confirm-logo em { font-style: italic; color: var(--gold); }
+    @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    .confirm-title { font-size: 20px; font-weight: 800; color: var(--ink); margin: 14px 0 6px; }
+    .confirm-text { font-size: 13.5px; color: var(--text-2); line-height: 1.6; margin-bottom: 22px; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .confirm-cancel, .confirm-ok { flex: 1; padding: 12px 0; border-radius: var(--radius); font-size: 13.5px; font-weight: 700; cursor: pointer; letter-spacing: .03em; }
+    .confirm-cancel { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+    .confirm-cancel:hover { background: var(--cream-warm); }
+    .confirm-ok { background: var(--primary); border: none; color: var(--paper); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .confirm-ok:hover { background: var(--primary-dark); }
     .login-overlay {
       display: none;
       position: fixed;
@@ -3197,6 +3214,19 @@
   <i class="fa-brands fa-whatsapp"></i>
 </button>
 
+<!-- SIGN OUT CONFIRMATION -->
+<div class="confirm-overlay" id="logout-overlay" onclick="if(event.target===this)closeLogoutConfirm()">
+  <div class="confirm-box">
+    <div class="confirm-logo">L<em>ax</em>uage</div>
+    <div class="confirm-title">Sign out?</div>
+    <div class="confirm-text">Are you sure you want to sign out of your Laxuage account?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" type="button" onclick="closeLogoutConfirm()">Cancel</button>
+      <button class="confirm-ok" type="button" onclick="confirmLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign out</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN MODAL -->
 <div class="login-overlay" id="login-overlay" onclick="loginOverlayClick(event)">
   <div class="login-box" id="login-box">
@@ -3226,6 +3256,7 @@
             <button class="pw-eye" type="button" onclick="togglePw('si-pass', this)"><i class="fa-regular fa-eye"></i></button>
           </div>
         </div>
+        <div class="forgot-row"><a class="forgot-link" onclick="authTab('forgot')">Forgot password?</a></div>
         <div class="login-err" id="si-err"></div>
         <button class="login-submit" id="si-btn" onclick="authSignIn()"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
         <div class="login-note">New to Laxuage? <a onclick="authTab('signup')" style="color:var(--primary);cursor:pointer;font-weight:700">Create an account</a>.</div>
@@ -3264,6 +3295,37 @@
         <button class="forgot-link" type="button" onclick="authSignUp(true)">Resend code</button>
         <button class="back-link" type="button" onclick="authTab('signup')"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <div class="login-note">By continuing, you agree to Laxuage's Terms of Use and Privacy Policy.</div>
+      </div>
+
+      <!-- FORGOT PASSWORD — request reset code -->
+      <div class="login-form" id="auth-forgot">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="fp-email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')authForgot()">
+        </div>
+        <div class="login-err" id="fp-err"></div>
+        <button class="login-submit" id="fp-btn" onclick="authForgot()"><i class="fa-solid fa-paper-plane"></i> Send reset code</button>
+        <button class="back-link" type="button" onclick="authTab('signin')"><i class="fa-solid fa-arrow-left"></i> Back to sign in</button>
+        <div class="login-note">We'll email you a 6-digit code to reset your password.</div>
+      </div>
+
+      <!-- RESET PASSWORD — code + new password -->
+      <div class="login-form" id="auth-reset">
+        <div class="form-group">
+          <label>Enter the code sent to <span id="fp-email-label" style="color:var(--primary);font-weight:700"></span></label>
+          <input type="text" id="rp-code" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="rp-pass" placeholder="New password (min 6 chars)" autocomplete="new-password" onkeydown="if(event.key==='Enter')authResetPassword()">
+            <button class="pw-eye" type="button" onclick="togglePw('rp-pass', this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="login-err" id="rp-err"></div>
+        <button class="login-submit" id="rp-btn" onclick="authResetPassword()"><i class="fa-solid fa-lock"></i> Reset &amp; Sign In</button>
+        <button class="forgot-link" type="button" onclick="authForgot(true)">Resend code</button>
+        <button class="back-link" type="button" onclick="authTab('forgot')"><i class="fa-solid fa-arrow-left"></i> Back</button>
       </div>
 
       <!-- (Legacy phone-OTP signup and forgot-password views removed — auth is now
@@ -3763,10 +3825,42 @@
     const onSignup = (which === 'signup' || which === 'verify');
     if (tabSin) tabSin.classList.toggle('active', !onSignup);
     if (tabSup) tabSup.classList.toggle('active', onSignup);
-    ['auth-signin','auth-signup','auth-verify'].forEach(id => {
+    ['auth-signin','auth-signup','auth-verify','auth-forgot','auth-reset'].forEach(id => {
       const el = document.getElementById(id); if (el) el.classList.toggle('active', id === 'auth-' + which);
     });
-    ['si-err','su-err','sv-err'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('show'); });
+    ['si-err','su-err','sv-err','fp-err','rp-err'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('show'); });
+  }
+
+  // Forgot password — email a reset code, then verify it + set a new password.
+  async function authForgot(isResend) {
+    const email = document.getElementById('fp-email').value.trim().toLowerCase();
+    if (!validEmail(email)) return authErr('fp-err', 'Please enter a valid email address.');
+    const btn = document.getElementById('fp-btn'); const orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
+    try {
+      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email }) });
+      const d = await r.json();
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+      if (!d.ok) return authErr('fp-err', d.error || 'Could not send the code.');
+      document.getElementById('fp-email-label').textContent = email;
+      if (isResend) showToast('A new code has been sent.');
+      else authTab('reset');
+    } catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = orig; } authErr('fp-err', 'Network error. Please try again.'); }
+  }
+  async function authResetPassword() {
+    const email = document.getElementById('fp-email').value.trim().toLowerCase();
+    const code = document.getElementById('rp-code').value.trim();
+    const password = document.getElementById('rp-pass').value;
+    if (!/^\d{6}$/.test(code)) return authErr('rp-err', 'Enter the 6-digit code from your email.');
+    if (password.length < 6) return authErr('rp-err', 'Password must be at least 6 characters.');
+    const btn = document.getElementById('rp-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Resetting…';
+    try {
+      const r = await fetch('/api/auth/reset-password', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, code, password }) });
+      const d = await r.json();
+      btn.disabled = false; btn.innerHTML = orig;
+      if (!d.ok) return authErr('rp-err', d.error || 'Reset failed.');
+      authSuccess(d.user, 'Welcome back');
+    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('rp-err', 'Network error. Please try again.'); }
   }
 
   function authErr(id, msg) { const e = document.getElementById(id); if (e) { e.textContent = msg; e.classList.add('show'); } }
@@ -3855,7 +3949,14 @@
     if (e.target === document.getElementById('login-overlay')) closeLogin();
   }
 
+  // Logout now asks for confirmation in a centered branded popup.
   function doLogout() {
+    const menu = document.getElementById('profile-menu'); if (menu) menu.classList.remove('open');
+    const ov = document.getElementById('logout-overlay'); if (ov) ov.classList.add('open');
+  }
+  function closeLogoutConfirm() { const ov = document.getElementById('logout-overlay'); if (ov) ov.classList.remove('open'); }
+  function confirmLogout() {
+    closeLogoutConfirm();
     try { fetch('/api/auth/logout', { method: 'POST' }).catch(function(){}); } catch(e) {}
     currentUser = null;
     try { localStorage.removeItem('laxuage_user'); } catch(e) {}
@@ -3866,7 +3967,6 @@
     updateNavProfile();
     applyFiltersAndSort();
     showToast('Logged out successfully.');
-    toggleDropdown('profile-menu');
   }
 
   // ===== DROPDOWN TOGGLE =====

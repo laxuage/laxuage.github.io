@@ -1642,7 +1642,7 @@
       max-width: 1320px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      grid-template-columns: 1.6fr 1fr 1fr;
       gap: 40px;
       padding-bottom: 40px;
       border-bottom: 1px solid rgba(255,255,255,0.10);
@@ -1669,22 +1669,23 @@
       margin-bottom: 20px;
       max-width: 340px;
     }
-    .social-links { display: flex; gap: 10px; }
+    .social-links { display: flex; gap: 14px; margin-top: 22px; }
     .social-btn {
-      width: 38px;
-      height: 38px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1.5px solid rgba(255,255,255,0.22);
       color: var(--paper);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 22px;
+      text-decoration: none;
       transition: all 0.2s;
     }
-    .social-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
+    .social-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-3px); }
 
     .footer-col h4 {
       font-size: 12px;
@@ -3167,15 +3168,11 @@
       <span class="logo-text">L<em>ax</em>uage</span>
       <div class="brand-tag">Made of Her</div>
       <p>Premium luxury bags crafted for the modern woman — designed in India, made with care, carried with intention.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Explore</h4>
-      <ul>
-        <li><button class="footer-link" onclick="window.scrollTo({top:0,behavior:'smooth'})">Home</button></li>
-        <li><button class="footer-link" onclick="filterCat('all'); document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">Collections</button></li>
-        <li><button class="footer-link" onclick="sortProducts('newest'); document.querySelector('.section-wrap').scrollIntoView({behavior:'smooth'})">New Arrivals</button></li>
-        <li><button class="footer-link" onclick="openInfo('shipping')">Shipping Info</button></li>
-      </ul>
+      <div class="social-links">
+        <a class="social-btn" href="https://wa.me/919846923350" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        <a class="social-btn" href="https://instagram.com/laxuage" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a class="social-btn" href="mailto:support@laxuage.com" aria-label="Email" title="Email"><i class="fa-solid fa-envelope"></i></a>
+      </div>
     </div>
     <div class="footer-col">
       <h4>Customer Care</h4>

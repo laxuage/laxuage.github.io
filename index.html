@@ -3820,7 +3820,14 @@
       const d = await r.json();
       btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr('sv-err', d.error || 'Verification failed.');
+      const hadPending = !!pendingAction;
       authSuccess(d.user, 'Welcome');
+      // A fresh signup from the main site lands on the app subdomain. If the
+      // user was mid-flow (e.g. checkout), don't yank them away — let them
+      // finish here. Skipped on app.laxuage.com itself and on preview/localhost.
+      if (!hadPending && /^(www\.)?laxuage\.com$/i.test(location.hostname)) {
+        setTimeout(function () { location.replace('https://app.laxuage.com/'); }, 800);
+      }
     } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('sv-err', 'Network error. Please try again.'); }
   }
 

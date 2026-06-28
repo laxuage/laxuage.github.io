@@ -1,6 +1,6 @@
 // POST /api/auth/login  { email, password }
 // Verifies the password and issues a 30-day session cookie.
-import { json, genToken, ensureSchema, verifyPassword } from '../_shared.js';
+import { json, genToken, ensureSchema, verifyPassword, sessionCookie } from '../_shared.js';
 
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 
@@ -28,6 +28,6 @@ export async function onRequestPost(context) {
   await env.OTP_KV.put('usersess:' + token, String(user.id), { expirationTtl: SESSION_TTL });
 
   return json({ ok: true, user: { id: user.id, email: user.email, name: user.name, phone: user.phone } }, 200, {
-    'Set-Cookie': 'lax_session=' + token + '; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=' + SESSION_TTL,
+    'Set-Cookie': sessionCookie(request, token, SESSION_TTL),
   });
 }

@@ -70,6 +70,17 @@ export async function isAdmin(env, request) {
   return !!(await env.OTP_KV.get('adminsess:' + token));
 }
 
+// Build the customer-session Set-Cookie header. On *.laxuage.com hosts the
+// cookie is scoped to ".laxuage.com" so the login is shared between
+// laxuage.com and app.laxuage.com; on preview/localhost it stays host-only.
+export function sessionCookie(request, token, ttl) {
+  let host = '';
+  try { host = new URL(request.url).hostname; } catch (e) {}
+  const domain = /(^|\.)laxuage\.com$/i.test(host) ? '; Domain=.laxuage.com' : '';
+  const tail = token ? '; Max-Age=' + ttl : '; Max-Age=0';
+  return 'lax_session=' + (token || '') + '; HttpOnly; Secure; SameSite=Lax; Path=/' + domain + tail;
+}
+
 // Returns the logged-in customer { id, email, name, phone } or null.
 export async function getSessionUser(env, request) {
   if (!env.OTP_KV || !env.DB) return null;

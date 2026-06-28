@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <title>Laxuage — Premium Luxury Bags | Made of Her</title>
   <meta name="description" content="Laxuage — premium luxury handbags, crossbody bags, totes and clutches for the modern woman. Designed in India, crafted with care. Free shipping on all orders, secure UPI & online payment.">
   <meta name="keywords" content="luxury bags, handbags India, crossbody bag, designer tote, clutch, premium bags Kerala, Laxuage">
@@ -6396,6 +6397,9 @@
   function applyTheme(t){
     if(t==='dark'){document.body.classList.add('dark');}
     else{document.body.classList.remove('dark');}
+    // Tell the browser the site manages its own theme, so its "force dark mode"
+    // can't re-darken/mangle our buttons. Keep native controls matching too.
+    document.documentElement.style.colorScheme = (t==='dark') ? 'dark' : 'light';
     var ic=document.querySelector('#theme-toggle i');
     if(ic) ic.className = t==='dark'?'fa-solid fa-sun':'fa-solid fa-moon';
     var lbl=document.querySelector('#theme-toggle span');

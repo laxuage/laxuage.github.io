@@ -83,6 +83,22 @@
   .trk-cell .trk-awb{padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11.5px;width:108px;margin:0 4px}
   .trk-cell .trk-save{padding:5px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;font-size:11.5px;font-weight:700;cursor:pointer}
   .trk-cell .trk-save:hover{opacity:.9}
+  .trk-cell .trk-view{padding:5px 10px;margin-left:4px;border:1px solid var(--primary);border-radius:6px;background:#fff;color:var(--primary);font-size:11.5px;font-weight:700;cursor:pointer}
+  .trk-cell .trk-view:hover{background:var(--primary);color:#fff}
+  #atrack-content{padding:18px 22px 22px}
+  .atrack-head{font-size:14px;color:var(--ink);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+  .atrack-status{background:#eef;color:var(--primary);font-size:11px;font-weight:800;padding:3px 10px;border-radius:14px;margin-left:6px}
+  .atrack-note{font-size:13px;color:var(--muted);line-height:1.6}
+  .atrack-note a{color:var(--primary);font-weight:700}
+  .atk-list{display:flex;flex-direction:column;gap:0}
+  .atk-step{position:relative;padding:0 0 16px 18px;border-left:2px solid var(--border)}
+  .atk-step:last-child{border-left-color:transparent}
+  .atk-step::before{content:'';position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--border)}
+  .atk-step.cur::before{background:#3cb371}
+  .atk-msg{font-size:13px;font-weight:700;color:var(--ink)}
+  .atk-step.cur .atk-msg{color:#2e8b57}
+  .atk-loc{font-size:12px;color:var(--muted);margin-top:2px}
+  .atk-time{font-size:11px;color:var(--muted);margin-top:2px}
   .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
   .b-paid{background:#e7f6ee;color:var(--success)} .b-cod{background:#fef4e2;color:var(--warn)} .b-pending{background:#fdecea;color:var(--danger)}
   .b-new{background:#eef0ff;color:#3a52d6} .b-shipped{background:#e7f1fb;color:#2a7bd6} .b-delivered{background:#e7f6ee;color:var(--success)} .b-cancelled{background:#f1f1f1;color:#888}
@@ -280,6 +296,15 @@
 </div>
 
 <!-- Product editor -->
+<div class="pmodal-overlay" id="atrack-overlay" onclick="if(event.target===this)closeAdminTrack()">
+  <div class="pmodal" style="max-width:520px">
+    <div class="pmodal-head">
+      <h3><i class="fa-solid fa-truck-fast"></i> Shipment Tracking</h3>
+      <button class="pmodal-x" onclick="closeAdminTrack()">×</button>
+    </div>
+    <div class="pmodal-body" id="atrack-content"></div>
+  </div>
+</div>
 <div class="pmodal-overlay" id="prod-modal" onclick="if(event.target===this)closeProduct()">
   <div class="pmodal">
     <div class="pmodal-head">
@@ -445,6 +470,7 @@ async function loadOrders(){
         +'<select class="trk-courier">'+courierOpts(r.courier)+'</select>'
         +'<input class="trk-awb" placeholder="Tracking no." value="'+esc(r.tracking_no||'')+'">'
         +'<button class="trk-save" type="button" onclick="setTracking(this,\''+esc(r.id)+'\')">Save</button>'
+        +'<button class="trk-view" type="button" onclick="openAdminTrack(this)">Track</button>'
       +'</td>'
       +'</tr>';
   });
@@ -473,6 +499,33 @@ async function setTracking(btn,id){
   const {data}=await api('/api/admin/orders','POST',{id:id,courier:courier,tracking_no:awb});
   btn.disabled=false; btn.textContent=old;
   toast(data.ok?'Tracking saved ✓':'Save failed');
+}
+function closeAdminTrack(){ document.getElementById('atrack-overlay').classList.remove('open'); }
+async function openAdminTrack(btn){
+  const cell=btn.parentElement;
+  const courier=cell.querySelector('.trk-courier').value;
+  const awb=cell.querySelector('.trk-awb').value.trim();
+  if(!awb){ toast('Enter a tracking number first'); return; }
+  const ov=document.getElementById('atrack-overlay'); const c=document.getElementById('atrack-content');
+  ov.classList.add('open');
+  c.innerHTML='<div class="atrack-note">Fetching live status…</div>';
+  let d=null;
+  try{ const r=await fetch('/api/track?courier='+encodeURIComponent(courier)+'&awb='+encodeURIComponent(awb)); d=await r.json(); }catch(e){}
+  const ext='https://www.google.com/search?q='+encodeURIComponent('track '+courier+' '+awb);
+  const head='<div class="atrack-head"><b>'+esc(courier||'Courier')+'</b> · '+esc(awb)+(d&&d.ok&&d.status?' <span class="atrack-status">'+esc(d.status)+'</span>':'')+'</div>';
+  if(d&&d.ok&&d.checkpoints&&d.checkpoints.length){
+    const steps=d.checkpoints.slice().reverse().map(function(cp,i){
+      const t=cp.time?new Date(cp.time).toLocaleString('en-IN'):'';
+      return '<div class="atk-step'+(i===0?' cur':'')+'"><div class="atk-msg">'+esc(cp.message||'Update')+'</div>'+(cp.location?'<div class="atk-loc">📍 '+esc(cp.location)+'</div>':'')+'<div class="atk-time">'+esc(t)+'</div></div>';
+    }).join('');
+    c.innerHTML=head+'<div class="atk-list">'+steps+'</div>';
+  } else if(d&&d.ok&&d.pending){
+    c.innerHTML=head+'<div class="atrack-note">📦 Tracking registered — live updates appear here within a few minutes.<br><a href="'+ext+'" target="_blank" rel="noopener">Open courier page</a></div>';
+  } else if(d&&!d.ok&&d.reason==='not-configured'){
+    c.innerHTML=head+'<div class="atrack-note">⚙️ Live in-panel tracking is not switched on yet. Add <b>AFTERSHIP_API_KEY</b> in Cloudflare Pages → Settings → Environment variables to enable it.<br><br><a href="'+ext+'" target="_blank" rel="noopener">Open courier tracking page →</a></div>';
+  } else {
+    c.innerHTML=head+'<div class="atrack-note"><a href="'+ext+'" target="_blank" rel="noopener">Open courier tracking page →</a></div>';
+  }
 }
 function exportOrdersCSV(){
   if(!ORDERS.length){toast('No orders to export');return;}

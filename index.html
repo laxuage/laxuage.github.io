@@ -2380,6 +2380,29 @@
     }
     .order-track .ot-btn:hover { background: var(--primary-dark); }
     .order-track .ot-btn i { font-size: 10px; }
+    /* Live tracking modal */
+    .track-content { padding: 20px 22px 24px; }
+    .track-loading { text-align: center; color: var(--muted); padding: 30px 0; font-size: 14px; }
+    .track-loading i { margin-right: 8px; }
+    .track-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .track-head .th-courier { font-size: 15px; font-weight: 800; color: var(--ink); }
+    .track-head .th-awb { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .track-head .th-status { background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 20px; letter-spacing: .03em; white-space: nowrap; }
+    .tk-timeline { display: flex; flex-direction: column; }
+    .tk-step { display: flex; gap: 14px; position: relative; padding-bottom: 18px; }
+    .tk-step:not(:last-child) .tk-dot::after { content: ''; position: absolute; left: 5px; top: 14px; bottom: -4px; width: 2px; background: var(--border); }
+    .tk-dot { position: relative; width: 12px; height: 12px; border-radius: 50%; background: var(--border); flex-shrink: 0; margin-top: 3px; }
+    .tk-step.current .tk-dot { background: var(--success); box-shadow: 0 0 0 4px rgba(60,179,113,.18); }
+    .tk-body { flex: 1; }
+    .tk-msg { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+    .tk-step.current .tk-msg { color: var(--success); }
+    .tk-loc { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+    .tk-loc i { color: var(--primary); font-size: 11px; margin-right: 3px; }
+    .tk-time { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .track-note { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 16px; }
+    .track-extlink { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: var(--paper); text-decoration: none; padding: 11px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 700; }
+    .track-extlink:hover { background: var(--primary-dark); }
+    .track-extlink i { font-size: 12px; }
 
     /* ============= PINCODE CHECK (Product Modal) ============= */
     .pincode-section {
@@ -3600,6 +3623,17 @@
         <p>You haven't placed any orders yet</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Live shipment tracking modal -->
+<div class="orders-modal-overlay" id="track-overlay" onclick="if(event.target===this)closeLiveTrack()">
+  <div class="orders-modal-box">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-truck-fast"></i> Track Shipment</h3>
+      <button class="modal-close" onclick="closeLiveTrack()">×</button>
+    </div>
+    <div id="track-content" class="track-content"></div>
   </div>
 </div>
 
@@ -5506,6 +5540,29 @@
     return map[courier] || ('https://www.google.com/search?q=' + encodeURIComponent('track ' + (courier || '') + ' ' + (awb || '')));
   }
 
+  function closeLiveTrack() { document.getElementById('track-overlay').classList.remove('open'); }
+  async function openLiveTrack(courier, awb) {
+    const ov = document.getElementById('track-overlay');
+    const c = document.getElementById('track-content');
+    ov.classList.add('open');
+    c.innerHTML = '<div class="track-loading"><i class="fa-solid fa-spinner fa-spin"></i> Fetching live status…</div>';
+    let d = null;
+    try { const r = await fetch('/api/track?courier=' + encodeURIComponent(courier || '') + '&awb=' + encodeURIComponent(awb || '')); d = await r.json(); } catch (e) {}
+    const extLink = '<a class="track-extlink" href="' + courierTrackUrl(courier, awb) + '" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open ' + escHtml(courier || 'courier') + ' tracking page</a>';
+    const head = '<div class="track-head"><div><div class="th-courier">' + escHtml(courier || 'Courier') + '</div><div class="th-awb">' + escHtml(awb || '') + '</div></div>' + (d && d.ok && d.status ? '<span class="th-status">' + escHtml(d.status) + '</span>' : '') + '</div>';
+    if (d && d.ok && Array.isArray(d.checkpoints) && d.checkpoints.length) {
+      const steps = d.checkpoints.slice().reverse().map(function (cp, idx) {
+        const t = cp.time ? new Date(cp.time).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+        return '<div class="tk-step' + (idx === 0 ? ' current' : '') + '"><div class="tk-dot"></div><div class="tk-body"><div class="tk-msg">' + escHtml(cp.message || 'Update') + '</div>' + (cp.location ? '<div class="tk-loc"><i class="fa-solid fa-location-dot"></i> ' + escHtml(cp.location) + '</div>' : '') + '<div class="tk-time">' + escHtml(t) + '</div></div></div>';
+      }).join('');
+      c.innerHTML = head + '<div class="tk-timeline">' + steps + '</div>' + extLink;
+    } else if (d && d.ok && d.pending) {
+      c.innerHTML = head + '<div class="track-note">📦 Tracking just registered — live updates appear here within a few minutes. Meanwhile, you can check the courier page:</div>' + extLink;
+    } else {
+      c.innerHTML = head + '<div class="track-note">Track this shipment on the courier\'s page:</div>' + extLink;
+    }
+  }
+
   async function renderOrders() {
     const content = document.getElementById('orders-content');
     content.innerHTML = '<div class="orders-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading your orders…</p></div>';
@@ -5532,7 +5589,7 @@
       const pay = (o.payment_status === 'paid') ? 'PAID' : String(o.payment_method || '').toUpperCase();
       const trackHtml = o.tracking_no ? `<div class="order-track">
           <span class="ot-info"><i class="fa-solid fa-truck-fast"></i> ${escHtml(o.courier || 'Courier')} · <strong>${escHtml(o.tracking_no)}</strong></span>
-          <a class="ot-btn" href="${courierTrackUrl(o.courier, o.tracking_no)}" target="_blank" rel="noopener">Track Shipment <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          <button class="ot-btn" type="button" data-courier="${escHtml(o.courier || '')}" data-awb="${escHtml(o.tracking_no)}" onclick="openLiveTrack(this.dataset.courier, this.dataset.awb)">Track Shipment <i class="fa-solid fa-location-dot"></i></button>
         </div>` : '';
       return `<div class="order-row">
         <div class="order-top">

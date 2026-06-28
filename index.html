@@ -1665,6 +1665,8 @@
     .ff-link:hover { color: var(--gold); }
     .ff-link.sm { font-size: 12px; }
     .ff-contact { font-size: 12.5px; color: #8a8079; margin-top: 16px; }
+    .ff-email { background: none; border: none; font-family: inherit; font-size: 12.5px; color: #a99e92; cursor: pointer; padding: 0; transition: color .2s; }
+    .ff-email:hover { color: var(--gold); text-decoration: underline; }
     .footer-top {
       max-width: 1320px;
       margin: 0 auto;
@@ -3205,7 +3207,7 @@
         <button class="ff-link" onclick="openInfo('faq')">FAQ</button>
         <button class="ff-link" onclick="openInfo('contact')">Contact</button>
       </div>
-      <div class="ff-contact">support@laxuage.com&nbsp;&nbsp;·&nbsp;&nbsp;+91 98469 23350</div>
+      <div class="ff-contact"><button class="ff-email" type="button" onclick="window.location.href='mailto:support@laxuage.com'">support@laxuage.com</button></div>
     </div>
   </div>
   <div class="footer-bottom">

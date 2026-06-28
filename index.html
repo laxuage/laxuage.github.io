@@ -5507,6 +5507,9 @@
   }
 
   async function placeOrder() {
+    const nextBtn = document.getElementById('ck-next-btn');
+    if (nextBtn) { nextBtn.disabled = true; nextBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing…'; }
+    const resetBtn = function(){ if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Place Order'; } };
     const addr = getAddressFromForm();
     const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     const discount = computeDiscount(subtotal);
@@ -5525,9 +5528,12 @@
     };
 
     // Save the order to the shop's database (pending for online, cod for COD).
+    // Time-boxed so a slow/hung network can never freeze checkout.
     try {
+      const _ctrl = new AbortController();
+      const _to = setTimeout(function(){ _ctrl.abort(); }, 12000);
       await fetch('/api/order/create', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
+        method: 'POST', headers: { 'content-type': 'application/json' }, signal: _ctrl.signal,
         body: JSON.stringify({
           id: orderId,
           items: order.items.map(function(i){ return { id:i.id, name:i.name, price:i.price, qty:i.qty }; }),
@@ -5541,12 +5547,14 @@
           payment_status: isOnline ? 'pending' : 'cod'
         })
       });
+      clearTimeout(_to);
     } catch(e) {}
 
     // For online orders, collect & verify the payment before showing success.
     if (isOnline) {
       const paid = await payWithRazorpay(orderId, final, addr);
       if (!paid) {
+        resetBtn();
         showToast('Payment not completed — your order is saved as pending. You can retry payment any time.');
         return; // keep the cart and stay on the payment step
       }
@@ -5586,10 +5594,12 @@
   function payWithRazorpay(orderId, amountRupees, addr) {
     return new Promise(function(resolve){
       if (typeof Razorpay === 'undefined') { showToast('⚠️ Payment library not loaded — please refresh and retry.'); return resolve(false); }
+      var _pc = new AbortController();
+      var _pt = setTimeout(function(){ _pc.abort(); }, 15000);
       fetch('/api/payment/create-order', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
+        method: 'POST', headers: { 'content-type': 'application/json' }, signal: _pc.signal,
         body: JSON.stringify({ order_id: orderId })
-      }).then(function(r){ return r.json(); }).then(function(co){
+      }).then(function(r){ clearTimeout(_pt); return r.json(); }).then(function(co){
         if (!co || !co.ok) { showToast('⚠️ ' + ((co && co.error) || 'Could not start payment')); return resolve(false); }
         var rzp = new Razorpay({
           key: co.key_id, order_id: co.order_id, amount: co.amount, currency: co.currency || 'INR',

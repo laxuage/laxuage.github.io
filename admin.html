@@ -43,6 +43,10 @@
   .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--border)}
   .btn-ghost:hover{border-color:var(--primary);background:#fff}
   .err{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px}
+  .ok-msg{color:#1a7f4e;font-size:12.5px;font-weight:600;margin-top:10px}
+  .linklike{background:none;border:none;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;padding:2px 4px;text-decoration:underline;text-underline-offset:3px}
+  .linklike:disabled{color:var(--muted);cursor:default;text-decoration:none}
+  .hint-note{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 16px}
 
   /* ---- App shell ---- */
   #app-view{display:none}
@@ -191,7 +195,7 @@
 
 <!-- LOGIN -->
 <div id="login-view">
-  <form class="login-card" onsubmit="doLogin(event)">
+  <form class="login-card" id="login-card" onsubmit="doLogin(event)">
     <div class="brand">L<em>ax</em>uage</div>
     <div class="brand-sub">Admin Panel</div>
     <h1>Sign in to manage your store</h1>
@@ -201,6 +205,36 @@
     </div>
     <button class="btn btn-block" type="submit" id="login-btn">Sign In</button>
     <div class="err" id="login-err"></div>
+    <button type="button" class="linklike" onclick="showForgot()">Forgot password?</button>
+  </form>
+
+  <form class="login-card" id="forgot-card" style="display:none" onsubmit="doForgot(event)">
+    <div class="brand">L<em>ax</em>uage</div>
+    <div class="brand-sub">Admin Panel</div>
+    <h1>Reset your password</h1>
+    <div id="forgot-step1">
+      <p class="hint-note">We'll email a 6-digit verification code to the store owner's registered address.</p>
+      <button class="btn btn-block" type="button" id="forgot-send" onclick="sendResetCode('forgot-send')">Send code</button>
+    </div>
+    <div id="forgot-step2" style="display:none">
+      <div class="field">
+        <label>Verification Code</label>
+        <input type="text" id="rc" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code">
+      </div>
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" id="np1" placeholder="At least 8 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" id="np2" placeholder="Re-enter new password" autocomplete="new-password">
+      </div>
+      <button class="btn btn-block" type="submit" id="forgot-btn">Reset password</button>
+      <button type="button" class="linklike" id="resend-btn" onclick="sendResetCode('resend-btn')">Resend code</button>
+    </div>
+    <div class="ok-msg" id="forgot-ok"></div>
+    <div class="err" id="forgot-err"></div>
+    <button type="button" class="linklike" onclick="showLogin()">← Back to sign in</button>
   </form>
 </div>
 
@@ -400,21 +434,164 @@ async function api(path, method, body){
   if(body){opt.headers['content-type']='application/json';opt.body=JSON.stringify(body);}
   const r=await fetch(path,opt);
   let d={}; try{d=await r.json();}catch(e){}
-  return {status:r.status, data:d};
+  return {status:r.status, data:d, retryAfter:r.headers.get('retry-after')};
 }
 
 /* ---- Auth ---- */
+/* Login lockout countdown: shows remaining wait time (mm:ss) after too many failed attempts.
+   Uses the server's retry_after (JSON) or Retry-After header when available;
+   otherwise falls back to LOCK_FALLBACK_SECS. Survives page refresh via localStorage. */
+const LOCK_KEY='adm_lock_until';
+const LOCK_FALLBACK_SECS=300; // 5 min — change to match the server's lockout window
+let lockTimer=null;
+
+function fmtSecs(s){ const m=Math.floor(s/60), r=s%60; return m+':'+String(r).padStart(2,'0'); }
+
+function startLock(secs){
+  const until=Date.now()+secs*1000;
+  try{ localStorage.setItem(LOCK_KEY,String(until)); }catch(e){}
+  runLock(until);
+}
+
+function runLock(until){
+  const err=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn');
+  const pwEl=document.getElementById('pw');
+  clearInterval(lockTimer);
+  function tick(){
+    const left=Math.ceil((until-Date.now())/1000);
+    if(left<=0){
+      clearInterval(lockTimer); lockTimer=null;
+      try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+      btn.disabled=false; btn.textContent='Sign In';
+      pwEl.disabled=false; pwEl.value=''; pwEl.focus();
+      err.textContent='You can try again now.';
+      return;
+    }
+    btn.disabled=true; btn.textContent='Locked · '+fmtSecs(left);
+    pwEl.disabled=true;
+    err.textContent='Too many failed attempts. Try again in '+fmtSecs(left);
+  }
+  tick();
+  lockTimer=setInterval(tick,1000);
+}
+
+function resumeLock(){
+  let until=0;
+  try{ until=parseInt(localStorage.getItem(LOCK_KEY)||'0',10)||0; }catch(e){}
+  if(until>Date.now()){ runLock(until); return true; }
+  try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+  return false;
+}
+
 async function doLogin(e){
   e.preventDefault();
+  if(lockTimer) return; // still locked out
   const pw=document.getElementById('pw').value;
   const err=document.getElementById('login-err'); err.textContent='';
   const btn=document.getElementById('login-btn'); btn.disabled=true; btn.textContent='Signing in…';
-  const {status,data}=await api('/api/admin/login','POST',{password:pw});
-  btn.disabled=false; btn.textContent='Sign In';
-  if(status===200 && data.ok){ showApp(); }
-  else { err.textContent = data.error || 'Login failed'; }
+  const {status,data,retryAfter}=await api('/api/admin/login','POST',{password:pw});
+  const msg=(data&&data.error)||'';
+  const isLocked = status===429 || /too many/i.test(msg);
+  if(status===200 && data.ok){
+    btn.disabled=false; btn.textContent='Sign In';
+    try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+    showApp();
+  } else if(isLocked){
+    let secs=parseInt((data&&(data.retry_after||data.retryAfter||data.wait_seconds))||retryAfter||'',10);
+    if(isNaN(secs)||secs<=0) secs=LOCK_FALLBACK_SECS;
+    startLock(secs);
+  } else {
+    btn.disabled=false; btn.textContent='Sign In';
+    err.textContent = msg || 'Login failed';
+  }
 }
 async function logout(){ await api('/api/admin/logout','POST'); location.reload(); }
+
+/* ---- Forgot password ---- */
+let resendT=null;
+
+function showForgot(){
+  document.getElementById('login-card').style.display='none';
+  document.getElementById('forgot-card').style.display='block';
+  document.getElementById('forgot-step1').style.display='block';
+  document.getElementById('forgot-step2').style.display='none';
+  document.getElementById('forgot-err').textContent='';
+  document.getElementById('forgot-ok').textContent='';
+  document.getElementById('rc').value='';
+  document.getElementById('np1').value='';
+  document.getElementById('np2').value='';
+}
+
+function showLogin(){
+  clearInterval(resendT); resendT=null;
+  document.getElementById('forgot-card').style.display='none';
+  document.getElementById('login-card').style.display='block';
+  const pwEl=document.getElementById('pw');
+  if(!pwEl.disabled) pwEl.focus();
+}
+
+function startResendCooldown(secs){
+  const b=document.getElementById('resend-btn');
+  clearInterval(resendT);
+  let left=secs;
+  b.disabled=true;
+  function tick(){
+    if(left<=0){ clearInterval(resendT); resendT=null; b.disabled=false; b.textContent='Resend code'; return; }
+    b.textContent='Resend code ('+left+'s)'; left--;
+  }
+  tick(); resendT=setInterval(tick,1000);
+}
+
+async function sendResetCode(btnId){
+  const btn=document.getElementById(btnId||'forgot-send');
+  const err=document.getElementById('forgot-err'); err.textContent='';
+  const ok=document.getElementById('forgot-ok'); ok.textContent='';
+  const orig=btn.textContent;
+  btn.disabled=true; btn.textContent='Sending…';
+  const {status,data}=await api('/api/admin/forgot','POST',{});
+  btn.disabled=false; btn.textContent=orig;
+  if(status===200 && data && data.ok){
+    document.getElementById('forgot-step1').style.display='none';
+    document.getElementById('forgot-step2').style.display='block';
+    ok.textContent='Code sent to '+((data.email_hint)||'the registered email')+'. Check the inbox and spam folder.';
+    startResendCooldown(60);
+    document.getElementById('rc').focus();
+  } else if(status===404 || status===405){
+    err.textContent='Password reset is not set up on the server yet. Contact your developer.';
+  } else {
+    err.textContent=(data&&data.error)||'Could not send the code. Try again.';
+  }
+}
+
+async function doForgot(e){
+  e.preventDefault();
+  const err=document.getElementById('forgot-err'); err.textContent='';
+  const ok=document.getElementById('forgot-ok'); ok.textContent='';
+  const code=document.getElementById('rc').value.trim();
+  const p1=document.getElementById('np1').value;
+  const p2=document.getElementById('np2').value;
+  if(!/^\d{6}$/.test(code)){ err.textContent='Enter the 6-digit code from the email.'; return; }
+  if(p1.length<8){ err.textContent='New password must be at least 8 characters.'; return; }
+  if(p1!==p2){ err.textContent='Passwords do not match.'; return; }
+  const btn=document.getElementById('forgot-btn');
+  btn.disabled=true; btn.textContent='Resetting…';
+  const {status,data}=await api('/api/admin/reset','POST',{code:code,new_password:p1});
+  btn.disabled=false; btn.textContent='Reset password';
+  if(status===200 && data && data.ok){
+    clearInterval(lockTimer); lockTimer=null;
+    try{ localStorage.removeItem(LOCK_KEY); }catch(e2){}
+    const lb=document.getElementById('login-btn'); lb.disabled=false; lb.textContent='Sign In';
+    const pwEl=document.getElementById('pw'); pwEl.disabled=false; pwEl.value='';
+    document.getElementById('login-err').textContent='';
+    showLogin();
+    toast('Password reset ✓ — sign in with your new password');
+  } else if(status===404 || status===405){
+    err.textContent='Password reset is not set up on the server yet. Contact your developer.';
+  } else {
+    err.textContent=(data&&data.error)||'Reset failed. Check the code and try again.';
+  }
+}
 
 function showApp(){
   document.getElementById('login-view').style.display='none';
@@ -814,7 +991,7 @@ async function revAct(id,action){
 (async function(){
   const {status}=await api('/api/admin/stats');
   if(status===200){ showApp(); }
-  else { document.getElementById('pw').focus(); }
+  else if(!resumeLock()){ document.getElementById('pw').focus(); }
 })();
 </script>
 </body>

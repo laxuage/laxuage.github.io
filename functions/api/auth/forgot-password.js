@@ -22,16 +22,31 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: 'Too many codes requested. Please try again in about 20 minutes.' }, 429);
   }
 
-  const user = await env.DB.prepare('SELECT id, password_hash FROM users WHERE email=?').bind(email).first();
-  if (user && user.password_hash) {
+  // Any existing account may reset — including legacy OTP-era users who never
+  // set a password. They prove ownership via the emailed code exactly the same
+  // way, and this makes "Forgot password" the ONE recovery path for everyone
+  // (which in turn lets /api/auth/login return a single generic error).
+  const user = await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first();
+  if (user) {
     const key = 'reset:' + email;
     const prevRaw = await env.OTP_KV.get(key);
     if (prevRaw) {
-      try { const prev = JSON.parse(prevRaw); if (prev.sentAt && Date.now() - prev.sentAt < RESEND_COOLDOWN_MS) return json({ ok: true }); } catch (e) {}
+      try {
+        const prev = JSON.parse(prevRaw);
+        if (prev.sentAt && Date.now() - prev.sentAt < RESEND_COOLDOWN_MS) return json({ ok: true });
+      } catch (e) {}
     }
     const code = genOTP();
-    await env.OTP_KV.put(key, JSON.stringify({ code, sentAt: Date.now(), attempts: 0 }), { expirationTtl: TTL });
-    await sendOtpEmail(env.BREVO_API_KEY, email, code); // best-effort
+    // Persist only after the mail is accepted, so a Brevo failure doesn't leave
+    // a live code the owner never received.
+    const sent = await sendOtpEmail(env.BREVO_API_KEY, email, code, {
+      subject: 'Your Laxuage password reset code',
+      intro: 'Use this code to reset your Laxuage password:',
+      footer: "If you didn't request this, you can safely ignore this email — your password has not changed.",
+    });
+    if (sent) {
+      await env.OTP_KV.put(key, JSON.stringify({ code, sentAt: Date.now(), attempts: 0 }), { expirationTtl: TTL });
+    }
   }
   // Always ok — don't leak whether the account exists.
   return json({ ok: true });

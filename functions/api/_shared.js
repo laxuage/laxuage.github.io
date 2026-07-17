@@ -28,6 +28,17 @@ export async function rateLimit(env, key, max, windowSec) {
   } catch (e) { return true; }
 }
 
+// Read-only check: is this key already at its cap? Does NOT increment, so a
+// caller can gate on a budget it only intends to charge conditionally (e.g.
+// charge failed logins but not successful ones). Fails OPEN like rateLimit().
+export async function rateLimitPeek(env, key, max) {
+  if (!env || !env.OTP_KV) return false;
+  try {
+    const n = parseInt((await env.OTP_KV.get('rl:' + key)) || '0', 10);
+    return n >= max;
+  } catch (e) { return false; }
+}
+
 // The caller's IP (Cloudflare-provided; not spoofable by the client).
 export function clientIp(request) {
   return request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -57,17 +68,93 @@ export function sanitizeText(s, max) {
     .slice(0, max || 800);
 }
 
+// Escape the cookie name so a caller can never inject regex metacharacters.
+function reEsc(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
 export function getCookie(request, name) {
-  const c = request.headers.get('Cookie') || '';
-  const m = c.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
-  return m ? m[1] : '';
+  const all = getCookies(request, name);
+  return all.length ? all[0] : '';
 }
 
+// ALL values sent for `name`. A browser can send duplicates for the same name
+// (e.g. a host-only cookie and a Domain=.laxuage.com cookie), and getCookie()
+// only ever sees the first. Logout must clear every one of them, or the session
+// whose token lost the race stays alive in KV.
+export function getCookies(request, name) {
+  const c = request.headers.get('Cookie') || '';
+  const re = new RegExp('(?:^|;\\s*)' + reEsc(name) + '=([^;]*)', 'g');
+  const out = [];
+  let m;
+  while ((m = re.exec(c)) !== null) if (m[1]) out.push(m[1]);
+  return out;
+}
+
+// Admin sessions carry their issue time so that a password reset can revoke
+// every existing session at once (there is no reverse token index in KV).
+// Any session issued before `admin_sess_epoch` is dead.
 export async function isAdmin(env, request) {
   if (!env.OTP_KV) return false;
   const token = getCookie(request, 'lax_admin');
   if (!token) return false;
-  return !!(await env.OTP_KV.get('adminsess:' + token));
+  const val = await env.OTP_KV.get('adminsess:' + token);
+  if (!val) return false;
+  // Fail CLOSED: if the epoch cannot be read we cannot know whether this
+  // session was revoked, and a revoked admin session must never be resurrected
+  // by a D1 hiccup. The panel needs D1 for every screen anyway, so refusing
+  // here costs no working functionality.
+  let epoch = 0;
+  try {
+    const s = await getSettingStrict(env.DB, 'admin_sess_epoch');
+    if (s && s.at) epoch = s.at;
+  } catch (e) {
+    return false;
+  }
+  const issued = parseInt(val, 10) || 0;   // legacy sessions stored '1'
+  return issued >= epoch;
+}
+
+// ---- Admin password: env secret + D1 override ----
+// ADMIN_PASSWORD is a Cloudflare env var, and a Worker cannot rewrite its own
+// env — so "forgot password" stores a PBKDF2 hash in D1 (settings.admin_password)
+// which, once present, takes precedence over the env secret.
+// THROWS on a D1 read error — callers must surface that as "try again", never
+// as a wrong password. Using the error-swallowing getSetting() here would make
+// "override missing" and "read failed" indistinguishable, so a transient D1
+// blip would silently re-enable a retired (possibly leaked) env password.
+export async function verifyAdminPassword(env, pw) {
+  const override = await getSettingStrict(env.DB, 'admin_password');
+  if (override && override.hash) return await verifyPassword(pw, override.hash);
+  const expected = env.ADMIN_PASSWORD;
+  if (!expected) return false;
+  return timingSafeEqual(pw, expected);
+}
+
+export async function setAdminPassword(env, pw) {
+  const hash = await hashPassword(pw);
+  await setSetting(env.DB, 'admin_password', { hash, at: Date.now() });
+  // Revoke every admin session issued before now (see isAdmin).
+  await setSetting(env.DB, 'admin_sess_epoch', { at: Date.now() });
+}
+
+// Constant-time string compare. Folds the length difference into the same
+// accumulator instead of returning early on a length mismatch.
+export function timingSafeEqual(a, b) {
+  a = String(a); b = String(b);
+  let diff = a.length ^ b.length;
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+// "adhur@gmail.com" -> "a***r@gmail.com" — enough for the owner to recognise
+// the inbox, not enough to disclose it to a stranger.
+export function maskEmail(email) {
+  const s = String(email || '');
+  const at = s.indexOf('@');
+  if (at < 1) return '***';
+  const user = s.slice(0, at), dom = s.slice(at);
+  if (user.length <= 2) return user[0] + '***' + dom;
+  return user[0] + '***' + user[user.length - 1] + dom;
 }
 
 // Build the customer-session Set-Cookie header. On *.laxuage.com hosts the
@@ -81,19 +168,56 @@ export function sessionCookie(request, token, ttl) {
   return 'lax_session=' + (token || '') + '; HttpOnly; Secure; SameSite=Lax; Path=/' + domain + tail;
 }
 
+// Mint a customer session token. The stored value records WHEN it was issued so
+// that a password reset can invalidate every older session for that user.
+export async function createUserSession(env, userId, ttl) {
+  const token = genToken();
+  await env.OTP_KV.put('usersess:' + token, JSON.stringify({ uid: userId, iat: Date.now() }), { expirationTtl: ttl });
+  return token;
+}
+
 // Returns the logged-in customer { id, email, name, phone } or null.
 export async function getSessionUser(env, request) {
   if (!env.OTP_KV || !env.DB) return null;
   const token = getCookie(request, 'lax_session');
   if (!token) return null;
-  const uid = await env.OTP_KV.get('usersess:' + token);
-  if (!uid) return null;
-  try {
-    const u = await env.DB.prepare('SELECT id,email,name,phone FROM users WHERE id=?').bind(parseInt(uid, 10)).first();
-    return u || null;
-  } catch (e) {
-    return null; // users table may not exist yet
+  const raw = await env.OTP_KV.get('usersess:' + token);
+  if (!raw) return null;
+
+  // New sessions are {uid,iat} JSON; legacy ones are a bare user-id string.
+  let uid = 0, iat = 0;
+  if (raw.charAt(0) === '{') {
+    try { const p = JSON.parse(raw); uid = parseInt(p.uid, 10) || 0; iat = p.iat || 0; } catch (e) { return null; }
+  } else {
+    uid = parseInt(raw, 10) || 0;
   }
+  if (!uid) return null;
+
+  let u = null;
+  try {
+    u = await env.DB.prepare('SELECT id,email,name,phone,pw_changed_at FROM users WHERE id=?').bind(uid).first();
+  } catch (e) {
+    // pw_changed_at is added by ensureSchema, which does NOT run on read-only
+    // paths like /api/auth/me. Immediately after this deploys the column does
+    // not exist yet, and D1 fails the whole SELECT with "no such column" —
+    // which would read as "no session" and log EVERY customer out until someone
+    // happened to hit a route that migrates. Fall back to the pre-migration
+    // shape instead.
+    try {
+      u = await env.DB.prepare('SELECT id,email,name,phone FROM users WHERE id=?').bind(uid).first();
+    } catch (e2) {
+      return null; // users table genuinely unavailable
+    }
+  }
+  if (!u) return null;
+
+  // Revoke sessions minted before the last password change. Legacy sessions
+  // (iat=0) are only cut off once a password change actually happens.
+  if (u.pw_changed_at && iat < u.pw_changed_at) {
+    try { await env.OTP_KV.delete('usersess:' + token); } catch (e) {}
+    return null;
+  }
+  return { id: u.id, email: u.email, name: u.name, phone: u.phone };
 }
 
 // Idempotent schema creation. Cheap (CREATE TABLE IF NOT EXISTS); safe to call per request.
@@ -171,6 +295,7 @@ export async function ensureSchema(db) {
   // Column migrations for older tables (ignored if the column already exists).
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE users ADD COLUMN password_hash TEXT').run(); } catch (e) {}
+  try { await db.prepare('ALTER TABLE users ADD COLUMN pw_changed_at INTEGER').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN rp_order_id TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN courier TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN tracking_no TEXT').run(); } catch (e) {}
@@ -212,37 +337,57 @@ export function genOTP() {
   return String(100000 + (v % 900000));
 }
 
-export async function sendOtpEmail(apiKey, to, code) {
+// Sends a 6-digit code. `opts` lets callers retitle it for a different purpose
+// (e.g. an admin password reset); defaults keep the original signup wording, so
+// existing callers are unaffected. Returns true only if Brevo accepted it.
+export async function sendOtpEmail(apiKey, to, code, opts) {
+  const o = opts || {};
+  const subject = o.subject || 'Your Laxuage verification code';
+  const intro = o.intro || 'Your email verification code is:';
+  const footer = o.footer || "If you didn't request this, you can safely ignore this email.";
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;background:#fbf7f1;padding:32px 24px;border-radius:8px">
     <div style="text-align:center;margin-bottom:24px">
       <span style="font-family:Georgia,serif;font-size:26px;font-style:italic;color:#7E2D49;letter-spacing:1px">Laxuage</span>
       <div style="font-size:11px;letter-spacing:3px;color:#b08d57;text-transform:uppercase;margin-top:2px">Made of Her</div>
     </div>
-    <p style="color:#1a1a1a;font-size:15px;margin:0 0 12px">Your email verification code is:</p>
+    <p style="color:#1a1a1a;font-size:15px;margin:0 0 12px">${intro}</p>
     <div style="text-align:center;background:#fff;border:1px solid #e6dfd0;border-radius:8px;padding:18px;margin:0 0 16px">
       <span style="font-size:34px;font-weight:bold;letter-spacing:10px;color:#7E2D49">${code}</span>
     </div>
     <p style="color:#707070;font-size:13px;margin:0 0 6px">This code is valid for 10 minutes. Do not share it with anyone.</p>
-    <p style="color:#a8a8a8;font-size:12px;margin:16px 0 0">If you didn't request this, you can safely ignore this email.</p>
+    <p style="color:#a8a8a8;font-size:12px;margin:16px 0 0">${footer}</p>
   </div>`;
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': apiKey, 'content-type': 'application/json', 'accept': 'application/json' },
-      body: JSON.stringify({ sender: { name: 'Laxuage', email: 'support@laxuage.com' }, to: [{ email: to }], subject: 'Your Laxuage verification code', htmlContent: html }),
+      body: JSON.stringify({ sender: { name: 'Laxuage', email: 'support@laxuage.com' }, to: [{ email: to }], subject, htmlContent: html }),
     });
     return res.ok;
   } catch (e) { return false; }
 }
 
-// Read a JSON setting by key (returns parsed object or null).
+// Read a JSON setting by key. Returns null both when the key is absent AND when
+// the read fails — convenient, but it means callers cannot tell those apart.
+// For anything security-critical use getSettingStrict().
 export async function getSetting(db, key) {
   try {
-    const row = await db.prepare('SELECT value FROM settings WHERE key=?').bind(key).first();
-    if (row && row.value) return JSON.parse(row.value);
-  } catch (e) {}
-  return null;
+    return await getSettingStrict(db, key);
+  } catch (e) { return null; }
+}
+
+// Same, but propagates read errors instead of swallowing them. Returns null ONLY
+// when the key genuinely does not exist.
+export async function getSettingStrict(db, key) {
+  if (!db) throw new Error('D1 binding "DB" missing');
+  const row = await db.prepare('SELECT value FROM settings WHERE key=?').bind(key).first();
+  if (!row || !row.value) return null;
+  try {
+    return JSON.parse(row.value);
+  } catch (e) {
+    throw new Error('settings.' + key + ' is not valid JSON');
+  }
 }
 
 // Write a JSON setting by key (upsert).

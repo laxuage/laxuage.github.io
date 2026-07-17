@@ -213,8 +213,9 @@
     <div class="brand-sub">Admin Panel</div>
     <h1>Reset your password</h1>
     <div id="forgot-step1">
-      <p class="hint-note">We'll email a 6-digit verification code to the store owner's registered address.</p>
+      <p class="hint-note">We'll email a 6-digit verification code to the store owner's inbox. The code is valid for 10 minutes.</p>
       <button class="btn btn-block" type="button" id="forgot-send" onclick="sendResetCode('forgot-send')">Send code</button>
+      <button type="button" class="linklike" onclick="showResetStep2()">I already have a code</button>
     </div>
     <div id="forgot-step2" style="display:none">
       <div class="field">
@@ -429,42 +430,59 @@ function fdate(ms){try{return new Date(ms).toLocaleString('en-IN',{day:'numeric'
 let toastT;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
 
+/* Never throws. A rejected fetch (offline, DNS, TLS) used to propagate out of
+   every caller and leave its button stuck on "Signing in…" forever, because the
+   re-enable line sat after the await. Callers get status:0 instead. */
 async function api(path, method, body){
   const opt={method:method||'GET',headers:{}};
   if(body){opt.headers['content-type']='application/json';opt.body=JSON.stringify(body);}
-  const r=await fetch(path,opt);
-  let d={}; try{d=await r.json();}catch(e){}
-  return {status:r.status, data:d, retryAfter:r.headers.get('retry-after')};
+  try{
+    const r=await fetch(path,opt);
+    let d={}; try{d=await r.json();}catch(e){}
+    return {status:r.status, data:d, retryAfter:r.headers.get('retry-after'), netErr:false};
+  }catch(e){
+    return {status:0, data:{}, retryAfter:null, netErr:true};
+  }
 }
 
 /* ---- Auth ---- */
-/* Login lockout countdown: shows remaining wait time (mm:ss) after too many failed attempts.
-   Uses the server's retry_after (JSON) or Retry-After header when available;
-   otherwise falls back to LOCK_FALLBACK_SECS. Survives page refresh via localStorage. */
-const LOCK_KEY='adm_lock_until';
-const LOCK_FALLBACK_SECS=300; // 5 min — change to match the server's lockout window
+/* Login lockout countdown.
+
+   The server owns the lock. It returns the exact remaining seconds as
+   `retry_after` (and a Retry-After header) on every 429, including the attempt
+   that trips the lock, and GET /api/admin/login reports the live state. So the
+   countdown is always anchored to the server rather than to a local guess:
+   clearing localStorage or opening another browser can no longer make the form
+   look unlocked while the server is still rejecting, and the timer can no
+   longer expire early and invite an attempt that is doomed to 429. */
 let lockTimer=null;
+let lockUntil=0;   // epoch ms, 0 = not locked
 
-function fmtSecs(s){ const m=Math.floor(s/60), r=s%60; return m+':'+String(r).padStart(2,'0'); }
-
-function startLock(secs){
-  const until=Date.now()+secs*1000;
-  try{ localStorage.setItem(LOCK_KEY,String(until)); }catch(e){}
-  runLock(until);
+function fmtSecs(s){
+  const m=Math.floor(s/60), r=s%60;
+  return m+':'+String(r).padStart(2,'0');
 }
 
-function runLock(until){
+function startLock(secs){
+  if(!(secs>0)) return;
+  lockUntil=Date.now()+secs*1000;
+  runLock();
+}
+
+function runLock(){
   const err=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
   const pwEl=document.getElementById('pw');
-  clearInterval(lockTimer);
+  if(!err||!btn||!pwEl) return;
+  clearInterval(lockTimer); lockTimer=null;
   function tick(){
-    const left=Math.ceil((until-Date.now())/1000);
+    const left=Math.ceil((lockUntil-Date.now())/1000);
     if(left<=0){
-      clearInterval(lockTimer); lockTimer=null;
-      try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+      clearInterval(lockTimer); lockTimer=null; lockUntil=0;
       btn.disabled=false; btn.textContent='Sign In';
-      pwEl.disabled=false; pwEl.value=''; pwEl.focus();
+      pwEl.disabled=false; pwEl.value='';
+      // Don't steal focus if the owner has moved to the reset form.
+      if(document.getElementById('login-card').style.display!=='none') pwEl.focus();
       err.textContent='You can try again now.';
       return;
     }
@@ -473,38 +491,66 @@ function runLock(until){
     err.textContent='Too many failed attempts. Try again in '+fmtSecs(left);
   }
   tick();
-  lockTimer=setInterval(tick,1000);
+  lockTimer=setInterval(tick,1000);   // re-reads the clock each tick, so a
+                                      // throttled background tab self-corrects
 }
 
-function resumeLock(){
-  let until=0;
-  try{ until=parseInt(localStorage.getItem(LOCK_KEY)||'0',10)||0; }catch(e){}
-  if(until>Date.now()){ runLock(until); return true; }
-  try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
+function clearLock(){
+  clearInterval(lockTimer); lockTimer=null; lockUntil=0;
+  const btn=document.getElementById('login-btn');
+  const pwEl=document.getElementById('pw');
+  const err=document.getElementById('login-err');
+  if(btn){ btn.disabled=false; btn.textContent='Sign In'; }
+  if(pwEl){ pwEl.disabled=false; }
+  if(err){ err.textContent=''; }
+}
+
+const isLocked=()=>lockUntil>Date.now();
+
+/* Ask the server whether this IP is locked; returns true if a countdown started. */
+async function resumeLock(){
+  const {status,data}=await api('/api/admin/login');
+  if(status===200 && data && data.locked && data.retry_after>0){
+    startLock(data.retry_after);
+    return true;
+  }
   return false;
+}
+
+/* Pull the wait time out of a 429, preferring the JSON body then the header. */
+function lockSecsFrom(data, retryAfter){
+  let s=parseInt((data&&data.retry_after)||'',10);
+  if(isNaN(s)||s<=0) s=parseInt(retryAfter||'',10);
+  return (isNaN(s)||s<=0)?0:s;
 }
 
 async function doLogin(e){
   e.preventDefault();
-  if(lockTimer) return; // still locked out
+  if(isLocked()) return;
   const pw=document.getElementById('pw').value;
   const err=document.getElementById('login-err'); err.textContent='';
   const btn=document.getElementById('login-btn'); btn.disabled=true; btn.textContent='Signing in…';
-  const {status,data,retryAfter}=await api('/api/admin/login','POST',{password:pw});
-  const msg=(data&&data.error)||'';
-  const isLocked = status===429 || /too many/i.test(msg);
-  if(status===200 && data.ok){
-    btn.disabled=false; btn.textContent='Sign In';
-    try{ localStorage.removeItem(LOCK_KEY); }catch(e){}
-    showApp();
-  } else if(isLocked){
-    let secs=parseInt((data&&(data.retry_after||data.retryAfter||data.wait_seconds))||retryAfter||'',10);
-    if(isNaN(secs)||secs<=0) secs=LOCK_FALLBACK_SECS;
-    startLock(secs);
-  } else {
-    btn.disabled=false; btn.textContent='Sign In';
-    err.textContent = msg || 'Login failed';
+  const {status,data,retryAfter,netErr}=await api('/api/admin/login','POST',{password:pw});
+  btn.disabled=false; btn.textContent='Sign In';
+
+  if(netErr){ err.textContent='Network error. Check your connection and try again.'; return; }
+  if(status===200 && data.ok){ clearLock(); showApp(); return; }
+
+  if(status===429){
+    const secs=lockSecsFrom(data,retryAfter);
+    // A 429 with no usable retry_after would otherwise leave the form enabled
+    // against a locked server; ask the server for the real number instead of
+    // inventing one.
+    if(secs>0) startLock(secs);
+    else if(!(await resumeLock())) err.textContent=(data&&data.error)||'Too many failed attempts. Please try again shortly.';
+    return;
   }
+
+  let msg=(data&&data.error)||'Login failed';
+  if(status===401 && typeof data.attempts_left==='number' && data.attempts_left>0){
+    msg+=' — '+data.attempts_left+' attempt'+(data.attempts_left===1?'':'s')+' left';
+  }
+  err.textContent=msg;
 }
 async function logout(){ await api('/api/admin/logout','POST'); location.reload(); }
 
@@ -527,18 +573,21 @@ function showLogin(){
   clearInterval(resendT); resendT=null;
   document.getElementById('forgot-card').style.display='none';
   document.getElementById('login-card').style.display='block';
+  // Re-render the lock state: the countdown keeps running in the background
+  // while the reset card is up, so the button must reflect it on return.
+  if(isLocked()) runLock();
   const pwEl=document.getElementById('pw');
   if(!pwEl.disabled) pwEl.focus();
 }
 
 function startResendCooldown(secs){
   const b=document.getElementById('resend-btn');
-  clearInterval(resendT);
+  if(!b) return;
+  clearInterval(resendT); resendT=null;
   let left=secs;
-  b.disabled=true;
   function tick(){
     if(left<=0){ clearInterval(resendT); resendT=null; b.disabled=false; b.textContent='Resend code'; return; }
-    b.textContent='Resend code ('+left+'s)'; left--;
+    b.disabled=true; b.textContent='Resend code ('+left+'s)'; left--;
   }
   tick(); resendT=setInterval(tick,1000);
 }
@@ -549,19 +598,36 @@ async function sendResetCode(btnId){
   const ok=document.getElementById('forgot-ok'); ok.textContent='';
   const orig=btn.textContent;
   btn.disabled=true; btn.textContent='Sending…';
-  const {status,data}=await api('/api/admin/forgot','POST',{});
+  const {status,data,netErr}=await api('/api/admin/forgot','POST',{});
   btn.disabled=false; btn.textContent=orig;
+
+  if(netErr){ err.textContent='Network error. Check your connection and try again.'; return; }
+
   if(status===200 && data && data.ok){
-    document.getElementById('forgot-step1').style.display='none';
-    document.getElementById('forgot-step2').style.display='block';
-    ok.textContent='Code sent to '+((data.email_hint)||'the registered email')+'. Check the inbox and spam folder.';
-    startResendCooldown(60);
+    showResetStep2();
+    // resent:false means the 45s server cooldown suppressed the send — say so
+    // rather than claiming a fresh code is on its way.
+    ok.textContent = data.resent===false
+      ? 'A code was already sent to '+(data.email_hint||'the owner inbox')+' moments ago. Check the inbox and spam folder.'
+      : 'Code sent to '+(data.email_hint||'the owner inbox')+'. Check the inbox and spam folder.';
+    startResendCooldown(data.retry_after>0?data.retry_after:60);
     document.getElementById('rc').focus();
-  } else if(status===404 || status===405){
-    err.textContent='Password reset is not set up on the server yet. Contact your developer.';
-  } else {
-    err.textContent=(data&&data.error)||'Could not send the code. Try again.';
+    return;
   }
+  // Even on a 429/error, if a code may already be in the inbox the owner must
+  // still be able to ENTER it — otherwise a rate-limit strands them on step 1
+  // with the code field hidden. Reveal step 2 and surface the reason.
+  if(status===429){
+    showResetStep2();
+    err.textContent=(data&&data.error)||'Too many requests. If you already have a code, enter it below.';
+    return;
+  }
+  err.textContent=(data&&data.error)||'Could not send the code. Try again.';
+}
+
+function showResetStep2(){
+  document.getElementById('forgot-step1').style.display='none';
+  document.getElementById('forgot-step2').style.display='block';
 }
 
 async function doForgot(e){
@@ -572,25 +638,27 @@ async function doForgot(e){
   const p1=document.getElementById('np1').value;
   const p2=document.getElementById('np2').value;
   if(!/^\d{6}$/.test(code)){ err.textContent='Enter the 6-digit code from the email.'; return; }
-  if(p1.length<8){ err.textContent='New password must be at least 8 characters.'; return; }
+  if(p1.length<8){ err.textContent='New password must be at least 8 characters.'; return; }   // matches the server's MIN_LEN
   if(p1!==p2){ err.textContent='Passwords do not match.'; return; }
   const btn=document.getElementById('forgot-btn');
   btn.disabled=true; btn.textContent='Resetting…';
-  const {status,data}=await api('/api/admin/reset','POST',{code:code,new_password:p1});
+  const {status,data,netErr}=await api('/api/admin/reset','POST',{code:code,new_password:p1});
   btn.disabled=false; btn.textContent='Reset password';
+
+  if(netErr){ err.textContent='Network error. Check your connection and try again.'; return; }
+
   if(status===200 && data && data.ok){
-    clearInterval(lockTimer); lockTimer=null;
-    try{ localStorage.removeItem(LOCK_KEY); }catch(e2){}
-    const lb=document.getElementById('login-btn'); lb.disabled=false; lb.textContent='Sign In';
-    const pwEl=document.getElementById('pw'); pwEl.disabled=false; pwEl.value='';
-    document.getElementById('login-err').textContent='';
+    clearInterval(resendT); resendT=null;
+    clearLock();   // the server cleared this IP's lockout as part of the reset
+    document.getElementById('rc').value='';
+    document.getElementById('np1').value='';
+    document.getElementById('np2').value='';
     showLogin();
+    document.getElementById('pw').focus();
     toast('Password reset ✓ — sign in with your new password');
-  } else if(status===404 || status===405){
-    err.textContent='Password reset is not set up on the server yet. Contact your developer.';
-  } else {
-    err.textContent=(data&&data.error)||'Reset failed. Check the code and try again.';
+    return;
   }
+  err.textContent=(data&&data.error)||'Reset failed. Check the code and try again.';
 }
 
 function showApp(){
@@ -989,9 +1057,17 @@ async function revAct(id,action){
 
 /* ---- Boot: are we already logged in? ---- */
 (async function(){
-  const {status}=await api('/api/admin/stats');
-  if(status===200){ showApp(); }
-  else if(!resumeLock()){ document.getElementById('pw').focus(); }
+  try{
+    const {status}=await api('/api/admin/stats');
+    if(status===200){ showApp(); return; }
+    // Not signed in: ask the server whether this IP is currently locked out,
+    // so a refresh can't be used to escape the countdown.
+    if(await resumeLock()) return;
+    document.getElementById('pw').focus();
+  }catch(e){
+    // Never let a boot failure leave a blank, dead login screen.
+    document.getElementById('pw').focus();
+  }
 })();
 </script>
 </body>

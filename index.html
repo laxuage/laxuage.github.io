@@ -3342,7 +3342,7 @@
         </div>
         <div class="login-err" id="rp-err"></div>
         <button class="login-submit" id="rp-btn" onclick="authResetPassword()"><i class="fa-solid fa-lock"></i> Reset &amp; Sign In</button>
-        <button class="forgot-link" type="button" onclick="authForgot(true)">Resend code</button>
+        <button class="forgot-link" type="button" id="rp-resend" onclick="authForgot(true)">Resend code</button>
         <button class="back-link" type="button" onclick="authTab('forgot')"><i class="fa-solid fa-arrow-left"></i> Back</button>
       </div>
 
@@ -3774,9 +3774,10 @@
   let currentUser = null;
   let pendingAction = null;
 
-  // OTP state (in-memory demo simulation)
-  let _phoneOTP = null, _emailCode = null, _forgotCode = null;
-  let _phoneVerified = false, _emailVerified = false;
+  // In-flight guards. The Enter-key handlers call these actions directly and so
+  // bypass the button's disabled state — without a flag, holding Enter fires
+  // several identical requests (and burns the server's OTP/attempt budget).
+  let _fpBusy = false, _siBusy = false, _suBusy = false, _svBusy = false, _rpBusy = false;
 
   function loadUser() {
     try {
@@ -3807,7 +3808,9 @@
     const profileName = document.getElementById('dropdown-profile-name');
     if (profileName) {
       if (currentUser) {
-        profileName.innerHTML = `Hello, ${currentUser.name}!<small>${currentUser.email || currentUser.phone}</small>`;
+        // escHtml on both: the name/email come from the server (/api/auth/me on
+        // every page load), so an unescaped name would be stored XSS.
+        profileName.innerHTML = 'Hello, ' + escHtml(currentUser.name || 'there') + '!<small>' + escHtml(currentUser.email || currentUser.phone || '') + '</small>';
       } else {
         profileName.innerHTML = `Hello, Guest!<small>Login to your account</small>`;
       }
@@ -3845,58 +3848,94 @@
   }
 
   // Forgot password — email a reset code, then verify it + set a new password.
+  // isResend means we were called from the RESET view ("Resend code"), so the
+  // errors and busy state must go to that view's elements — writing them to the
+  // forgot view's fp-err/fp-btn put them on a hidden panel, where a failed
+  // resend looked like nothing happened at all.
   async function authForgot(isResend) {
+    if (_fpBusy) return;                       // guard the Enter key / double click
+    const errId = isResend ? 'rp-err' : 'fp-err';
     const email = document.getElementById('fp-email').value.trim().toLowerCase();
-    if (!validEmail(email)) return authErr('fp-err', 'Please enter a valid email address.');
-    const btn = document.getElementById('fp-btn'); const orig = btn ? btn.innerHTML : '';
+    if (!validEmail(email)) return authErr(errId, 'Please enter a valid email address.');
+    const btn = document.getElementById(isResend ? 'rp-resend' : 'fp-btn');
+    const orig = btn ? btn.innerHTML : '';
+    _fpBusy = true;
     if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
     try {
       const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email }) });
       const d = await r.json();
-      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
-      if (!d.ok) return authErr('fp-err', d.error || 'Could not send the code.');
+      if (!d.ok) return authErr(errId, d.error || 'Could not send the code.');
       document.getElementById('fp-email-label').textContent = email;
-      if (isResend) showToast('A new code has been sent.');
+      // Deliberately non-committal: the server always replies ok so it never
+      // reveals whether the address is registered, so we must not claim a code
+      // was definitely sent.
+      if (isResend) showToast('If that email has an account, a new code is on its way.');
       else authTab('reset');
-    } catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = orig; } authErr('fp-err', 'Network error. Please try again.'); }
+    } catch(e) {
+      authErr(errId, 'Network error. Please try again.');
+    } finally {
+      _fpBusy = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
   }
   async function authResetPassword() {
+    if (_rpBusy) return;
     const email = document.getElementById('fp-email').value.trim().toLowerCase();
     const code = document.getElementById('rp-code').value.trim();
     const password = document.getElementById('rp-pass').value;
     if (!/^\d{6}$/.test(code)) return authErr('rp-err', 'Enter the 6-digit code from your email.');
     if (password.length < 6) return authErr('rp-err', 'Password must be at least 6 characters.');
-    const btn = document.getElementById('rp-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Resetting…';
+    const btn = document.getElementById('rp-btn'); const orig = btn.innerHTML;
+    _rpBusy = true; btn.disabled = true; btn.innerHTML = 'Resetting…';
     try {
       const r = await fetch('/api/auth/reset-password', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, code, password }) });
       const d = await r.json();
-      btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr('rp-err', d.error || 'Reset failed.');
       authSuccess(d.user, 'Welcome back');
-    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('rp-err', 'Network error. Please try again.'); }
+    } catch(e) {
+      authErr('rp-err', 'Network error. Please try again.');
+    } finally { _rpBusy = false; btn.disabled = false; btn.innerHTML = orig; }
   }
 
   function authErr(id, msg) { const e = document.getElementById(id); if (e) { e.textContent = msg; e.classList.add('show'); } }
   function validEmail(x) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); }
 
+  // Show/hide a password field. The four .pw-eye buttons have always called
+  // this, but it was never defined — every click threw a ReferenceError and the
+  // toggle did nothing.
+  function togglePw(inputId, btn) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const show = el.type === 'password';
+    el.type = show ? 'text' : 'password';
+    const icon = btn && btn.querySelector('i');
+    if (icon) icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    if (btn) btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    el.focus();
+  }
+
   // Sign In — email + password.
   async function authSignIn() {
+    if (_siBusy) return;
     const email = document.getElementById('si-email').value.trim().toLowerCase();
     const password = document.getElementById('si-pass').value;
     if (!validEmail(email)) return authErr('si-err', 'Please enter a valid email address.');
     if (!password) return authErr('si-err', 'Please enter your password.');
-    const btn = document.getElementById('si-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Signing in…';
+    const btn = document.getElementById('si-btn'); const orig = btn.innerHTML;
+    _siBusy = true; btn.disabled = true; btn.innerHTML = 'Signing in…';
     try {
       const r = await fetch('/api/auth/login', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, password }) });
       const d = await r.json();
-      btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr('si-err', d.error || 'Sign in failed.');
       authSuccess(d.user, 'Welcome back');
-    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('si-err', 'Network error. Please try again.'); }
+    } catch(e) {
+      authErr('si-err', 'Network error. Please try again.');
+    } finally { _siBusy = false; btn.disabled = false; btn.innerHTML = orig; }
   }
 
   // Create Account — email + password -> emails a verification code.
   async function authSignUp(isResend) {
+    if (_suBusy) return;
     const name = document.getElementById('su-name').value.trim();
     const email = document.getElementById('su-email').value.trim().toLowerCase();
     const password = document.getElementById('su-pass').value;
@@ -3906,33 +3945,38 @@
       const confirm = document.getElementById('su-pass2').value;
       if (password !== confirm) return authErr('su-err', 'Passwords do not match.');
     }
-    const btn = document.getElementById(isResend === true ? 'sv-btn' : 'su-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Sending…';
+    const btn = document.getElementById(isResend === true ? 'sv-btn' : 'su-btn'); const orig = btn.innerHTML;
+    _suBusy = true; btn.disabled = true; btn.innerHTML = 'Sending…';
     try {
       const r = await fetch('/api/auth/signup', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, password, name }) });
       const d = await r.json();
-      btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr(isResend === true ? 'sv-err' : 'su-err', d.error || 'Could not create the account.');
       document.getElementById('su-email-label').textContent = email;
       authTab('verify');
       document.getElementById('su-code').value = '';
       try { document.getElementById('su-code').focus(); } catch(e){}
       if (isResend === true) showToast('📧 A new code has been sent.');
-    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr(isResend === true ? 'sv-err' : 'su-err', 'Network error. Please try again.'); }
+    } catch(e) {
+      authErr(isResend === true ? 'sv-err' : 'su-err', 'Network error. Please try again.');
+    } finally { _suBusy = false; btn.disabled = false; btn.innerHTML = orig; }
   }
 
   // Confirm the emailed code -> account created + signed in.
   async function authVerifySignup() {
+    if (_svBusy) return;
     const email = document.getElementById('su-email').value.trim().toLowerCase();
     const code = document.getElementById('su-code').value.trim();
     if (!/^\d{6}$/.test(code)) return authErr('sv-err', 'Enter the 6-digit code from your email.');
-    const btn = document.getElementById('sv-btn'); const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Verifying…';
+    const btn = document.getElementById('sv-btn'); const orig = btn.innerHTML;
+    _svBusy = true; btn.disabled = true; btn.innerHTML = 'Verifying…';
     try {
       const r = await fetch('/api/auth/verify-signup', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ email, code }) });
       const d = await r.json();
-      btn.disabled = false; btn.innerHTML = orig;
       if (!d.ok) return authErr('sv-err', d.error || 'Verification failed.');
       authSuccess(d.user, 'Welcome');
-    } catch(e) { btn.disabled = false; btn.innerHTML = orig; authErr('sv-err', 'Network error. Please try again.'); }
+    } catch(e) {
+      authErr('sv-err', 'Network error. Please try again.');
+    } finally { _svBusy = false; btn.disabled = false; btn.innerHTML = orig; }
   }
 
   // Shared success path for sign-in and sign-up.
@@ -4734,9 +4778,12 @@
 
   function showToast(msg) {
     const c = document.getElementById('toast-container');
+    if (!c) return;
     const t = document.createElement('div');
     t.className = 'toast';
-    t.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+    // Callers pass server data (e.g. "Welcome back, <name>"), so escape it —
+    // the icon is the only markup this is allowed to build.
+    t.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + escHtml(msg);
     c.appendChild(t);
     setTimeout(() => t.remove(), 2800);
   }

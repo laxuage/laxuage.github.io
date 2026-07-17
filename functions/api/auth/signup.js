@@ -1,7 +1,7 @@
 // POST /api/auth/signup  { email, password, name }
 // Validates, hashes the password, stores a pending signup, emails a verify code.
 // The account is only created after /api/auth/verify-signup confirms the code.
-import { json, ensureSchema, genOTP, sendOtpEmail, hashPassword, rateLimit, clientIp } from '../_shared.js';
+import { json, ensureSchema, genOTP, sendOtpEmail, hashPassword, rateLimit, clientIp, sanitizeText } from '../_shared.js';
 
 const TTL = 600;                  // pending signup valid 10 min
 const RESEND_COOLDOWN_MS = 45000; // 45s between sends
@@ -16,7 +16,9 @@ export async function onRequestPost(context) {
   try { b = await request.json(); } catch (e) { return json({ ok: false, error: 'Bad request' }, 400); }
   const email = String(b.email || '').trim().toLowerCase();
   const password = String(b.password || '');
-  const name = String(b.name || '').trim().slice(0, 60);
+  // sanitizeText strips angle brackets/control chars: the name is later rendered
+  // in the storefront nav and the admin panel, so it must never carry markup.
+  const name = sanitizeText(b.name, 60);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ ok: false, error: 'Enter a valid email address.' }, 400);
   if (password.length < 6) return json({ ok: false, error: 'Password must be at least 6 characters.' }, 400);
 

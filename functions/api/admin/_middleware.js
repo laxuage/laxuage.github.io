@@ -10,7 +10,10 @@ export async function onRequest(context) {
   if (request.method !== 'GET' && request.method !== 'HEAD' && !sameOrigin(request)) {
     return json({ ok: false, error: 'Cross-origin request blocked.' }, 403);
   }
-  if (url.pathname === '/api/admin/login') return next();   // login is public
+  // Public by necessity: you cannot be signed in while recovering a password.
+  // Each of these enforces its own rate limits and code checks.
+  const PUBLIC = ['/api/admin/login', '/api/admin/forgot', '/api/admin/reset'];
+  if (PUBLIC.includes(url.pathname)) return next();
   if (!(await isAdmin(env, request))) {
     return json({ ok: false, error: 'Unauthorized' }, 401);
   }

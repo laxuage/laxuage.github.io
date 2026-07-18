@@ -16,8 +16,7 @@
   <meta property="og:title" content="Laxuage — Premium Luxury Bags">
   <meta property="og:description" content="A handpicked edit of premium luxury bags. Designed in India, made with care, carried with intention.">
   <meta property="og:locale" content="en_IN">
-  <!-- og:image: after launch, add a real share image at this path (1200x630) -->
-  <meta property="og:image" content="share-cover.jpg">
+  <meta property="og:image" content="https://laxuage.com/share-cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Laxuage — Premium Luxury Bags">
   <meta name="twitter:description" content="A handpicked edit of premium luxury bags. Designed in India, made with care.">
@@ -39,7 +38,7 @@
         "@id": "https://laxuage.com/#organization",
         "name": "Laxuage",
         "url": "https://laxuage.com/",
-        "logo": "https://laxuage.com/share-cover.jpg",
+        "logo": "https://laxuage.com/favicon.png",
         "email": "support@laxuage.com",
         "sameAs": ["https://instagram.com/laxuage"]
       },
@@ -5654,6 +5653,9 @@
         var rzp = new Razorpay({
           key: co.key_id, order_id: co.order_id, amount: co.amount, currency: co.currency || 'INR',
           name: 'Laxuage', description: 'Order ' + orderId,
+          // Merchant logo in the Razorpay checkout header (absolute URL required).
+          // Without this Razorpay renders a plain "L" letter tile as a fallback.
+          image: 'https://laxuage.com/favicon.png?v=3',
           prefill: { name: addr.name || '', email: (currentUser && currentUser.email) || '', contact: addr.phone || '' },
           theme: { color: '#7E2D49' },
           handler: function(resp){
@@ -6291,7 +6293,7 @@
   "@type":"Store",
   "name":"Laxuage",
   "description":"Premium luxury handbags, crossbody bags, totes and clutches for the modern woman. Designed in India.",
-  "image":"share-cover.jpg",
+  "image":"https://laxuage.com/share-cover.jpg",
   "address":{"@type":"PostalAddress","addressRegion":"Kerala","addressCountry":"IN"},
   "email":"support@laxuage.com",
   "telephone":"+919846923350",

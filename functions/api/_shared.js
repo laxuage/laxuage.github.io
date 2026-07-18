@@ -291,6 +291,14 @@ export async function ensureSchema(db) {
       created_at INTEGER,
       source TEXT
     )`),
+    // Security events worth reviewing after the fact. Queryable from the
+    // Cloudflare D1 console; nothing here is shown to customers.
+    db.prepare(`CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at INTEGER,
+      kind TEXT,
+      detail TEXT
+    )`),
   ]);
   // Column migrations for older tables (ignored if the column already exists).
   try { await db.prepare('ALTER TABLE products ADD COLUMN colors TEXT').run(); } catch (e) {}

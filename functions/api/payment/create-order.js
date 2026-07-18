@@ -44,8 +44,26 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: (data && data.error && data.error.description) || 'Could not create payment order' }, 502);
   }
 
-  // Bind the Razorpay order to our order so verify.js can check it.
-  try { await env.DB.prepare('UPDATE orders SET rp_order_id=? WHERE id=?').bind(String(data.id), oid).run(); } catch (e) {}
+  // Bind the Razorpay order to our order so verify.js can check that the
+  // payment presented at verify time actually belongs to THIS order.
+  //
+  // This binding MUST land. If rp_order_id stays NULL, verify.js has nothing
+  // to match against and has to fall back to accepting the payment — which is
+  // precisely the gap a replayed-payment attack walks through. So retry, and
+  // if it still fails, refuse here: failing BEFORE the customer pays is safe
+  // (the unused Razorpay order just expires), whereas failing after would take
+  // their money without recording the order.
+  let bound = false;
+  for (let attempt = 0; attempt < 3 && !bound; attempt++) {
+    try {
+      const upd = await env.DB.prepare('UPDATE orders SET rp_order_id=? WHERE id=?').bind(String(data.id), oid).run();
+      // A 0-row update is the silent failure mode we care about, not just a throw.
+      if (!upd || !upd.meta || upd.meta.changes > 0) bound = true;
+    } catch (e) {}
+  }
+  if (!bound) {
+    return json({ ok: false, error: 'Could not start payment. Please retry.' }, 503);
+  }
 
   return json({ ok: true, order_id: data.id, amount: data.amount, currency: data.currency, key_id: env.RAZORPAY_KEY_ID });
 }

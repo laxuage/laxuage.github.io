@@ -34,6 +34,28 @@ export async function onRequestPost(context) {
         if (ord.rp_order_id && ord.rp_order_id !== roid) {
           return json({ ok: false, error: 'Payment does not match this order' }, 400);
         }
+        if (!ord.rp_order_id) {
+          // No Razorpay order was ever bound to this order, so the signature
+          // above proves only that SOME payment succeeded — not that it was
+          // for this order. That is exactly the shape of a replayed-payment
+          // attack: pay for a cheap order, then present that signature against
+          // an expensive one that never went through create-order.
+          //
+          // PHASE 1 — observe, don't block. Legacy orders predating the
+          // rp_order_id column would be rejected by a hard fail, so for now we
+          // record and still accept. Once these stop appearing in audit_log,
+          // this becomes a hard reject (and see create-order.js, which now
+          // refuses to start a payment it cannot bind).
+          console.warn('payment/verify: unbound order accepted', String(b.order_id), roid, rpid);
+          try {
+            await env.DB.prepare('INSERT INTO audit_log (created_at,kind,detail) VALUES (?,?,?)')
+              .bind(Date.now(), 'verify_unbound_order', JSON.stringify({
+                order_id: String(b.order_id), total: ord.total,
+                razorpay_order_id: roid, razorpay_payment_id: rpid,
+                ip: request.headers.get('CF-Connecting-IP') || '',
+              }).slice(0, 900)).run();
+          } catch (e) {}
+        }
         await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?")
           .bind(rpid, String(b.order_id)).run();
         // Best-effort server-side Purchase to Meta (Conversions API) for accurate

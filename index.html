@@ -3238,7 +3238,9 @@
 </div>
 
 <!-- LOGIN MODAL -->
-<div class="login-overlay" id="login-overlay" onclick="loginOverlayClick(event)">
+<!-- No backdrop-click close: a stray click outside would wipe a half-typed
+     email/password. The × button (and only it) closes this. -->
+<div class="login-overlay" id="login-overlay">
   <div class="login-box" id="login-box">
     <div class="login-header">
       <button class="login-close-btn" onclick="closeLogin()">×</button>
@@ -4003,10 +4005,6 @@
       else { currentUser = null; try { localStorage.removeItem('laxuage_user'); } catch(e){} }
     } catch(e) {}
     updateNavProfile();
-  }
-
-  function loginOverlayClick(e) {
-    if (e.target === document.getElementById('login-overlay')) closeLogin();
   }
 
   // Logout now asks for confirmation in a centered branded popup.

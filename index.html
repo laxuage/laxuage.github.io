@@ -2189,6 +2189,7 @@
     .ck-review-item {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 10px;
       padding: 8px 0;
       border-bottom: 1px solid var(--border);
@@ -2197,7 +2198,14 @@
     }
     .ck-review-item:last-child { border-bottom: none; }
     .ck-review-item .ri-name { color: var(--text-2); }
-    .ck-review-item .ri-qty { color: var(--muted); font-size: 11.5px; margin-left: 6px; }
+    .ck-review-item .ri-left { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    /* Same stepper as the cart drawer — reuses .qty-btn / .qty-val. */
+    .ck-review-item .ri-qty-ctl {
+      display: flex; align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      width: fit-content;
+    }
     .ck-review-item .ri-price { font-weight: 700; }
     .ck-review-item .ri-right { display: flex; align-items: center; gap: 12px; }
     .ck-review-item .ri-remove {
@@ -5531,7 +5539,14 @@
       const sub = item.price * item.qty;
       subtotal += sub;
       return `<div class="ck-review-item">
-        <div><span class="ri-name">${escHtml(item.name)}</span><span class="ri-qty">× ${item.qty}</span></div>
+        <div class="ri-left">
+          <span class="ri-name">${escHtml(item.name)}</span>
+          <div class="ri-qty-ctl">
+            <button class="qty-btn" onclick="changeReviewQty(${item.id},-1)" aria-label="Decrease quantity of ${escHtml(item.name)}" title="Decrease">−</button>
+            <span class="qty-val">${item.qty}</span>
+            <button class="qty-btn" onclick="changeReviewQty(${item.id},1)" aria-label="Increase quantity of ${escHtml(item.name)}" title="Increase">+</button>
+          </div>
+        </div>
         <div class="ri-right">
           <span class="ri-price">₹${sub.toLocaleString()}</span>
           <button class="ri-remove" onclick="removeReviewItem(${item.id})" aria-label="Remove ${escHtml(item.name)}" title="Remove"><i class="fa-solid fa-trash-can"></i></button>
@@ -5549,6 +5564,21 @@
       <div class="summary-row"><span>Payment Method</span><span style="font-weight:700">${payLabels[ckPayMethod]}</span></div>
       <div class="summary-row total"><span>Total</span><span>₹${final.toLocaleString()}</span></div>
     `;
+  }
+
+  // Quantity stepper on the Review step. Mirrors changeQty() in the cart drawer,
+  // but also re-renders the review so the line total, any coupon discount (which
+  // can fall away if the subtotal drops under its minimum) and the order total
+  // all move together. Stepping the last unit down removes the line.
+  function changeReviewQty(id, delta) {
+    const item = cart.find(x => x.id === id);
+    if (!item) return;
+    if (item.qty + delta <= 0) { removeReviewItem(id); return; }
+    item.qty += delta;
+    saveData();
+    updateCartUI();
+    renderCartItems();
+    renderReview();
   }
 
   // Remove an item directly from the Review step. If the cart empties, close

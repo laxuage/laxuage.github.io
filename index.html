@@ -4365,7 +4365,11 @@
     try {
       fetch('/api/me/data', {
         method:'POST', headers:{'content-type':'application/json'},
-        body: JSON.stringify({ cart: cart.map(function(i){ return { id:i.id, qty:i.qty }; }), wishlist: [...wishlist] })
+        body: JSON.stringify({
+          cart: cart.map(function(i){ return { id:i.id, qty:i.qty }; }),
+          wishlist: [...wishlist],
+          addresses: loadAddresses(),
+        })
       }).catch(function(){});
     } catch(e){}
   }
@@ -4385,6 +4389,17 @@
       });
       cart = Object.values(map);
       (d.wishlist || []).forEach(function(id){ wishlist.add(id); });
+      // Union the account's address book with anything saved on this device,
+      // local first so a just-entered address stays at the top. Same identity
+      // rule the duplicate check uses elsewhere: house + pincode.
+      if (Array.isArray(d.addresses) && d.addresses.length) {
+        const merged = loadAddresses();
+        d.addresses.forEach(function(sa){
+          if (!merged.some(function(a){ return a.house === sa.house && a.pin === sa.pin; })) merged.push(sa);
+        });
+        try { localStorage.setItem(addrKey(), JSON.stringify(merged.slice(0, 10))); } catch(e){}
+        if (typeof renderAddressBook === 'function') { try { renderAddressBook(); } catch(e){} }
+      }
       try {
         localStorage.setItem('laxuage_cart', JSON.stringify(cart));
         localStorage.setItem('laxuage_wishlist', JSON.stringify([...wishlist]));
@@ -5812,35 +5827,53 @@
   // ===================================================================
   // ============= NEW: ADDRESS BOOK ===================================
   // ===================================================================
+  // The address book is keyed on the ACCOUNT ID, and mirrored to the server via
+  // /api/me/data so it follows the user across logins and devices.
+  //
+  // It used to be keyed on `phone || email`. Both of those are editable in the
+  // profile dialog, which changed the key and made every saved address vanish
+  // — the account id never changes, so it cannot drift the same way.
+  function addrKey() {
+    if (!currentUser) return null;
+    return 'laxuage_addr_v2_' + (currentUser.id || currentUser.email || 'guest');
+  }
+  // One-time rescue of addresses written under the old unstable keys.
+  function migrateLegacyAddresses() {
+    const key = addrKey();
+    if (!key || localStorage.getItem(key)) return;   // already migrated or has data
+    for (const legacy of [currentUser.phone, currentUser.email]) {
+      if (!legacy) continue;
+      try {
+        const old = localStorage.getItem('laxuage_addr_' + legacy);
+        if (old && JSON.parse(old).length) { localStorage.setItem(key, old); return; }
+      } catch(e) {}
+    }
+  }
   function loadAddresses() {
     if (!currentUser) return [];
     try {
-      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
-      return JSON.parse(localStorage.getItem(key) || '[]');
+      migrateLegacyAddresses();
+      return JSON.parse(localStorage.getItem(addrKey()) || '[]');
     } catch(e) { return []; }
+  }
+  function storeAddresses(all) {
+    if (!currentUser) return;
+    try { localStorage.setItem(addrKey(), JSON.stringify(all.slice(0, 10))); } catch(e) {}
+    pushServerData();   // mirror to the account so the next device/login sees it
   }
   function saveAddress(addr) {
     if (!currentUser) return;
-    try {
-      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
-      const all = loadAddresses();
-      // Avoid exact duplicates
-      const exists = all.find(a => a.house === addr.house && a.pin === addr.pin);
-      if (!exists) {
-        all.unshift(addr);
-        localStorage.setItem(key, JSON.stringify(all.slice(0, 5))); // max 5
-      }
-    } catch(e) {}
+    const all = loadAddresses();
+    // Avoid exact duplicates
+    const exists = all.find(a => a.house === addr.house && a.pin === addr.pin);
+    if (!exists) { all.unshift(addr); storeAddresses(all); }
   }
   function deleteAddress(idx) {
-    try {
-      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
-      const all = loadAddresses();
-      all.splice(idx, 1);
-      localStorage.setItem(key, JSON.stringify(all));
-      renderAddressBook();
-      showToast('Address removed');
-    } catch(e) {}
+    const all = loadAddresses();
+    all.splice(idx, 1);
+    storeAddresses(all);
+    renderAddressBook();
+    showToast('Address removed');
   }
   let _addrEditIdx = -1;
   function addAddress(){ _addrEditIdx = -1; openAddrForm(null); }
@@ -5873,13 +5906,10 @@
     if (!addr.name || !addr.phone || !addr.house || !addr.city || !addr.state) { showToast('⚠️ Please fill all required fields'); return; }
     if (!/^[1-9]\d{5}$/.test(addr.pin)) { showToast('⚠️ Enter a valid 6-digit pincode'); return; }
     if (!currentUser) { showToast('Please log in'); return; }
-    try {
-      const key = 'laxuage_addr_' + (currentUser.phone || currentUser.email || 'guest');
-      const all = loadAddresses();
-      if (_addrEditIdx >= 0 && all[_addrEditIdx]) all[_addrEditIdx] = addr;
-      else all.unshift(addr);
-      localStorage.setItem(key, JSON.stringify(all.slice(0, 10)));
-    } catch(e) {}
+    const all = loadAddresses();
+    if (_addrEditIdx >= 0 && all[_addrEditIdx]) all[_addrEditIdx] = addr;
+    else all.unshift(addr);
+    storeAddresses(all);
     cancelAddrForm();
     renderAddressBook();
     showToast(_addrEditIdx >= 0 ? 'Address updated ✓' : 'Address added ✓');

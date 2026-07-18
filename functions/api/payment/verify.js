@@ -22,51 +22,78 @@ export async function onRequestPost(context) {
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ rsig.charCodeAt(i);
   if (diff !== 0) return json({ ok: false, error: 'Payment verification failed' }, 400);
 
-  // Mark our order paid — but only if the Razorpay order that was just paid is
-  // the one we bound to this order at create time. This stops a buyer from
-  // paying a cheap Razorpay order and replaying its signature against an
-  // expensive internal order.
-  if (b.order_id) {
-    try {
-      const ord = await env.DB.prepare('SELECT id, rp_order_id, total, customer_email FROM orders WHERE id=?')
-        .bind(String(b.order_id)).first();
-      if (ord) {
-        if (ord.rp_order_id && ord.rp_order_id !== roid) {
-          return json({ ok: false, error: 'Payment does not match this order' }, 400);
-        }
-        if (!ord.rp_order_id) {
-          // No Razorpay order was ever bound to this order, so the signature
-          // above proves only that SOME payment succeeded — not that it was
-          // for this order. That is exactly the shape of a replayed-payment
-          // attack: pay for a cheap order, then present that signature against
-          // an expensive one that never went through create-order.
-          //
-          // PHASE 1 — observe, don't block. Legacy orders predating the
-          // rp_order_id column would be rejected by a hard fail, so for now we
-          // record and still accept. Once these stop appearing in audit_log,
-          // this becomes a hard reject (and see create-order.js, which now
-          // refuses to start a payment it cannot bind).
-          console.warn('payment/verify: unbound order accepted', String(b.order_id), roid, rpid);
-          try {
-            await env.DB.prepare('INSERT INTO audit_log (created_at,kind,detail) VALUES (?,?,?)')
-              .bind(Date.now(), 'verify_unbound_order', JSON.stringify({
-                order_id: String(b.order_id), total: ord.total,
-                razorpay_order_id: roid, razorpay_payment_id: rpid,
-                ip: request.headers.get('CF-Connecting-IP') || '',
-              }).slice(0, 900)).run();
-          } catch (e) {}
-        }
-        await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?")
-          .bind(rpid, String(b.order_id)).run();
-        // Best-effort server-side Purchase to Meta (Conversions API) for accurate
-        // ad attribution. Dormant unless META_CAPI_TOKEN is configured; never
-        // affects the response. event_id = order id so it dedupes with the
-        // browser pixel's Purchase (which sends the same eventID).
-        if (env.META_CAPI_TOKEN) { await sendMetaPurchase(env, request, ord).catch(() => {}); }
-      }
-    } catch (e) {}
+  // A valid signature only proves that SOME payment succeeded. It says nothing
+  // about WHICH of our orders that payment was for — so everything below binds
+  // the payment to this specific order before marking it paid.
+  const oid = String(b.order_id || '');
+  if (!oid) return json({ ok: false, error: 'Missing order reference' }, 400);
+
+  // Note the deliberate absence of a blanket try/catch here: a D1 error must
+  // NOT fall through to `ok: true`. An unconfirmed payment the owner reconciles
+  // by hand is recoverable; goods shipped against a payment that never landed
+  // are not.
+  let ord;
+  try {
+    ord = await env.DB.prepare('SELECT id, rp_order_id, total, customer_email, payment_status, payment_id FROM orders WHERE id=?')
+      .bind(oid).first();
+  } catch (e) {
+    return json({ ok: false, error: 'Could not confirm payment yet. We will verify shortly.' }, 503);
   }
+  if (!ord) return json({ ok: false, error: 'Order not found' }, 404);
+
+  // Already settled by this exact payment — replaying the same callback (double
+  // submit, retry, refresh) is not an attack, so stay idempotent.
+  if (ord.payment_status === 'paid' && ord.payment_id === rpid) return json({ ok: true });
+
+  // The payment must be for the Razorpay order we bound to THIS order at create
+  // time. A missing binding is now a hard reject: create-order refuses to start
+  // a payment it cannot bind, so from here on every genuine payment has one.
+  // Without this, an unbound order accepts any valid signature — pay for a
+  // cheap order, replay that signature against an expensive one.
+  if (!ord.rp_order_id || ord.rp_order_id !== roid) {
+    await audit(env, request, ord.rp_order_id ? 'verify_order_mismatch' : 'verify_unbound_order', {
+      order_id: oid, total: ord.total, bound: ord.rp_order_id || null,
+      razorpay_order_id: roid, razorpay_payment_id: rpid,
+    });
+    return json({ ok: false, error: 'Payment does not match this order' }, 400);
+  }
+
+  // One payment settles one order. Without this a single genuine payment could
+  // be replayed across many orders that each happen to be bound to it.
+  try {
+    const clash = await env.DB.prepare('SELECT id FROM orders WHERE payment_id=? AND id<>?').bind(rpid, oid).first();
+    if (clash) {
+      await audit(env, request, 'verify_payment_reuse', { order_id: oid, already_used_by: clash.id, razorpay_payment_id: rpid });
+      return json({ ok: false, error: 'This payment has already been used' }, 400);
+    }
+  } catch (e) {
+    return json({ ok: false, error: 'Could not confirm payment yet. We will verify shortly.' }, 503);
+  }
+
+  try {
+    await env.DB.prepare("UPDATE orders SET payment_status='paid', payment_id=? WHERE id=?").bind(rpid, oid).run();
+  } catch (e) {
+    return json({ ok: false, error: 'Could not confirm payment yet. We will verify shortly.' }, 503);
+  }
+
+  // Best-effort server-side Purchase to Meta (Conversions API) for accurate
+  // ad attribution. Dormant unless META_CAPI_TOKEN is configured; never
+  // affects the response. event_id = order id so it dedupes with the
+  // browser pixel's Purchase (which sends the same eventID).
+  if (env.META_CAPI_TOKEN) { await sendMetaPurchase(env, request, ord).catch(() => {}); }
   return json({ ok: true });
+}
+
+// Records a rejected verification for later review. Never throws — a failure to
+// log must not change the caller's decision.
+async function audit(env, request, kind, detail) {
+  console.warn('payment/verify: ' + kind, JSON.stringify(detail));
+  try {
+    await env.DB.prepare('INSERT INTO audit_log (created_at,kind,detail) VALUES (?,?,?)')
+      .bind(Date.now(), kind, JSON.stringify(Object.assign({
+        ip: request.headers.get('CF-Connecting-IP') || '',
+      }, detail)).slice(0, 900)).run();
+  } catch (e) {}
 }
 
 async function sha256Hex(s) {

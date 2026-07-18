@@ -307,6 +307,9 @@ export async function ensureSchema(db) {
   try { await db.prepare('ALTER TABLE orders ADD COLUMN rp_order_id TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN courier TEXT').run(); } catch (e) {}
   try { await db.prepare('ALTER TABLE orders ADD COLUMN tracking_no TEXT').run(); } catch (e) {}
+  // payment/verify looks a payment id up across orders on every verification to
+  // reject reuse, so keep that lookup indexed.
+  try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_orders_payment_id ON orders(payment_id)').run(); } catch (e) {}
 }
 
 // ---- Password hashing (PBKDF2-SHA256, salted) ----
